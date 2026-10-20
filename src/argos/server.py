@@ -35,6 +35,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
             stale.unlink(missing_ok=True)
         core.speech = Speech(voice_worker, core.voice, audio_directory)
         core.capture = Capture(core, voice_worker, audio_directory)
+        core.speech.language = store.setting("voice.language", "es")
+        core.capture.input_device = store.setting("voice.input_device")
     stopped = asyncio.Event()
     clients = set()
     sessions = asyncio.Semaphore(32)

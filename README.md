@@ -26,7 +26,8 @@ Reutiliza Core si ya está activo. No configura inicio automático al arrancar L
 La esfera es verde mientras escucha, amarilla mientras procesa voz, cian durante
 la reproducción y roja si falla la voz. La amplitud procede del WAV reproducido.
 El micrófono solo se abre al pulsar Espacio y se limita a 30 segundos.
-No hay palabra de activación todavía.
+No hay palabra de activación todavía. El idioma predeterminado es español;
+la detección de Whisper no cambia el idioma de la voz automáticamente.
 
 Ejemplos: «hola», «abre Firefox», «lista las ventanas», «enfoca Firefox»,
 «busca en la web documentación de Python», «qué estás haciendo»,
@@ -105,6 +106,8 @@ Otras operaciones:
 ./argos resume ID
 ./argos say "hola" --speak
 ./argos voice-status
+./argos voice-inputs
+./argos voice-config --language es --input-device ID_DEL_MICROFONO
 ./argos doctor --codex
 ```
 
@@ -128,6 +131,11 @@ python scripts/setup_voice.py
 
 Descarga paquetes y modelos de forma explícita. PyAV se fija a 16.1.0:
 la versión 19 instalada inicialmente era incompatible con faster-whisper 1.2.1.
+El idioma y el micrófono se guardan en la configuración de ARGOS.
+`voice-config --language en` selecciona inglés explícitamente. Un micrófono
+seleccionado que se desconecta produce un error; no se cambia a la webcam.
+Esta selección no cambia los dispositivos predeterminados de otras aplicaciones.
+
 El runtime usa los modelos descargados en modo offline. Necesita también
 `pw-record` / `pw-play`, una sesión PipeWire y, para el lanzador, kitty.
 

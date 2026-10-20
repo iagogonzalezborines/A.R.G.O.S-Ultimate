@@ -89,3 +89,18 @@ TTS y latencia física de audio; no representan velocidad de conversación.
 Aprobaciones detalladas por CLI, no por voz. Búsqueda por fragmentos, sin lectura
 de páginas completas. Escritura de texto, sin borrar/mover/crear carpetas.
 Sin Blender, impresora, activación de autoactualizaciones ni GUI Windows.
+
+## Corrección de idioma y micrófono
+
+71 pruebas aprobadas tras corregir el seguimiento automático del idioma.
+Regresiones añadidas: una detección `en` no cambia una voz configurada `es`,
+Whisper recibe el idioma seleccionado, PipeWire recibe el dispositivo elegido,
+un dispositivo ausente no cae a otro micrófono y el fallo del reproductor
+se refleja como error. Todas esas pruebas usan procesos silenciosos o dobles.
+
+En el equipo del usuario la entrada predeterminada era la webcam, mientras la
+salida era SteelSeries. Se confirmó recepción de audio por PipeWire en la salida
+SteelSeries y el usuario confirmó que se oía, aunque con idioma/voz inadecuados.
+Se seleccionó el micrófono SteelSeries expresamente solicitado y español fijo
+para reconocimiento, contexto del modelo y síntesis. La calidad subjetiva de
+la voz requiere valoración del usuario; un exit code 0 no demuestra inteligibilidad.

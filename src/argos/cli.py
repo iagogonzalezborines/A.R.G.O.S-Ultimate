@@ -53,6 +53,10 @@ def parser():
     s.add_argument("name")
     s.add_argument("argv", nargs=argparse.REMAINDER)
     sub.add_parser("voice-status")
+    sub.add_parser("voice-inputs", help="Listar micrófonos disponibles")
+    s = sub.add_parser("voice-config", help="Guardar idioma y micrófono de ARGOS")
+    s.add_argument("--language", choices=("es", "en"))
+    s.add_argument("--input-device", help="ID mostrado por voice-inputs")
     s = sub.add_parser("play-wav", help="Salida PCM real y amplitud para la esfera; no es TTS")
     s.add_argument("path")
     sub.add_parser("stop-speech")
@@ -106,10 +110,12 @@ async def execute(args):
         return
     methods = {"projects": "projects.list", "add-project": "projects.add",
                "play-wav": "voice.play", "stop-speech": "voice.stop",
-               "voice-status": "voice.state", "review": "task", "register-command": "commands.register"}
+               "voice-status": "voice.state", "voice-inputs": "voice.inputs",
+               "voice-config": "voice.configure", "review": "task", "register-command": "commands.register"}
     message = {"method": methods.get(args.command, args.command), "session": args.session,
                "request_id": args.request_id or uuid.uuid4().hex}
-    for name in ("text", "project", "task_id", "name", "path", "capability", "fingerprint", "speak", "argv"):
+    for name in ("text", "project", "task_id", "name", "path", "capability", "fingerprint", "speak", "argv",
+                 "language", "input_device"):
         if hasattr(args, name) and getattr(args, name) is not None:
             message[name] = getattr(args, name)
     if args.command == "run":
@@ -135,7 +141,8 @@ async def execute(args):
         print(result["speech"])
         if result.get("task_id"):
             print("Task:", result["task_id"])
-        if args.command in ("task", "tasks", "agents", "projects", "review", "voice-status", "register-command") and result.get("data") is not None:
+        if args.command in ("task", "tasks", "agents", "projects", "review", "voice-status", "voice-config",
+                            "voice-inputs", "register-command") and result.get("data") is not None:
             print(json.dumps(result["data"], ensure_ascii=False, indent=2))
     if result.get("kind") == "failed":
         return 1

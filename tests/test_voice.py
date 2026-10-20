@@ -7,9 +7,29 @@ from pathlib import Path
 from unittest.mock import patch
 
 from argos.voice import VoiceOutput
+from argos.models import ArgosError
 
 
 class VoiceTests(unittest.IsolatedAsyncioTestCase):
+    async def test_failed_player_is_visible_instead_of_silent_success(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            player = root / "failed-player"
+            player.write_text("#!/usr/bin/env python3\nraise SystemExit(7)\n")
+            player.chmod(0o700)
+            audio = root / "audio.wav"
+            with wave.open(str(audio), "wb") as wav:
+                wav.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                wav.writeframes(b"\0" * 3200)
+            voice = VoiceOutput()
+            with patch("argos.voice.shutil.which", return_value=str(player)):
+                await voice.play(audio)
+                with self.assertRaises(ArgosError):
+                    await voice.job
+                self.assertEqual(voice.state, "error")
+                self.assertIn("reproductor", voice.last_error)
+                await voice.stop()
+
     async def test_real_pcm_and_single_silent_playback_owner(self):
         # Exercise the actual process lifecycle with a silent player. No sound
         # may ever reach the user's speakers during tests.

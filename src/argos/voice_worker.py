@@ -41,7 +41,8 @@ def main():
                     if whisper is None:
                         whisper = WhisperModel("base", device="cpu", compute_type="int8", cpu_threads=2,
                                                download_root=str(root / "whisper"), local_files_only=True)
-                    segments, info = whisper.transcribe(request["path"], beam_size=3, vad_filter=True,
+                    segments, info = whisper.transcribe(request["path"], language=request.get("language", "es"),
+                                                        beam_size=3, vad_filter=True,
                                                         condition_on_previous_text=False)
                     text = " ".join(segment.text.strip() for segment in segments
                                     if segment.no_speech_prob < 0.7).strip()

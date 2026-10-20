@@ -49,6 +49,7 @@ class Core:
 
     def context(self, project, agent="general"):
         return {
+            "response_language": self.store.setting("voice.language", "es"),
             "project": {"id": project["id"], "name": project["name"]} if project else None,
             "capabilities": [c.public() for c in CAPABILITIES.values()
                              if agent == "general" or c.name in AGENTS[agent].capabilities],
@@ -60,7 +61,7 @@ class Core:
         safe_data(message)
         if not isinstance(message, dict):
             raise ArgosError("Petición inválida.")
-        if message.get("method") in ("projects.list", "agents", "tasks", "task", "voice.state"):
+        if message.get("method") in ("projects.list", "agents", "tasks", "task", "voice.state", "voice.inputs"):
             # Observation has no effects. Never persist audio meter samples or
             # issue SQLite writes for console/status polling.
             return (await self._dispatch(message)).json()
@@ -175,6 +176,30 @@ class Core:
                 self._enqueue(task)
                 return Response("Tarea reanudada en la cola.", task_id=task["id"])
             return await self._answer(task, public_text(request.get("text", "")))
+        if method == "voice.inputs":
+            from .speech import input_devices
+            return Response("Micrófonos disponibles.", data=await input_devices())
+        if method == "voice.configure":
+            if not self.capture or not self.speech:
+                raise ArgosError("La voz no está conectada.")
+            if self.capture.state in ("listening", "thinking") or self.speech.state == "thinking" or (
+                    self.voice and self.voice.state == "speaking"):
+                raise ArgosError("Termina la petición de voz antes de cambiar la configuración.")
+            language = request.get("language", self.speech.language)
+            device = request.get("input_device", self.capture.input_device)
+            if language not in ("es", "en"):
+                raise ArgosError("El idioma debe ser es o en.")
+            if device:
+                from .speech import input_devices
+                if device not in [item["id"] for item in await input_devices()]:
+                    raise ArgosError("Ese micrófono no está conectado.")
+            self.store.set_setting("voice.language", language)
+            self.store.set_setting("voice.input_device", device)
+            self.speech.language = language
+            self.capture.input_device = device
+            self.capture.last_error = self.speech.last_error = None
+            return Response("Configuración de voz guardada.",
+                            data={"language": language, "input_device": device})
         if method == "voice.state":
             data = self.voice.snapshot() if self.voice else {"state": "idle", "level": 0}
             if self.capture and self.capture.state != "idle":
@@ -183,8 +208,11 @@ class Core:
                 data = {**data, "state": self.speech.state}
             data["stt"] = "whisper-base" if self.capture else "not_connected"
             data["tts"] = "pocket-peter-yearsley" if self.speech else "not_connected"
+            data["language"] = self.speech.language if self.speech else None
+            data["input_device"] = self.capture.input_device if self.capture else None
             data["error"] = ((self.capture.last_error if self.capture else None)
-                             or (self.speech.last_error if self.speech else None))
+                             or (self.speech.last_error if self.speech else None)
+                             or (getattr(self.voice, "last_error", None) if self.voice else None))
             return Response("", data=data)
         if method == "voice.toggle":
             if not self.capture:

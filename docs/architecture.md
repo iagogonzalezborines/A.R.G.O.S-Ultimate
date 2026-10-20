@@ -83,6 +83,9 @@ Procesos ajenos de la misma cuenta no se consideran adversarios aislados.
 
 Espacio inicia captura PipeWire; la segunda pulsación envía a Whisper; límite
 de 30 segundos. No hay wake word. Se pausa TTS durante captura/transcripción.
+El idioma es una preferencia persistente, español por defecto; una detección
+de Whisper no la modifica. El micrófono puede fijarse por nombre de nodo PipeWire
+sin cambiar la configuración global del escritorio.
 Un único propietario de reproducción evita solapamientos. Escape detiene audio,
 no trabajos ya encolados. El RMS sigue el reloj del proceso de reproducción;
 puede diferir por el buffer físico del dispositivo.

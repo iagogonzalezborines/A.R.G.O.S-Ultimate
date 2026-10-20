@@ -24,6 +24,7 @@ class VoiceOutput:
         self.job, self.process = None, None
         self.generation = 0
         self.lock = asyncio.Lock()
+        self.last_error = None
 
     def snapshot(self):
         return {"level": round(self.level, 4), "state": self.state, "generation": self.generation}
@@ -72,6 +73,7 @@ class VoiceOutput:
         async with self.lock:
             await self._stop()
             self.generation += 1
+            self.last_error = None
             self.process = await asyncio.create_subprocess_exec(
                 player, str(path), stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL)
@@ -88,6 +90,11 @@ class VoiceOutput:
                 self.level = level
                 await asyncio.sleep(max(0, start + (index + 1) * interval - time.monotonic()))
             await asyncio.wait_for(proc.wait(), 5)
+            if proc.returncode:
+                raise ArgosError("El reproductor no pudo enviar audio a la salida seleccionada.")
+        except (ArgosError, OSError, TimeoutError) as error:
+            self.last_error = str(error)
+            raise
         finally:
             if proc.returncode is None:
                 proc.terminate()
@@ -96,4 +103,4 @@ class VoiceOutput:
                 except TimeoutError:
                     proc.kill()
                     await proc.wait()
-            self.level, self.state = 0.0, "idle"
+            self.level, self.state = 0.0, "error" if self.last_error else "idle"

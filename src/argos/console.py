@@ -59,7 +59,11 @@ async def console(directory, project=None):
                 if b"\x1b" in key:
                     await call(directory, {"method": "voice.stop"})
                 elif b" " in key:
-                    await call(directory, {"method": "voice.toggle", "project": project})
+                    try:
+                        await call(directory, {"method": "voice.toggle", "project": project})
+                    except ArgosError:
+                        # Capture keeps the error in voice.state; preserve the sphere.
+                        pass
             data = (await call(directory, {"method": "voice.state"}))["data"]
             width, height = shutil.get_terminal_size((80, 24))
             screen = frame(width, max(6, height - 1), data["level"], now)

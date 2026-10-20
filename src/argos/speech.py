@@ -15,6 +15,15 @@ from .models import ArgosError
 VOICE_PYTHON = Path.home() / ".local/share/argos/voice-env/bin/python"
 
 
+async def input_devices():
+    from .linux_tools import process
+    code, output, _ = await process(["pactl", "-f", "json", "list", "sources"])
+    if code:
+        raise ArgosError("No se pudo consultar la lista de micrófonos.")
+    return [{"id": item["name"], "name": item.get("description", item["name"])}
+            for item in json.loads(output) if not item["name"].endswith(".monitor")]
+
+
 class VoiceWorker:
     def __init__(self):
         self.process = None
@@ -118,6 +127,7 @@ class Capture:
         self.lock = asyncio.Lock()
         self.project = None
         self.last_error = None
+        self.input_device = None
 
     async def toggle(self, project=None):
         async with self.lock:
@@ -134,19 +144,25 @@ class Capture:
             fd, self.path = tempfile.mkstemp(prefix="microphone-", suffix=".wav", dir=self.directory)
             os.close(fd)
             try:
+                target = []
+                if self.input_device:
+                    if self.input_device not in [item["id"] for item in await input_devices()]:
+                        raise ArgosError("El micrófono seleccionado no está conectado.")
+                    target = ["--target", self.input_device]
                 self.process = await asyncio.create_subprocess_exec(
-                    "pw-record", "--rate=16000", "--channels=1", "--format=s16", self.path,
+                    "pw-record", *target, "--rate=16000", "--channels=1", "--format=s16", self.path,
                     stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
                 await asyncio.sleep(0.1)
                 if self.process.returncode is not None:
                     raise ArgosError("PipeWire no pudo abrir el micrófono.")
-            except BaseException:
+            except BaseException as error:
                 await self._discard()
                 self.core.speech.paused = False
                 self.core.speech.resume_queue()
                 self.state = "error"
-                self.last_error = "No se pudo abrir el micrófono."
+                self.last_error = str(error) if isinstance(error, ArgosError) else "No se pudo abrir el micrófono."
                 raise
+            self.last_error = None
             self.state = "listening"
             self.timer = asyncio.create_task(self._limit())
 
@@ -177,8 +193,8 @@ class Capture:
 
     async def _transcribe(self):
         try:
-            result = await self.worker.request({"op": "transcribe", "path": self.path})
-            self.core.speech.language = "en" if result["language"] == "en" else "es"
+            result = await self.worker.request({"op": "transcribe", "path": self.path,
+                                               "language": self.core.speech.language})
             if result["text"]:
                 await self.core.request({"method": "say", "text": result["text"], "project": self.project,
                                          "session": "default", "request_id": uuid.uuid4().hex, "speak": True})

@@ -2,12 +2,63 @@ import asyncio
 import tempfile
 import unittest
 import wave
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 from pathlib import Path
 
-from argos.speech import Speech
+from argos.speech import Speech, Capture
+from argos.models import ArgosError
 
 
 class SpeechTests(unittest.IsolatedAsyncioTestCase):
+    async def test_recognition_language_cannot_switch_speaking_language(self):
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(None, None, Path(temp))
+            core = SimpleNamespace(speech=speech, request=AsyncMock())
+            worker = SimpleNamespace(request=AsyncMock(return_value={"text": "hola", "language": "en"}))
+            capture = Capture(core, worker, Path(temp))
+            capture.path = str(Path(temp) / "recording.wav")
+            Path(capture.path).touch()
+            await capture._transcribe()
+            self.assertEqual(worker.request.call_args.args[0]["language"], "es")
+            self.assertEqual(speech.language, "es")
+            self.assertEqual(core.request.call_args.args[0]["text"], "hola")
+            self.assertEqual(list(Path(temp).iterdir()), [])
+
+    async def test_selected_microphone_is_passed_to_recorder(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = SimpleNamespace(stop=AsyncMock())
+            speech = Speech(None, output, Path(temp))
+            core = SimpleNamespace(speech=speech)
+            capture = Capture(core, None, Path(temp))
+            capture.input_device = "steelseries-input"
+            proc = SimpleNamespace(returncode=None, wait=AsyncMock(return_value=0))
+            proc.send_signal = lambda _: setattr(proc, "returncode", 0)
+            with patch("argos.speech.input_devices", AsyncMock(return_value=[{"id": "steelseries-input"}])), \
+                 patch("argos.speech.asyncio.create_subprocess_exec", AsyncMock(return_value=proc)) as spawn:
+                try:
+                    await capture.toggle()
+                    argv = spawn.call_args.args
+                    self.assertEqual(argv[argv.index("--target") + 1], "steelseries-input")
+                    self.assertEqual(capture.state, "listening")
+                finally:
+                    await capture.cancel()
+
+    async def test_missing_selected_microphone_never_falls_back(self):
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(None, SimpleNamespace(stop=AsyncMock()), Path(temp))
+            capture = Capture(SimpleNamespace(speech=speech), None, Path(temp))
+            capture.input_device = "disconnected-headset"
+            with patch("argos.speech.input_devices", AsyncMock(return_value=[{"id": "webcam"}])), \
+                 patch("argos.speech.asyncio.create_subprocess_exec", AsyncMock()) as spawn:
+                with self.assertRaises(ArgosError):
+                    await capture.toggle()
+                spawn.assert_not_called()
+            self.assertIn("no está conectado", capture.last_error)
+            self.assertEqual(capture.state, "error")
+            self.assertFalse(speech.paused)
+            self.assertEqual(list(Path(temp).iterdir()), [])
+
     async def test_capture_pause_keeps_notifications_out_of_microphone(self):
         with tempfile.TemporaryDirectory() as temp:
             speech = Speech(None, None, Path(temp))
