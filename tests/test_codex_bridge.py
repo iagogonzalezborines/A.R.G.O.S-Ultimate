@@ -3,7 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from argos.codex import Codex, RESULT_SCHEMA
 from argos.models import ArgosError
@@ -19,7 +19,8 @@ for line in sys.stdin:
     method=m.get("method")
     if method=="initialize": result={}
     elif method=="account/read": result={"account":{"type":"chatgpt"}}
-    elif method in ("thread/start","thread/resume"): result={"thread":{"id":"thread-one"}}
+    elif method=="model/list": result={"data":[{"model":"test-model","supportedReasoningEfforts":[{"reasoningEffort":"low"}]}]}
+    elif method in ("thread/start","thread/resume"): result={"thread":{"id":"thread-one"},"model":"test-model"}
     elif method=="turn/start":
         emit({"id":m["id"],"result":{"turn":{"id":"turn-one"}}})
         emit({"id":900,"method":"item/tool/call","params":{"threadId":"thread-one",
@@ -61,7 +62,10 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
             calls.append((name, args))
             return {"evidence": "actual tool result"}
         thread = await self.codex.thread("engineering", tools=True)
-        result = await self.codex.turn(thread, "read file", RESULT_SCHEMA, tool)
+        with patch.object(self.codex, "rpc", wraps=self.codex.rpc) as rpc:
+            result = await self.codex.turn(thread, "read file", RESULT_SCHEMA, tool)
+        turn_params = next(call.args[1] for call in rpc.call_args_list if call.args[0] == "turn/start")
+        self.assertNotIn("effort", turn_params)
         self.assertEqual(calls, [("files.read", {"file": "demo.txt"})])
         self.assertEqual(result["speech"], "Leído.")
         self.assertEqual(await self.codex.thread("engineering", thread), thread)
@@ -106,3 +110,17 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
         child = self.codex.process
         await self.codex.close()
         self.assertIsNotNone(child.returncode)
+
+    async def test_general_uses_supported_low_effort_without_changing_model(self):
+        result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
+        with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
+            await self.codex.decide("hola", {})
+        self.assertEqual(turn.call_args.kwargs["effort"], "low")
+
+    async def test_unknown_model_keeps_its_default_effort(self):
+        await self.codex.start()
+        self.codex.fast_models.clear()
+        result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
+        with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
+            await self.codex.decide("hola", {})
+        self.assertIsNone(turn.call_args.kwargs["effort"])

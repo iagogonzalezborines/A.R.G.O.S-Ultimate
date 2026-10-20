@@ -1,13 +1,26 @@
 import asyncio
 import tempfile
 import unittest
-import wave
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 from pathlib import Path
 
 from argos.speech import Speech, Capture
 from argos.models import ArgosError
+
+
+class SilentOutput:
+    job = None
+
+    async def play_stream(self, chunks, first_audio=None):
+        async def consume():
+            async for _ in chunks:
+                if first_audio:
+                    first_audio()
+        self.job = asyncio.create_task(consume())
+
+    async def stop(self):
+        pass
 
 
 class SpeechTests(unittest.IsolatedAsyncioTestCase):
@@ -71,18 +84,16 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
     async def test_cancelled_synthesis_removes_audio_and_pending_speech(self):
         entered = asyncio.Event()
         class Worker:
-            async def request(self, request):
+            async def chunks(self, text, language):
                 entered.set()
                 await asyncio.sleep(60)
-        class Output:
-            async def stop(self):
-                pass
+                yield b"\0\0"
         with tempfile.TemporaryDirectory() as temp:
-            speech = Speech(Worker(), Output(), Path(temp))
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
             speech.enqueue("Primero.")
             speech.enqueue("Segundo.")
             await entered.wait()
-            self.assertEqual(len(list(Path(temp).iterdir())), 1)
+            self.assertEqual(list(Path(temp).iterdir()), [])
             await speech.stop()
             self.assertEqual(list(Path(temp).iterdir()), [])
             self.assertTrue(speech.queue.empty())
@@ -91,22 +102,11 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
     async def test_speech_is_serial_and_leaves_no_recordings(self):
         observed = []
         class Worker:
-            async def request(self, request):
-                observed.append(request["text"])
-                with wave.open(request["path"], "wb") as file:
-                    file.setnchannels(1)
-                    file.setsampwidth(2)
-                    file.setframerate(16000)
-                    file.writeframes(b"\0" * 100)
-                return {"ok": True}
-        class Output:
-            job = None
-            async def play(self, path):
-                self.job = asyncio.create_task(asyncio.sleep(0.01))
-            async def stop(self):
-                pass
+            async def chunks(self, text, language):
+                observed.append(text)
+                yield b"\0" * 100
         with tempfile.TemporaryDirectory() as temp:
-            speech = Speech(Worker(), Output(), Path(temp))
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
             speech.enqueue("Uno.")
             speech.enqueue("Dos.")
             await speech.job
@@ -116,15 +116,11 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
     async def test_queued_utterances_keep_their_own_language(self):
         observed = []
         class Worker:
-            async def request(self, message):
-                observed.append((message["text"], message["language"]))
-                Path(message["path"]).touch()
-        class Output:
-            job = None
-            async def play(self, path):
-                self.job = asyncio.create_task(asyncio.sleep(0))
+            async def chunks(self, text, language):
+                observed.append((text, language))
+                yield b"\0\0"
         with tempfile.TemporaryDirectory() as temp:
-            speech = Speech(Worker(), Output(), Path(temp))
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
             speech.paused = True
             speech.enqueue("Hola.", language="es")
             speech.language = "en"

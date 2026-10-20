@@ -229,8 +229,13 @@ class Core:
             data["language"] = self.speech.language if self.speech else None
             data["language_mode"] = self.store.setting("voice.language_mode", "auto")
             data["input_device"] = self.capture.input_device if self.capture else None
+            worker = getattr(self.speech, "worker", None)
+            data["voice_ready"] = getattr(worker, "ready", False)
+            data["tts_first_audio_ms"] = getattr(self.speech, "first_audio_ms", None)
+            data["last_input_timings"] = getattr(self.capture, "timings", {})
             data["error"] = ((self.capture.last_error if self.capture else None)
                              or (self.speech.last_error if self.speech else None)
+                             or getattr(worker, "last_error", None)
                              or (getattr(self.voice, "last_error", None) if self.voice else None))
             return Response("", data=data)
         if method == "voice.toggle":

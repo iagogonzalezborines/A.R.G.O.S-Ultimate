@@ -17,9 +17,11 @@ class Router:
         language = language_command(text)
         if language:
             return Decision("language", arguments={"language": language}, reason="explicit_language_request")
+        # Strip invocation prefixes from the original text too, preserving path
+        # and app-name case for direct capabilities. They must not need Codex.
+        text = re.sub(r"^argos[, :]+\s*", "", text.strip(), flags=re.I)
+        text = re.sub(r"^(?:por favor|please)[, ]+", "", text, flags=re.I)
         value = normalize(text)
-        value = re.sub(r"^argos[, :] *", "", value)
-        value = re.sub(r"^(?:por favor|please)[, ]+", "", value)
         exact = {
             "hola": ("greeting", "Hola."),
             "hello": ("greeting", "Hello."),

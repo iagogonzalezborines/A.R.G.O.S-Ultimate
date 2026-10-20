@@ -25,7 +25,7 @@ async def serve(directory, interpreter=None, voice_enabled=False):
     store = Store(directory)
     core = Core(store, interpreter)
     core.voice = VoiceOutput()
-    voice_worker = None
+    voice_worker = warmup = None
     if voice_enabled:
         from .speech import Capture, Speech, VoiceWorker
         voice_worker = VoiceWorker()
@@ -72,6 +72,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
         await core.start()
         server = await asyncio.start_unix_server(client, str(socket), limit=256000)
         socket.chmod(0o600)
+        if voice_worker:
+            warmup = asyncio.create_task(voice_worker.warmup(core.speech.language))
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, stopped.set)
@@ -85,6 +87,9 @@ async def serve(directory, interpreter=None, voice_enabled=False):
             await core.capture.cancel()
         if core.speech:
             await core.speech.stop()
+        if warmup:
+            warmup.cancel()
+            await asyncio.gather(warmup, return_exceptions=True)
         if voice_worker:
             await voice_worker.close()
         await core.voice.stop()

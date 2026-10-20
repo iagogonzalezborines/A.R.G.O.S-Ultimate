@@ -24,7 +24,7 @@ Reutiliza Core si ya está activo. No configura inicio automático al arrancar L
 | Q / Ctrl-C | Cerrar la consola; Core continúa |
 
 La esfera es verde mientras escucha, amarilla mientras procesa voz, cian durante
-la reproducción y roja si falla la voz. La amplitud procede del WAV reproducido.
+la reproducción y roja si falla la voz. La amplitud procede del audio PCM enviado al reproductor.
 El micrófono solo se abre al pulsar Espacio y se limita a 30 segundos.
 No hay palabra de activación todavía. El modo de idioma predeterminado es
 automático: responde en español si hablas español y en inglés si hablas inglés.
@@ -123,8 +123,20 @@ interrumpidas se revisan antes de reanudar; no se repiten al arrancar.
 Core usa Python 3.11+ y su biblioteca estándar. Voz usa un entorno separado
 Python 3.12 en `~/.local/share/argos/voice-env`, Whisper base/int8 en CPU y
 Pocket TTS con el preset Peter Yearsley, modelos español e inglés. Los modelos
-se cargan al usarse y permanecen en el proceso de voz para reducir latencia.
-No se carga un modelo por cada agente. El primer turno tarda más.
+de reconocimiento y del idioma actual se preparan silenciosamente al arrancar.
+Las voces usadas permanecen en memoria al cambiar español/inglés. No se carga
+un modelo por cada agente. La primera petición puede esperar si la preparación
+aún no ha terminado; interrumpir una síntesis reinicia ese proceso.
+
+La voz se reproduce por fragmentos mientras se genera, sin esperar un WAV
+completo. La conversación General solicita esfuerzo `low` cuando el modelo
+configurado lo admite; los especialistas mantienen su esfuerzo configurado.
+No se cambia de modelo ni de proveedor. Las consultas remotas aún dependen
+de la latencia de Codex y de la complejidad de la petición.
+
+`./argos voice-status` muestra preparación de voz, tiempos del último
+reconocimiento/despacho y tiempo hasta enviar el primer fragmento de síntesis.
+Son medidas internas, no una medición acústica de los auriculares; no guardan audio.
 
 Para reproducir la instalación en otra máquina con `uv`:
 
@@ -147,7 +159,8 @@ El runtime usa los modelos descargados en modo offline. Necesita también
 
 STT y TTS comparten un proceso separado. Las notificaciones esperan mientras
 se graba o transcribe, para evitar que el micrófono recoja la propia voz.
-Los WAV son temporales, privados y se borran al terminar, cancelar o reiniciar.
+Los WAV de captura son temporales, privados y se borran al terminar, cancelar
+o reiniciar. La síntesis normal transmite PCM sin escribir audio en disco.
 Los textos de las peticiones sí pueden quedar en el historial de tareas.
 GAMING descarta avisos de tareas; no los acumula para reproducirlos después.
 

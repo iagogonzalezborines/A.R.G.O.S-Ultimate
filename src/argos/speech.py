@@ -1,11 +1,13 @@
 """Local STT/TTS process and push-to-talk. Audio files are temporary and private."""
 import asyncio
+import base64
 import contextlib
 import json
 import os
 import re
 import signal
 import tempfile
+import time
 import uuid
 from pathlib import Path
 
@@ -29,9 +31,12 @@ class VoiceWorker:
     def __init__(self):
         self.process = None
         self.lock = asyncio.Lock()
+        self.ready = False
+        self.last_error = None
 
-    async def request(self, message):
+    async def _responses(self, message):
         async with self.lock:
+            completed = False
             if not self.process or self.process.returncode is not None:
                 if not VOICE_PYTHON.exists():
                     raise ArgosError("Falta instalar el entorno local de voz.")
@@ -42,14 +47,46 @@ class VoiceWorker:
             try:
                 self.process.stdin.write(json.dumps(message).encode() + b"\n")
                 await self.process.stdin.drain()
-                line = await asyncio.wait_for(self.process.stdout.readline(), 120)
-                result = json.loads(line)
-                if not result.get("ok"):
-                    raise ArgosError(result.get("error", "Falló la voz."))
-                return result
+                while True:
+                    line = await asyncio.wait_for(self.process.stdout.readline(), 120)
+                    result = json.loads(line)
+                    if not result.get("ok"):
+                        raise ArgosError(result.get("error", "Falló la voz."))
+                    if "chunk" not in result:
+                        self.ready = True
+                        self.last_error = None
+                        completed = True
+                        yield result
+                        break
+                    yield result
             except BaseException:
-                await self.close()
+                if not completed:
+                    await self.close()
                 raise
+
+    async def request(self, message):
+        async with contextlib.aclosing(self._responses(message)) as responses:
+            async for result in responses:
+                if "chunk" not in result:
+                    return result
+
+    async def chunks(self, text, language):
+        message = {"op": "synthesize", "text": text, "language": language, "stream": True}
+        async with contextlib.aclosing(self._responses(message)) as responses:
+            async for result in responses:
+                if "chunk" in result:
+                    if result.get("rate") != 24000:
+                        raise ArgosError("Frecuencia de síntesis no admitida.")
+                    pcm = base64.b64decode(result["chunk"], validate=True)
+                    if not pcm or len(pcm) % 2:
+                        raise ArgosError("El modelo devolvió audio incompleto.")
+                    yield pcm
+
+    async def warmup(self, language):
+        try:
+            await self.request({"op": "warmup", "language": language})
+        except (ArgosError, OSError, ValueError, TimeoutError) as error:
+            self.last_error = str(error)
 
     async def close(self):
         if self.process and self.process.returncode is None:
@@ -60,6 +97,7 @@ class VoiceWorker:
                 self.process.kill()
                 await self.process.wait()
         self.process = None
+        self.ready = False
 
 
 class Speech:
@@ -72,6 +110,7 @@ class Speech:
         self.automatic_language = True
         self.last_error = None
         self.paused = False
+        self.first_audio_ms = None
 
     def enqueue(self, text, language=None):
         language = language or self.language
@@ -90,21 +129,21 @@ class Speech:
         try:
             while not self.queue.empty():
                 text, language = self.queue.get_nowait()
-                fd, filename = tempfile.mkstemp(prefix="speech-", suffix=".wav", dir=self.directory)
-                os.close(fd)
                 try:
                     self.state = "thinking"
-                    await self.worker.request({"op": "synthesize", "text": text,
-                                               "language": language, "path": filename})
-                    await self.output.play(filename)
+                    started = time.monotonic()
+                    self.first_audio_ms = None
+                    def first_audio():
+                        self.first_audio_ms = round((time.monotonic() - started) * 1000)
+                        self.state = "speaking"
+                    await self.output.play_stream(self.worker.chunks(text, language), first_audio)
                     if self.output.job:
                         await self.output.job
                     self.last_error = None
-                except (ArgosError, OSError, ValueError) as error:
+                except (ArgosError, OSError, ValueError, TimeoutError) as error:
                     self.last_error = str(error)
                     self.state = "error"
                 finally:
-                    Path(filename).unlink(missing_ok=True)
                     self.queue.task_done()
         finally:
             if self.state != "error":
@@ -131,6 +170,7 @@ class Capture:
         self.project = None
         self.last_error = None
         self.input_device = None
+        self.timings = {}
 
     async def toggle(self, project=None):
         async with self.lock:
@@ -195,15 +235,20 @@ class Capture:
         self.job = asyncio.create_task(self._transcribe())
 
     async def _transcribe(self):
+        started = time.monotonic()
+        self.timings = {}
         try:
             result = await self.worker.request({"op": "transcribe", "path": self.path,
                                                "language": "auto" if self.core.speech.automatic_language else self.core.speech.language,
                                                "previous_language": self.core.speech.language})
+            self.timings["stt_ms"] = round((time.monotonic() - started) * 1000)
             if result["text"]:
+                dispatched = time.monotonic()
                 await self.core.request({"method": "say", "text": result["text"], "project": self.project,
                                          "session": "default", "request_id": uuid.uuid4().hex, "speak": True,
                                          "detected_language": result.get("language"),
                                          "language_probability": result.get("language_probability", 0.0)})
+                self.timings["dispatch_ms"] = round((time.monotonic() - dispatched) * 1000)
             else:
                 self.core.speech.enqueue(localize("No he entendido la petición.", self.core.speech.language))
             self.last_error = None

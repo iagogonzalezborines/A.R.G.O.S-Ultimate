@@ -1,5 +1,6 @@
 """Single PCM playback owner and output meter, shared by TTS and WAV playback."""
 import asyncio
+import contextlib
 import math
 import shutil
 import struct
@@ -79,6 +80,64 @@ class VoiceOutput:
                 stderr=asyncio.subprocess.DEVNULL)
             self.state = "speaking"
             self.job = asyncio.create_task(self._meter(levels, chunk / rate))
+
+    async def play_stream(self, chunks, first_audio=None):
+        """Play mono 24 kHz s16 PCM as it arrives, with bounded buffering."""
+        player = shutil.which("pw-play") or shutil.which("aplay")
+        if not player:
+            raise ArgosError("No se ha encontrado un reproductor PCM.")
+        async with self.lock:
+            await self._stop()
+            self.generation += 1
+            self.last_error = None
+            self.state = "thinking"
+            self.job = asyncio.create_task(self._stream(chunks, player, first_audio))
+
+    async def _stream(self, chunks, player, first_audio):
+        proc = None
+        deadline = time.monotonic()
+        first = True
+        try:
+            async with contextlib.aclosing(chunks):
+                async for data in chunks:
+                    if not proc:
+                        args = (["--raw", "--rate=24000", "--channels=1", "--format=s16",
+                                 "--latency=80ms", "-"] if Path(player).name != "aplay"
+                                else ["-t", "raw", "-r", "24000", "-c", "1", "-f", "S16_LE", "-"])
+                        proc = self.process = await asyncio.create_subprocess_exec(
+                            player, *args, stdin=asyncio.subprocess.PIPE,
+                            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+                    # Feed and meter at 20 ms intervals. The subprocess pipe and
+                    # worker reader are bounded; a long answer cannot grow a PCM queue.
+                    for offset in range(0, len(data), 960):
+                        frame = data[offset:offset + 960]
+                        proc.stdin.write(frame)
+                        await proc.stdin.drain()
+                        self.level, self.state = rms16(frame), "speaking"
+                        if first:
+                            first = False
+                            if first_audio:
+                                first_audio()
+                        deadline = max(deadline + len(frame) / 48000, time.monotonic())
+                        await asyncio.sleep(max(0, deadline - time.monotonic()))
+                if proc:
+                    proc.stdin.close()
+                    await asyncio.wait_for(proc.wait(), 5)
+                    if proc.returncode:
+                        raise ArgosError("El reproductor no pudo enviar audio a la salida seleccionada.")
+        except (ArgosError, OSError, ValueError, TimeoutError) as error:
+            self.last_error = (str(error) if isinstance(error, ArgosError)
+                               else "No se pudo completar la reproducción de voz.")
+            raise ArgosError(self.last_error) from None
+        finally:
+            if proc and proc.returncode is None:
+                proc.terminate()
+                try:
+                    await asyncio.wait_for(proc.wait(), 2)
+                except TimeoutError:
+                    proc.kill()
+                    await proc.wait()
+            self.level, self.state = 0.0, "error" if self.last_error else "idle"
 
     async def _meter(self, levels, interval):
         proc = self.process

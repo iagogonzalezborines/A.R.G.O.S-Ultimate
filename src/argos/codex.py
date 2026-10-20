@@ -50,6 +50,7 @@ class Codex:
         self.sequence = 0
         self.start_lock = asyncio.Lock()
         self.chat_locks, self.chat_threads = {}, {}
+        self.fast_models, self.fast_threads = set(), set()
 
     async def start(self):
         async with self.start_lock:
@@ -83,6 +84,10 @@ class Codex:
                 account = (await self.rpc("account/read", {"refreshToken": False})).get("account") or {}
                 if account.get("type") != "chatgpt":
                     raise ArgosError("Codex necesita iniciar sesión con ChatGPT; no se usará una API de pago.")
+                models = await self.rpc("model/list", {})
+                self.fast_models = {model["model"] for model in models.get("data", [])
+                                    if any(option.get("reasoningEffort") == "low"
+                                           for option in model.get("supportedReasoningEfforts", []))}
             except BaseException:
                 await self.close()
                 raise
@@ -186,9 +191,11 @@ class Codex:
         else:
             params.update(ephemeral=ephemeral, environments=[], dynamicTools=[TOOL] if tools else [])
             result = await self.rpc("thread/start", params)
+        if agent == "general" and result.get("model") in self.fast_models:
+            self.fast_threads.add(result["thread"]["id"])
         return result["thread"]["id"]
 
-    async def turn(self, thread_id, text, schema, tool_handler=None, progress=None):
+    async def turn(self, thread_id, text, schema, tool_handler=None, progress=None, effort=None):
         queue = asyncio.Queue(maxsize=4096)
         self.queues[thread_id] = queue
         if tool_handler:
@@ -201,6 +208,7 @@ class Codex:
                 "outputSchema": schema, "approvalPolicy": "never",
                 "sandboxPolicy": {"type": "readOnly", "networkAccess": False},
                 "environments": [], "summary": "none",
+                **({"effort": effort} if effort else {}),
             })
             turn_id = result["turn"]["id"]
             async with asyncio.timeout(300):
@@ -259,7 +267,8 @@ class Codex:
             payload = json.dumps({"request": text, "context": context,
                                   "output_note": "Encode capability arguments as a JSON string in arguments_json."},
                                  ensure_ascii=False)
-            data = await self.turn(thread_id, payload, DECISION_SCHEMA)
+            data = await self.turn(thread_id, payload, DECISION_SCHEMA,
+                                   effort="low" if thread_id in self.fast_threads else None)
             try:
                 data["arguments"] = json.loads(data.pop("arguments_json"))
             except (ValueError, KeyError, TypeError):
@@ -300,3 +309,5 @@ class Codex:
             await asyncio.gather(self.reader, return_exceptions=True)
         self.process = self.reader = None
         self.chat_threads.clear()
+        self.fast_threads.clear()
+        self.fast_models.clear()

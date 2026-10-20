@@ -4,7 +4,7 @@ import unittest
 import uuid
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from argos.core import Core
 from argos.language import choose_language, language_command
@@ -12,9 +12,21 @@ from argos.models import Decision
 from argos.speech import Speech, Capture
 from argos.store import Store
 from argos.voice_worker import transcribe
+from argos.router import Router
 
 
 class LanguageSelectionTests(unittest.TestCase):
+    def test_invocation_prefixes_keep_app_commands_local_and_preserve_names(self):
+        for text in ("Argos, abre Firefox", "Argos por favor abre Firefox", "Please open Firefox"):
+            with patch("argos.linux_tools.find_app", return_value={"id": "firefox.desktop"}) as find:
+                result = Router().resolve(text)
+            self.assertEqual(result.capability, "apps.open")
+            find.assert_called_once_with("Firefox")
+        with patch("argos.linux_tools.find_app") as find:
+            for text in ('Argos, no abras Firefox', 'Argos, si digo "abre Firefox"', 'Argos, "abre Firefox"'):
+                self.assertEqual(Router().resolve(text).kind, "interpret")
+            find.assert_not_called()
+
     def test_uncertain_clip_rechecks_other_language_locally(self):
         calls = []
         def decode(path, language, **kwargs):

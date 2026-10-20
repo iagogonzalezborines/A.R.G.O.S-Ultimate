@@ -1,4 +1,5 @@
 """Run only with the isolated voice Python. JSON protocol; no microphone or playback."""
+import base64
 import contextlib
 import json
 import os
@@ -45,38 +46,64 @@ def main():
     # Downloads are an explicit setup step, never an accidental voice operation.
     os.environ["HF_HUB_OFFLINE"] = "1"
     root = Path.home() / ".local/share/argos/models"
-    tts, tts_state, tts_language, whisper = None, None, None, None
+    voices, whisper = {}, None
     output = sys.stdout
     with contextlib.redirect_stdout(sys.stderr):
         import torch
         torch.set_num_threads(2)
+
+    def voice(language):
+        if language not in voices:
+            from pocket_tts import TTSModel
+            model = TTSModel.load_model(language={"es": "spanish", "en": "english"}[language])
+            state = model.get_state_for_audio_prompt(str(root / f"peter-{language}.safetensors"))
+            voices[language] = model, state
+        return voices[language]
+
+    def recognizer():
+        nonlocal whisper
+        if whisper is None:
+            from faster_whisper import WhisperModel
+            whisper = WhisperModel("base", device="cpu", compute_type="int8", cpu_threads=2,
+                                   download_root=str(root / "whisper"), local_files_only=True)
+        return whisper
+
     for line in sys.stdin:
         try:
             request = json.loads(line)
             with contextlib.redirect_stdout(sys.stderr):
                 if request["op"] == "synthesize":
-                    from pocket_tts import TTSModel
                     language = request.get("language", "es")
-                    if tts_language != language:
-                        tts, tts_state = None, None
-                        tts = TTSModel.load_model(language={"es": "spanish", "en": "english"}[language])
-                        tts_state = tts.get_state_for_audio_prompt(str(root / f"peter-{language}.safetensors"))
-                        tts_language = language
-                    audio = tts.generate_audio(tts_state, request["text"])
-                    pcm = (audio.detach().cpu().flatten().clamp(-1, 1) * 32767).to(torch.int16).numpy()
-                    with wave.open(request["path"], "wb") as file:
-                        file.setnchannels(1)
-                        file.setsampwidth(2)
-                        file.setframerate(tts.sample_rate)
-                        file.writeframes(pcm.tobytes())
-                    response = {"ok": True, "seconds": len(pcm) / tts.sample_rate}
+                    tts, tts_state = voice(language)
+                    streaming = request.get("stream", False)
+                    frames = 0
+                    with contextlib.ExitStack() as stack:
+                        if not streaming:
+                            file = stack.enter_context(wave.open(request["path"], "wb"))
+                            file.setparams((1, 2, tts.sample_rate, 0, "NONE", "not compressed"))
+                        for audio in tts.generate_audio_stream(tts_state, request["text"]):
+                            pcm = (audio.detach().cpu().flatten().clamp(-1, 1) * 32767).to(torch.int16).numpy()
+                            frames += len(pcm)
+                            if streaming:
+                                print(json.dumps({"ok": True, "chunk": base64.b64encode(pcm.tobytes()).decode(),
+                                                  "rate": tts.sample_rate}), file=output, flush=True)
+                            else:
+                                file.writeframes(pcm.tobytes())
+                    response = {"ok": True, "seconds": frames / tts.sample_rate}
                 elif request["op"] == "transcribe":
-                    from faster_whisper import WhisperModel
-                    if whisper is None:
-                        whisper = WhisperModel("base", device="cpu", compute_type="int8", cpu_threads=2,
-                                               download_root=str(root / "whisper"), local_files_only=True)
-                    response = transcribe(whisper, request["path"], request.get("language", "auto"),
+                    response = transcribe(recognizer(), request["path"], request.get("language", "auto"),
                                           request.get("previous_language", "es"))
+                elif request["op"] == "warmup":
+                    import numpy as np
+                    # Synthetic silence and discarded speech: never record or play audio.
+                    segments, _ = recognizer().transcribe(np.zeros(16000, dtype=np.float32),
+                                                          language="es", vad_filter=True)
+                    list(segments)
+                    language = request.get("language", "es")
+                    tts, state = voice(language)
+                    for _ in tts.generate_audio_stream(state, "Hola." if language == "es" else "Hello."):
+                        pass
+                    response = {"ok": True}
                 else:
                     response = {"ok": False, "error": "Operación de voz desconocida."}
         except Exception:

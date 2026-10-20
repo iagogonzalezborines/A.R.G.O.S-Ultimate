@@ -131,3 +131,47 @@ El contexto de cada turno tuvo prioridad sobre el idioma del historial.
 La instancia abierta quedó en modo auto, con el micrófono SteelSeries conservado.
 Se comprobaron por IPC los cambios inglés/español y las respuestas locales,
 sin consultar al modelo para cambiar una preferencia.
+
+## Reducción de espera
+
+La salida normal ahora transmite PCM mientras Pocket lo genera. Whisper y la
+voz del idioma actual se preparan al arrancar; ambas voces permanecen en memoria
+una vez usadas. Decir «Argos, abre Firefox» o «Please open Firefox» conserva la
+ruta local, incluyendo el nombre original de la aplicación.
+
+91 pruebas automáticas. Añaden inicio de reproducción antes del final de la
+generación, cierre del generador y del reproductor al interrumpir, errores de
+reproducción, reutilización del proceso de voz, reinicio tras interrupción y
+esfuerzo reducido exclusivamente en General cuando el catálogo lo admite.
+Los reproductores de las pruebas son silenciosos.
+
+Muestras locales sin altavoces, mismas frases antes/después:
+
+| Frase | Antes: WAV completo disponible | Después: primer PCM disponible |
+| --- | ---: | ---: |
+| Español, 28 caracteres, modelo preparado | 533 ms | 69 ms |
+| Español, 136 caracteres, modelo preparado | 1776 ms | 120 ms |
+| Español tras usar inglés | 853 ms | 68 ms |
+
+Preparación inicial: 2,715 s en segundo plano, sin grabación ni reproducción.
+La primera voz inglesa, aún sin cargar, produjo PCM a los 418 ms.
+La integración completa Speech → VoiceWorker → VoiceOutput con reproductor
+silencioso envió su primer fragmento español a los 71 ms, terminó sin errores
+y conservó el proceso preparado. Esto mide entrega al reproductor; no incluye
+STT, Codex, la latencia física de PipeWire ni la de los auriculares.
+
+El modelo configurado sigue siendo el mismo. Se confirmó mediante el catálogo
+del App Server que admite `low`; General lo solicita por turno y los
+especialistas conservan su configuración. Fuente del protocolo:
+[documentación oficial de Codex App Server](https://learn.chatgpt.com/docs/app-server).
+
+En dos muestras por configuración de una pregunta breve, el esfuerzo heredado
+`high` tardó 4,504 y 4,445 s; `low`, 3,861 y 4,269 s. Una prueba posterior del
+bridge completo tardó 5,841 s con arranque y 2,623 s en la continuación inglesa.
+La variación remota sigue siendo relevante: estas pocas muestras no establecen
+un porcentaje de mejora general ni prometen respuestas instantáneas.
+
+`voice-status` expone tiempos internos del último reconocimiento/despacho y
+primera entrega de audio, sin guardar audio ni razonamiento. Interrumpir una
+síntesis termina el proceso para descartar sus fragmentos pendientes; la
+siguiente petición vuelve a cargar los modelos necesarios.

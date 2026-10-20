@@ -11,6 +11,49 @@ from argos.models import ArgosError
 
 
 class VoiceTests(unittest.IsolatedAsyncioTestCase):
+    async def test_stream_starts_before_generation_finishes_and_stop_closes_source(self):
+        started, closed = asyncio.Event(), asyncio.Event()
+        async def chunks():
+            try:
+                yield struct.pack("<h", 12000) * 1920
+                await asyncio.sleep(60)
+            finally:
+                closed.set()
+        with tempfile.TemporaryDirectory() as temp:
+            player = Path(temp) / "silent-stream-player"
+            player.write_text("#!/usr/bin/env python3\nimport sys\nsys.stdin.buffer.read()\n")
+            player.chmod(0o700)
+            voice = VoiceOutput()
+            with patch("argos.voice.shutil.which", return_value=str(player)):
+                try:
+                    await voice.play_stream(chunks(), started.set)
+                    await asyncio.wait_for(started.wait(), 2)
+                    child = voice.process
+                    self.assertFalse(voice.job.done())
+                    self.assertEqual(voice.state, "speaking")
+                    self.assertGreater(voice.level, .3)
+                    await voice.stop()
+                    self.assertTrue(closed.is_set())
+                    self.assertIsNotNone(child.returncode)
+                    self.assertEqual(voice.state, "idle")
+                finally:
+                    await voice.stop()
+
+    async def test_stream_reaches_eof_and_reports_player_failure(self):
+        async def chunks():
+            yield b"\0" * 960
+        with tempfile.TemporaryDirectory() as temp:
+            player = Path(temp) / "failed-stream-player"
+            player.write_text("#!/usr/bin/env python3\nimport sys\nsys.stdin.buffer.read()\nraise SystemExit(7)\n")
+            player.chmod(0o700)
+            voice = VoiceOutput()
+            with patch("argos.voice.shutil.which", return_value=str(player)):
+                await voice.play_stream(chunks())
+                with self.assertRaises(ArgosError):
+                    await voice.job
+                self.assertEqual(voice.state, "error")
+                await voice.stop()
+
     async def test_failed_player_is_visible_instead_of_silent_success(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
