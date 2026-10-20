@@ -23,16 +23,22 @@ class Router:
         text = re.sub(r"^(?:por favor|please)[, ]+", "", text, flags=re.I)
         value = normalize(text)
         panel = re.sub(r"[, ]+(?:por favor|please)$", "", value)
+        panel = re.sub(r"^(?:(?:puedes|podrias)(?: por favor)? |(?:can|could|would) you(?: please)? )", "", panel)
         if re.fullmatch(
-                r"(?:(?:muestrame|muestra|abre|abrir|ver|ensename)(?: a)? )?(?:los |el )?"
-                r"(?:mapa(?: cerebral)? de agentes|diagrama de agentes|agentes)", panel):
+                r"(?:(?:muestrame|muestra|mostrarme|mostrar|abre|abreme|abrir|abrirme|ver|ensename)(?: a)? |"
+                r"(?:quiero|me gustaria) (?:ver|abrir) )?(?:los |el )?"
+                r"(?:mapa(?: cerebral)? de (?:los )?agentes|diagrama de (?:los )?agentes|agentes)"
+                r"(?: de argos)?(?: aqui| en (?:la |otra )?consola)?", panel):
             return Decision("panel", arguments={"view": "agents"})
         if re.fullmatch(
-                r"(?:(?:muestrame|muestra|abre|abrir|ver|ensename) )?(?:el |las )?"
+                r"(?:(?:muestrame|muestra|mostrarme|mostrar|abre|abreme|abrir|abrirme|ver|ensename) |"
+                r"(?:quiero|me gustaria) (?:ver|abrir) )?(?:el |las )?"
                 r"(?:monitor de tareas|panel de tareas|historial de tareas|registro de tareas|log de tareas|"
                 r"log de tasks|tareas|conversaciones de codex)", panel):
             return Decision("panel", arguments={"view": "tasks"})
-        if re.fullmatch(r"(?:show|open)(?: me)? (?:the )?(?:agents|agent map|agent diagram)", panel):
+        if re.fullmatch(r"(?:(?:show|open)(?: me)? )?(?:the )?(?:argos )?"
+                        r"(?:agents|agent map|agent diagram|(?:map|diagram) of (?:the )?(?:argos )?agents)"
+                        r"(?: here| in (?:the |another )?console)?", panel):
             return Decision("panel", arguments={"view": "agents"})
         if re.fullmatch(r"(?:show|open)(?: me)? (?:the )?(?:task monitor|task log|task history|tasks|codex conversations)", panel):
             return Decision("panel", arguments={"view": "tasks"})

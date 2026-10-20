@@ -11,6 +11,7 @@ from argos.core import Core
 from argos.models import ArgosError, Decision
 from argos.monitor import clean, render_map, render_tasks
 from argos.panels import Panels
+from argos.providers import validate_decision
 from argos.router import Router
 from argos.store import Store
 
@@ -146,6 +147,35 @@ class MonitorTests(unittest.IsolatedAsyncioTestCase):
         self.core.panels.open.assert_awaited_once_with("agents", "default")
         self.assertIsNone(first["task_id"])
 
+    async def test_natural_panel_request_uses_one_interpretation_and_records_actual_result(self):
+        self.core.panels = SimpleNamespace(open=AsyncMock(return_value={"status": "requested", "view": "agents"}))
+        decision = validate_decision({"kind": "panel", "speech": "MODEL_CLAIM",
+                                      "agent": "", "capability": "", "arguments": {"view": "agents"}})
+        self.core.interpreter = SimpleNamespace(name="test", decide=AsyncMock(return_value=decision))
+        request = {"method": "say", "text": "I'd like a live view of which ARGOS agents are working.",
+                   "request_id": uuid.uuid4().hex}
+        result = await self.core.request(request)
+        self.assertEqual(result["data"]["view"], "agents")
+        self.assertNotIn("MODEL_CLAIM", result["speech"])
+        self.assertEqual(await self.core.request(request), result)
+        self.core.panels.open.assert_awaited_once_with("agents", "default")
+        self.core.interpreter.decide.assert_awaited_once()
+        context = self.core.interpreter.decide.call_args.args[1]
+        self.assertEqual(context["panels"], ["agents", "tasks"])
+        self.assertEqual(self.core.context(None, "engineering")["panels"], [])
+        self.assertEqual(self.store.tasks("default"), [])
+        messages = self.store.db.execute("SELECT content FROM messages WHERE role='assistant'").fetchall()
+        self.assertEqual(len(messages), 1)
+        self.assertNotIn("MODEL_CLAIM", messages[0]["content"])
+
+    async def test_model_panel_request_cannot_claim_success_when_launcher_is_absent(self):
+        self.core.interpreter = SimpleNamespace(name="test", decide=AsyncMock(
+            return_value=Decision("panel", arguments={"view": "agents"})))
+        self.assertEqual(self.core.context(None)["panels"], [])
+        with self.assertRaises(ArgosError):
+            await self.request("say", text="I'd like a live view of which ARGOS agents are working.")
+        self.assertEqual(self.store.db.execute("SELECT status FROM conversations").fetchone()[0], "FAILED")
+
     async def test_diagram_and_task_views_fit_resize_and_sanitize_control_text(self):
         data = (await self.request())["data"]
         for width, height in ((128, 42), (80, 24), (50, 16)):
@@ -224,10 +254,15 @@ class PanelTests(unittest.IsolatedAsyncioTestCase):
     def test_exact_voice_variants_and_negated_or_quoted_non_actions(self):
         router = Router()
         for text in ("Argos muéstrame a los agentes", "el mapa de agentes", "diagrama de agentes",
-                     "abre el mapa cerebral de agentes", "show me the agent map"):
+                     "abre el mapa cerebral de agentes", "show me the agent map",
+                     "The ARGOS agent diagram here.", "ARGOS, show me the map of agents.",
+                     "¿Puedes abrir el mapa de los agentes?", "Ábreme el diagrama de agentes",
+                     "Quiero ver el mapa de agentes", "Could you show me the ARGOS agent diagram, please?"):
             self.assertEqual(router.resolve(text).arguments, {"view": "agents"}, text)
         for text in ("abre el monitor de tareas", "historial de tareas", "muestra las conversaciones de codex",
                      "open the task monitor"):
             self.assertEqual(router.resolve(text).arguments, {"view": "tasks"}, text)
-        for text in ('no muestres el mapa de agentes', '"abre el mapa de agentes"', 'si digo mapa de agentes qué pasa'):
+        for text in ('no muestres el mapa de agentes', '"abre el mapa de agentes"', 'si digo mapa de agentes qué pasa',
+                     'ARGOS, show me the map of people.', 'What is an agent diagram?',
+                     'Do not open the agent diagram', 'Could you explain the agent diagram?'):
             self.assertEqual(router.resolve(text).kind, "interpret", text)

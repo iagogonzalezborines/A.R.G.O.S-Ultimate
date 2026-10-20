@@ -58,6 +58,11 @@ pestañas de tareas/conversaciones y M abre el mapa. Se usan kitty y curses de
 la biblioteca estándar. El lanzador limita enfoque y geometría a ventanas
 ARGOS identificadas por vista, carpeta de estado y sesión. En Hyprland admite
 el protocolo Lua actual y las órdenes anteriores, sin cambiar reglas persistentes.
+General recibe `context.panels` y puede devolver una decisión `panel` con
+`view=agents|tasks`; Core abre la ventana y registra su propia respuesta.
+La validación rechaza otras vistas, argumentos adicionales y solicitudes de
+panel desde especialistas. Esto permite interpretar peticiones naturales y
+aclaraciones sin limitar la función a frases exactas ni añadir otra inferencia.
 
 ## Codex
 

@@ -85,6 +85,7 @@ class Core:
             "capabilities": [c.public() for c in CAPABILITIES.values()
                              if agent == "general" or c.name in AGENTS[agent].capabilities],
             "agents": catalogue(self.interpreter.name if self.interpreter else "none"),
+            "panels": ["agents", "tasks"] if self.panels is not None and agent == "general" else [],
             "scope": "No source files, credentials, other project tasks or raw logs are supplied.",
         }
 
@@ -371,7 +372,8 @@ class Core:
                 try:
                     decision = await self.interpreter.decide(text, context)
                     self.preparation_errors.pop(conversation_key, None)
-                    response = self._decision(decision, text, project, session)
+                    response = (await self.open_panel(decision.arguments.get("view"), session)
+                                if decision.kind == "panel" else self._decision(decision, text, project, session))
                     thread = (self.interpreter.conversation_thread(context)
                               if hasattr(self.interpreter, "conversation_thread") else None)
                     self.store.finish_conversation(conversation_id, response.speech, thread_id=thread,

@@ -249,3 +249,26 @@ del micrófono SteelSeries.
 Las conversaciones generales empiezan a registrarse con esta versión. El
 historial anterior de tareas permanece disponible, pero no se reconstruyen
 mensajes generales antiguos ni conversaciones de Codex ajenas a ARGOS.
+
+### Apertura contextual de paneles
+
+El fallo posterior quedó reproducido en el registro público: la entrada llegó
+como «ARGOS, show me the map of people.» y el usuario aclaró «The ARGOS agent
+diagram here.». El primer texto era ambiguo; el segundo identificaba el panel,
+pero el esquema del proveedor no permitía solicitar su apertura. Se añadió
+la decisión `panel`, disponibilidad en el contexto de General y ejecución por
+Core, además de variantes directas en ambos idiomas. No se equipara «people»
+a agentes ni se ejecutan frases negadas, citadas o meramente explicativas.
+
+114 pruebas aprobadas. Las regresiones incluyen la aclaración observada,
+variantes naturales, límites de la decisión del proveedor, una sola
+interpretación, idempotencia, ausencia de tareas artificiales y registro de la
+respuesta real del lanzador en lugar de la afirmación del modelo.
+
+Una comprobación manual con Codex real interpretó «I'd like to see which ARGOS
+agents are working; bring up their live diagram.» como apertura de `agents`.
+Usó un Core aislado y un lanzador simulado, sin abrir ventanas ni emitir audio.
+Después se recargó el Core real en reposo, se restauró la consola de voz y se
+envió por IPC la aclaración «The ARGOS agent diagram here.». El lanzador abrió
+el mapa y se verificó la ventana mapeada de 1180 × 780. La voz quedó preparada.
+No se repitió una prueba física de reconocimiento por micrófono.

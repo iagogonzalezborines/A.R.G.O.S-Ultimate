@@ -14,7 +14,7 @@ from .security import safe_data
 DECISION_SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
-        "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability"]},
+        "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability", "panel"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
         "capability": {"type": "string"}, "arguments_json": {"type": "string"},
     },
@@ -278,7 +278,7 @@ class Codex:
                 thread_id = await self.thread(agent, ephemeral=True)
                 self.chat_threads[key] = thread_id
             payload = json.dumps({"request": text, "context": context,
-                                  "output_note": "Encode capability arguments as a JSON string in arguments_json."},
+                                  "output_note": "Encode action arguments (capability or panel) as a JSON string in arguments_json."},
                                  ensure_ascii=False)
             data = await self.turn(thread_id, payload, DECISION_SCHEMA,
                                    effort="low" if thread_id in self.fast_threads else None)

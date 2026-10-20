@@ -52,6 +52,10 @@ de voz sigue en su propia ventana.
 - Si la ventana ya existe, la orden la enfoca. Q cierra solo esa ventana.
   El mapa abre el monitor con T; el monitor abre el mapa con M.
 
+También admite «puedes abrir el mapa de los agentes», «show me the map of agents»
+y «The ARGOS agent diagram here». Las peticiones naturales que no coinciden
+con una orden directa pasan a General, que puede solicitar el mismo panel.
+
 En el monitor: **1–4** filtran todas/en proceso/en espera/finalizadas; **G**
 recorre agentes y **A** quita ese filtro. **↑↓** seleccionan registros, **←→**
 cambian la página del historial, **PgUp/PgDn** desplazan el texto y **[ / ]**

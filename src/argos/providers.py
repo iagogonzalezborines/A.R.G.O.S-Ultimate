@@ -15,7 +15,7 @@ from .security import safe_data
 SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
-        "kind": {"enum": ["answer", "clarify", "delegate", "capability"]},
+        "kind": {"enum": ["answer", "clarify", "delegate", "capability", "panel"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
         "capability": {"type": "string"}, "arguments": {"type": "object"},
     },
@@ -41,7 +41,12 @@ def validate_decision(data, agent="general"):
         raise ArgosError("El proveedor excedió los límites de respuesta.")
     if data["agent"] and data["agent"] not in AGENTS:
         raise ArgosError("El proveedor solicitó un agente inexistente.")
-    if data["kind"] == "capability":
+    if data["kind"] == "panel":
+        if (agent != "general" or data["agent"] or data["capability"]
+                or set(data["arguments"]) != {"view"}
+                or data["arguments"]["view"] not in ("agents", "tasks")):
+            raise ArgosError("El proveedor solicitó un panel no admitido.")
+    elif data["kind"] == "capability":
         cap = CAPABILITIES.get(data["capability"])
         if not cap or (agent != "general" and cap.name not in AGENTS[agent].capabilities):
             raise ArgosError("El proveedor solicitó una capacidad fuera de su alcance.")

@@ -48,6 +48,18 @@ class BoundaryTests(unittest.TestCase):
         with self.assertRaises(ArgosError):
             validate_decision(data, "engineering")
 
+    def test_panel_decision_only_accepts_known_views_and_general_scope(self):
+        data = {"kind": "panel", "speech": "", "agent": "", "capability": "", "arguments": {"view": "agents"}}
+        for view in ("agents", "tasks"):
+            self.assertEqual(validate_decision({**data, "arguments": {"view": view}}).arguments["view"], view)
+        for change in ({"arguments": {}}, {"arguments": {"view": "shell"}},
+                       {"arguments": {"view": "agents", "command": "unexpected"}},
+                       {"agent": "computer"}, {"capability": "apps.open"}):
+            with self.subTest(change=change), self.assertRaises(ArgosError):
+                validate_decision({**data, **change})
+        with self.assertRaises(ArgosError):
+            validate_decision(data, "engineering")
+
     def test_remote_provider_rejected(self):
         for endpoint in ("https://example.com", "http://example.com", "http://user:secret@localhost"):
             with self.assertRaises(ArgosError):
