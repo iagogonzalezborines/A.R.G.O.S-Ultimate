@@ -42,6 +42,7 @@ async def console(directory, project=None):
         raise ArgosError("La esfera necesita una terminal interactiva.")
     # Check connection before entering alternate screen.
     data = (await call(directory, {"method": "voice.state"}))["data"]
+    await call(directory, {"method": "voice.prepare", "project": project})
     keys = asyncio.Queue()
     loop = asyncio.get_running_loop()
     fd = sys.stdin.fileno()

@@ -256,6 +256,13 @@ class Codex:
                 job.cancel()
             await asyncio.gather(*callbacks, return_exceptions=True)
 
+    async def prepare(self, context):
+        """Connect and create the exact conversation thread; no inference turn."""
+        key = (context.get("session", "default"), (context.get("project") or {}).get("id"), "general")
+        async with self.chat_locks.setdefault(key, asyncio.Lock()):
+            if key not in self.chat_threads:
+                self.chat_threads[key] = await self.thread("general", ephemeral=True)
+
     async def decide(self, text, context, agent="general"):
         key = (context.get("session", "default"), (context.get("project") or {}).get("id"), agent)
         lock = self.chat_locks.setdefault(key, asyncio.Lock())

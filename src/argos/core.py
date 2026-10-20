@@ -23,6 +23,8 @@ class Core:
         self.worker_count = workers
         self.workers, self.active, self.inflight = [], {}, {}
         self.dispatches = set()
+        self.preparations = {}
+        self.preparation_errors = {}
         self.execution_slots = asyncio.Semaphore(workers)
         self.resource_locks = {}
         self.session_locks = {}
@@ -42,6 +44,9 @@ class Core:
 
     async def close(self):
         self.closing = True
+        for job in self.preparations.values():
+            job.cancel()
+        await asyncio.gather(*self.preparations.values(), return_exceptions=True)
         for worker in self.workers:
             worker.cancel()
         await asyncio.gather(*self.workers, return_exceptions=True)
@@ -52,6 +57,24 @@ class Core:
         self.store.recover()
         if self.interpreter and hasattr(self.interpreter, "close"):
             await self.interpreter.close()
+
+    def prepare_conversation(self, project=None, session="default"):
+        if not self.interpreter or not hasattr(self.interpreter, "prepare"):
+            return
+        project = self.store.project(project)
+        key = (session, project["id"] if project else None)
+        existing = self.preparations.get(key)
+        if existing and (not existing.done() or key not in self.preparation_errors):
+            return
+        context = {**self.context(project), "session": session}
+        self.preparation_errors.pop(key, None)
+
+        async def prepare():
+            try:
+                await self.interpreter.prepare(context)
+            except (ArgosError, OSError, ValueError, TimeoutError):
+                self.preparation_errors[key] = "No se pudo preparar la conexión de conversación."
+        self.preparations[key] = asyncio.create_task(prepare())
 
     def context(self, project, agent="general"):
         return {
@@ -231,13 +254,24 @@ class Core:
             data["input_device"] = self.capture.input_device if self.capture else None
             worker = getattr(self.speech, "worker", None)
             data["voice_ready"] = getattr(worker, "ready", False)
+            data["preparing"] = (getattr(worker, "preparing", False)
+                                 or any(not job.done() for job in self.preparations.values()))
             data["tts_first_audio_ms"] = getattr(self.speech, "first_audio_ms", None)
             data["last_input_timings"] = getattr(self.capture, "timings", {})
             data["error"] = ((self.capture.last_error if self.capture else None)
                              or (self.speech.last_error if self.speech else None)
                              or getattr(worker, "last_error", None)
+                             or next(iter(self.preparation_errors.values()), None)
                              or (getattr(self.voice, "last_error", None) if self.voice else None))
+            if data["state"] == "idle":
+                if data["error"]:
+                    data["state"] = "error"
+                elif data["preparing"]:
+                    data["state"] = "thinking"
             return Response("", data=data)
+        if method == "voice.prepare":
+            self.prepare_conversation(request.get("project"), request.get("session", "default"))
+            return Response("")
         if method == "voice.toggle":
             if not self.capture:
                 raise ArgosError("El micrófono no está conectado.")
@@ -319,6 +353,7 @@ class Core:
                 context["applications"] = self.application_names()
                 context["projects"] = [p["name"] for p in self.store.projects()]
                 decision = await self.interpreter.decide(text, context)
+                self.preparation_errors.pop((session, project["id"] if project else None), None)
         return self._decision(decision, text, project, session)
 
     def _local(self, decision, session):

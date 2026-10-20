@@ -111,6 +111,19 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
         await self.codex.close()
         self.assertIsNotNone(child.returncode)
 
+    async def test_preparation_reuses_project_thread_without_an_inference_turn(self):
+        context = {"session": "voice", "project": {"id": "project-one"}}
+        with patch.object(self.codex, "rpc", wraps=self.codex.rpc) as rpc:
+            await asyncio.gather(self.codex.prepare(context), self.codex.prepare(context))
+            methods = [call.args[0] for call in rpc.call_args_list]
+            self.assertEqual(methods.count("thread/start"), 1)
+            self.assertNotIn("turn/start", methods)
+            result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
+            with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
+                await self.codex.decide("hola", context)
+            self.assertEqual(turn.call_args.args[0], "thread-one")
+            self.assertEqual([call.args[0] for call in rpc.call_args_list].count("thread/start"), 1)
+
     async def test_general_uses_supported_low_effort_without_changing_model(self):
         result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
         with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:

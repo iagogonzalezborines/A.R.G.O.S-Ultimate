@@ -23,7 +23,8 @@ Reutiliza Core si ya está activo. No configura inicio automático al arrancar L
 | Escape | Detener grabación y voz; las tareas ya encoladas continúan |
 | Q / Ctrl-C | Cerrar la consola; Core continúa |
 
-La esfera es verde mientras escucha, amarilla mientras procesa voz, cian durante
+La esfera es verde mientras escucha, amarilla durante la preparación inicial
+y mientras procesa voz, cian durante
 la reproducción y roja si falla la voz. La amplitud procede del audio PCM enviado al reproductor.
 El micrófono solo se abre al pulsar Espacio y se limita a 30 segundos.
 No hay palabra de activación todavía. El modo de idioma predeterminado es
@@ -122,14 +123,24 @@ interrumpidas se revisan antes de reanudar; no se repiten al arrancar.
 
 Core usa Python 3.11+ y su biblioteca estándar. Voz usa un entorno separado
 Python 3.12 en `~/.local/share/argos/voice-env`, Whisper base/int8 en CPU y
-Pocket TTS con el preset Peter Yearsley, modelos español e inglés. Los modelos
-de reconocimiento y del idioma actual se preparan silenciosamente al arrancar.
-Las voces usadas permanecen en memoria al cambiar español/inglés. No se carga
+Pocket TTS con el preset Peter Yearsley, modelos español e inglés. Al arrancar
+se preparan silenciosamente ambas voces y se ejecuta reconocimiento sobre
+audio sintético generado en memoria; una prueba solo con silencio no prepara
+el reconocimiento completo. La esfera permanece amarilla durante esa preparación
+(unos 5 s en una muestra de este equipo).
+Las voces permanecen en memoria al cambiar español/inglés. No se carga
 un modelo por cada agente. La primera petición puede esperar si la preparación
 aún no ha terminado; interrumpir una síntesis reinicia ese proceso.
 
 La voz se reproduce por fragmentos mientras se genera, sin esperar un WAV
-completo. La conversación General solicita esfuerzo `low` cuando el modelo
+completo. Antes de iniciar la reproducción se acumulan 240 ms de audio para
+absorber pausas iniciales de generación. No se recorta el texto hablado a un
+número de caracteres: la respuesta completa validada llega a la síntesis.
+La extensión depende de la pregunta y del contexto de conversación.
+
+Abrir la consola también conecta Codex y prepara el hilo de la sesión y proyecto
+seleccionados. No envía un turno ficticio ni añade mensajes al historial.
+La conversación General solicita esfuerzo `low` cuando el modelo
 configurado lo admite; los especialistas mantienen su esfuerzo configurado.
 No se cambia de modelo ni de proveedor. Las consultas remotas aún dependen
 de la latencia de Codex y de la complejidad de la petición.

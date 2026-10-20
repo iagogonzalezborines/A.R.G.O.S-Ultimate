@@ -55,6 +55,49 @@ class CoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["speech"], "Hola.")
         self.assertEqual(self.store.tasks(), [])
 
+    async def test_conversation_preparation_is_visible_without_blocking_commands(self):
+        entered, release = asyncio.Event(), asyncio.Event()
+        contexts = []
+        class Provider:
+            name = "test"
+            async def prepare(self, context):
+                contexts.append(context)
+                entered.set()
+                await release.wait()
+        self.core.interpreter = Provider()
+        await self.req("voice.prepare", project="Alpha")
+        await asyncio.wait_for(entered.wait(), 1)
+        await self.req("voice.prepare", project="Alpha")
+        state = (await self.req("voice.state"))["data"]
+        self.assertTrue(state["preparing"])
+        self.assertEqual(state["state"], "thinking")
+        self.assertEqual((await self.req(text="hola"))["speech"], "Hola.")
+        release.set()
+        await asyncio.gather(*self.core.preparations.values())
+        state = (await self.req("voice.state"))["data"]
+        self.assertFalse(state["preparing"])
+        self.assertEqual(state["state"], "idle")
+        self.assertEqual(len(contexts), 1)
+        self.assertEqual(contexts[0]["project"]["name"], "Alpha")
+
+    async def test_failed_preparation_can_be_retried_without_blocking_local_work(self):
+        calls = []
+        class Provider:
+            name = "test"
+            async def prepare(self, context):
+                calls.append(context)
+                if len(calls) == 1:
+                    raise ArgosError("offline")
+        self.core.interpreter = Provider()
+        await self.req("voice.prepare")
+        await asyncio.gather(*self.core.preparations.values())
+        state = (await self.req("voice.state"))["data"]
+        self.assertEqual(state["state"], "error")
+        self.assertEqual((await self.req(text="hola"))["speech"], "Hola.")
+        await self.req("voice.prepare")
+        await asyncio.gather(*self.core.preparations.values())
+        self.assertIsNone((await self.req("voice.state"))["data"]["error"])
+
     async def test_real_system_capability(self):
         response = await self.req("run", capability="system.info")
         self.assertEqual(response["data"]["status"], "QUEUED")

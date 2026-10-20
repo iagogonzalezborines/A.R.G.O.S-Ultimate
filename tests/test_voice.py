@@ -11,11 +11,59 @@ from argos.models import ArgosError
 
 
 class VoiceTests(unittest.IsolatedAsyncioTestCase):
+    async def test_initial_buffer_waits_for_more_audio_and_preserves_every_byte(self):
+        initial, release = asyncio.Event(), asyncio.Event()
+        pcm = struct.pack("<h", 1234) * 8000 + struct.pack("<h", 2345) * 137
+        async def chunks():
+            yield pcm[:3840]
+            initial.set()
+            await release.wait()
+            yield pcm[3840:11520]
+            yield pcm[11520:]
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            recorded = root / "received.pcm"
+            player = root / "silent-player"
+            player.write_text("#!/usr/bin/env python3\nimport sys,pathlib\n"
+                              f"pathlib.Path({str(recorded)!r}).write_bytes(sys.stdin.buffer.read())\n")
+            player.chmod(0o700)
+            voice = VoiceOutput()
+            with patch("argos.voice.shutil.which", return_value=str(player)):
+                try:
+                    await voice.play_stream(chunks())
+                    await asyncio.wait_for(initial.wait(), 2)
+                    self.assertIsNone(voice.process)
+                    self.assertEqual(voice.state, "thinking")
+                    release.set()
+                    await asyncio.wait_for(voice.job, 2)
+                    self.assertEqual(recorded.read_bytes(), pcm)
+                    self.assertEqual(voice.state, "idle")
+                finally:
+                    await voice.stop()
+
+    async def test_short_utterance_below_buffer_threshold_is_not_discarded(self):
+        pcm = struct.pack("<h", 2345) * 480
+        async def chunks():
+            yield pcm
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            recorded = root / "received.pcm"
+            player = root / "silent-player"
+            player.write_text("#!/usr/bin/env python3\nimport sys,pathlib\n"
+                              f"pathlib.Path({str(recorded)!r}).write_bytes(sys.stdin.buffer.read())\n")
+            player.chmod(0o700)
+            voice = VoiceOutput()
+            with patch("argos.voice.shutil.which", return_value=str(player)):
+                await voice.play_stream(chunks())
+                await voice.job
+                self.assertEqual(recorded.read_bytes(), pcm)
+                await voice.stop()
+
     async def test_stream_starts_before_generation_finishes_and_stop_closes_source(self):
         started, closed = asyncio.Event(), asyncio.Event()
         async def chunks():
             try:
-                yield struct.pack("<h", 12000) * 1920
+                yield struct.pack("<h", 12000) * 5760
                 await asyncio.sleep(60)
             finally:
                 closed.set()

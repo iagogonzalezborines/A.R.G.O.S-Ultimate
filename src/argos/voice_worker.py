@@ -95,14 +95,18 @@ def main():
                                           request.get("previous_language", "es"))
                 elif request["op"] == "warmup":
                     import numpy as np
-                    # Synthetic silence and discarded speech: never record or play audio.
-                    segments, _ = recognizer().transcribe(np.zeros(16000, dtype=np.float32),
-                                                          language="es", vad_filter=True)
-                    list(segments)
                     language = request.get("language", "es")
-                    tts, state = voice(language)
-                    for _ in tts.generate_audio_stream(state, "Hola." if language == "es" else "Hello."):
-                        pass
+                    # Exercise both TTS voices and the actual STT encoder/decoder.
+                    # Silence with VAD skips recognition and leaves it cold.
+                    for selected in (language, "en" if language == "es" else "es"):
+                        tts, state = voice(selected)
+                        phrase = ("Hola, estoy listo para conversar." if selected == "es"
+                                  else "Hello, I am ready to talk.")
+                        audio = np.concatenate([chunk.detach().cpu().flatten().numpy()
+                                                for chunk in tts.generate_audio_stream(state, phrase)])
+                        samples = np.interp(np.arange(0, len(audio), tts.sample_rate / 16000),
+                                            np.arange(len(audio)), audio).astype(np.float32)
+                        transcribe(recognizer(), samples, selected)
                     response = {"ok": True}
                 else:
                     response = {"ok": False, "error": "Operación de voz desconocida."}

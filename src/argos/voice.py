@@ -97,29 +97,46 @@ class VoiceOutput:
         proc = None
         deadline = time.monotonic()
         first = True
+
+        async def feed(data):
+            nonlocal proc, deadline, first
+            if not proc:
+                args = (["--raw", "--rate=24000", "--channels=1", "--format=s16",
+                         "--latency=80ms", "-"] if Path(player).name != "aplay"
+                        else ["-t", "raw", "-r", "24000", "-c", "1", "-f", "S16_LE", "-"])
+                proc = self.process = await asyncio.create_subprocess_exec(
+                    player, *args, stdin=asyncio.subprocess.PIPE,
+                    stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+                deadline = time.monotonic()
+            # Feed and meter at 20 ms intervals, without accumulating clock drift.
+            for offset in range(0, len(data), 960):
+                frame = data[offset:offset + 960]
+                proc.stdin.write(frame)
+                await proc.stdin.drain()
+                self.level, self.state = rms16(frame), "speaking"
+                if first:
+                    first = False
+                    if first_audio:
+                        first_audio()
+                deadline = max(deadline + len(frame) / 48000, time.monotonic())
+                await asyncio.sleep(max(0, deadline - time.monotonic()))
+
         try:
+            pending = bytearray()
             async with contextlib.aclosing(chunks):
                 async for data in chunks:
+                    # Collect 240 ms of PCM before opening the player. Starting
+                    # at the very first 80 ms chunk exposes cold-generation stalls.
                     if not proc:
-                        args = (["--raw", "--rate=24000", "--channels=1", "--format=s16",
-                                 "--latency=80ms", "-"] if Path(player).name != "aplay"
-                                else ["-t", "raw", "-r", "24000", "-c", "1", "-f", "S16_LE", "-"])
-                        proc = self.process = await asyncio.create_subprocess_exec(
-                            player, *args, stdin=asyncio.subprocess.PIPE,
-                            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
-                    # Feed and meter at 20 ms intervals. The subprocess pipe and
-                    # worker reader are bounded; a long answer cannot grow a PCM queue.
-                    for offset in range(0, len(data), 960):
-                        frame = data[offset:offset + 960]
-                        proc.stdin.write(frame)
-                        await proc.stdin.drain()
-                        self.level, self.state = rms16(frame), "speaking"
-                        if first:
-                            first = False
-                            if first_audio:
-                                first_audio()
-                        deadline = max(deadline + len(frame) / 48000, time.monotonic())
-                        await asyncio.sleep(max(0, deadline - time.monotonic()))
+                        pending.extend(data)
+                        if len(pending) < 11520:
+                            continue
+                        data = bytes(pending)
+                        pending.clear()
+                    await feed(data)
+                # Very short utterances must still be played in full at EOF.
+                if pending:
+                    await feed(bytes(pending))
                 if proc:
                     proc.stdin.close()
                     await asyncio.wait_for(proc.wait(), 5)

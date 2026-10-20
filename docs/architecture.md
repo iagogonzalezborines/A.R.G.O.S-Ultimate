@@ -11,7 +11,7 @@ CLI ────────────────┴→ Core → intención c
                                                         ↓
                                        evidencia SQLite → resultado
                                                         ↓
-                                 Pocket TTS → WAV → PipeWire → RMS → esfera
+                                 Pocket TTS → PCM progresivo → PipeWire → RMS → esfera
 ```
 
 Core, consola y proceso de voz tienen ciclos de vida distintos. Cerrar la consola
@@ -37,6 +37,10 @@ que un proyecto atasque a los demás.
 Se comparte un App Server; cada tarea especialista conserva `thread_id`.
 General mantiene hilos efímeros por sesión/proyecto. Los turnos tienen salida
 estructurada y no se añade una segunda llamada de Persona.
+Al abrir la consola se prepara el mismo hilo de sesión/proyecto que utilizará
+la primera petición. Esto establece la conexión y el hilo sin ejecutar inferencia
+ni introducir mensajes ficticios. Preparación y primera petición comparten el
+mismo bloqueo para no crear hilos duplicados.
 
 El proceso se inicia con herramientas nativas, plugins, apps y descubrimiento
 de skills desactivados. Usa una carpeta vacía de ARGOS, sandbox de lectura y
@@ -103,6 +107,16 @@ puede diferir por el buffer físico del dispositivo.
 El entorno de voz se instala explícitamente con versiones fijadas, separado
 del Python del sistema. El runtime no descarga modelos ni guarda grabaciones.
 Las pruebas de modelo usan audio generado y no comprueban el micrófono físico.
+Al arrancar se sintetizan frases de prueba en ambos idiomas en memoria y se
+transcriben para preparar también el codificador y decodificador de Whisper.
+Usar silencio con VAD no ejercita ese recorrido. La esfera refleja la preparación
+en amarillo y el diagnóstico expone sus errores sin bloquear capacidades locales.
+
+La reproducción comienza con una reserva de 240 ms de PCM y continúa mientras
+se sintetiza el resto. La reserva es audio disponible, no una espera fija de
+240 ms; normalmente se genera más rápido que su duración. Se conserva el final
+del audio, incluso si una frase completa es menor que esa reserva. La brevedad
+se expresa en el contrato de conversación y nunca con un recorte del texto.
 
 ## Siguientes integraciones
 

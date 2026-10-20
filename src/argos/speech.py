@@ -32,6 +32,7 @@ class VoiceWorker:
         self.process = None
         self.lock = asyncio.Lock()
         self.ready = False
+        self.preparing = False
         self.last_error = None
 
     async def _responses(self, message):
@@ -83,10 +84,13 @@ class VoiceWorker:
                     yield pcm
 
     async def warmup(self, language):
+        self.preparing = True
         try:
             await self.request({"op": "warmup", "language": language})
         except (ArgosError, OSError, ValueError, TimeoutError) as error:
             self.last_error = str(error)
+        finally:
+            self.preparing = False
 
     async def close(self):
         if self.process and self.process.returncode is None:
@@ -114,11 +118,11 @@ class Speech:
 
     def enqueue(self, text, language=None):
         language = language or self.language
-        # Spoken output is concise; the full structured result remains in the task.
+        # Brevity belongs to the conversation contract, never a character slice.
         text = re.sub(r"https?://\S+", "link in the details" if language == "en" else "enlace en los detalles", text)
         text = re.sub(r"[`*_#]", "", text).strip()
         if text and not self.queue.full():
-            self.queue.put_nowait((text[:1200], language))
+            self.queue.put_nowait((text, language))
             self.resume_queue()
 
     def resume_queue(self):

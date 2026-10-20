@@ -24,6 +24,19 @@ class SilentOutput:
 
 
 class SpeechTests(unittest.IsolatedAsyncioTestCase):
+    async def test_long_response_reaches_synthesis_without_cutting_the_ending(self):
+        observed = []
+        class Worker:
+            async def chunks(self, text, language):
+                observed.append(text)
+                yield b"\0\0"
+        text = "Una explicación que conserva todo su contexto. " * 40 + "Este es el final completo."
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
+            speech.enqueue(text)
+            await speech.job
+        self.assertEqual(observed, [text])
+
     async def test_auto_recognition_passes_evidence_to_core_without_mutating_voice(self):
         with tempfile.TemporaryDirectory() as temp:
             speech = Speech(None, None, Path(temp))

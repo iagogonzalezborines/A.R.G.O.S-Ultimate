@@ -175,3 +175,43 @@ un porcentaje de mejora general ni prometen respuestas instantáneas.
 primera entrega de audio, sin guardar audio ni razonamiento. Interrumpir una
 síntesis termina el proceso para descartar sus fragmentos pendientes; la
 siguiente petición vuelve a cargar los modelos necesarios.
+
+## Primera conversación y conservación de respuestas
+
+Tras el informe de cortes solo al comenzar, se revisó la preparación: el
+calentamiento anterior usaba silencio con VAD y solo preparaba la voz del último
+idioma. La nueva preparación sintetiza y transcribe frases de ambos idiomas en
+memoria. La consola también prepara la conexión y el hilo Codex del proyecto
+seleccionado, sin ejecutar un turno de inferencia ficticio. El estado muestra
+la preparación; las capacidades locales siguen disponibles.
+
+Se añade una reserva inicial de 240 ms de PCM. No demuestra por sí sola que
+todos los cortes físicos estuvieran causados por falta de buffer, pero evita
+iniciar el reproductor con un único fragmento de 80 ms. Se elimina también
+el recorte de síntesis a 1200 caracteres y la cuota de una o dos frases del
+contrato. Las respuestas recientes inspeccionadas no excedían ese recorte,
+por lo que no se atribuye a él el problema de arranque observado por el usuario.
+
+97 pruebas aprobadas. Las nuevas regresiones comprueban conservación completa
+de respuestas largas, espera del buffer inicial, igualdad exacta del PCM
+generado y entregado (incluido el último fragmento), frases menores que el
+buffer, preparación no bloqueante y reintento tras fallo, y reutilización del
+hilo preparado sin una llamada adicional al modelo.
+
+Desde un proceso de voz nuevo, con reproductor silencioso:
+
+- Preparación completa de ambos idiomas: 5,006 s.
+- Primera frase española después de preparar: primera entrega en 150 ms,
+  8 s de audio; transcripción posterior en 1,115 s conservó la frase final.
+- Primera frase inglesa: primera entrega en 132 ms, 6,48 s de audio;
+  transcripción posterior en 1,102 s conservó la frase final.
+
+Estas muestras incluyen el nuevo buffer y no usan micrófono ni altavoces.
+No prueban percepción acústica en los auriculares, conversación sin pulsador,
+ni latencia de inferencia remota. La preparación de Codex abre conexión/hilo;
+el cálculo de la primera respuesta sigue ocurriendo al recibir la petición.
+
+Codex real: preparar conexión/hilo tardó 0,229 s; la primera respuesta solicitada
+en cuatro frases completas tardó 6,614 s y conservó las cuatro frases. Se usó
+el mismo hilo preparado. Esta medición confirma que preparar la conexión no
+elimina la espera de inferencia remota.
