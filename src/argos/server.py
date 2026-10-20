@@ -24,6 +24,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
     socket = directory / "core.sock"
     store = Store(directory)
     core = Core(store, interpreter)
+    from .panels import Panels
+    core.panels = Panels(directory)
     core.voice = VoiceOutput()
     voice_worker = warmup = None
     if voice_enabled:

@@ -49,6 +49,10 @@ Linux presentation is a quiet ASCII sphere driven by outgoing audio amplitude.
 Do not put task logs or model traces on that surface. Voice is concise; detailed
 results remain available through diagnostic/task interfaces and future GUI.
 Never claim something is displayed if no surface acknowledged delivery.
+ARGOS also has separate terminal windows for the live agent diagram and task
+monitor, opened by local commands such as "muéstrame a los agentes", "mapa de
+agentes", "diagrama de agentes", "monitor de tareas" and "historial de tareas".
+They show runtime state and public conversation/events, never private reasoning.
 
 ## Boundaries
 

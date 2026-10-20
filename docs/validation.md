@@ -215,3 +215,37 @@ Codex real: preparar conexión/hilo tardó 0,229 s; la primera respuesta solicit
 en cuatro frases completas tardó 6,614 s y conservó las cuatro frases. Se usó
 el mismo hilo preparado. Esta medición confirma que preparar la conexión no
 elimina la espera de inferencia remota.
+
+## Mapa de agentes y monitor de actividad
+
+111 pruebas automáticas aprobadas. Cubren proyecciones de agentes ocupados,
+en cola y en espera; historial paginado de 109 tareas; aislamiento por sesión;
+conversaciones durante un turno y después de una interrupción; paginación de
+mensajes completos; migración aditiva desde SQLite v1; comandos de voz exactos
+y rechazo de frases negadas o citadas. El sondeo no escribe solicitudes en SQLite.
+Los eventos mostrados excluyen cuerpos de herramientas y razonamiento interno.
+
+Una prueba con pseudo-terminal abre el monitor, cambia entre tareas y
+conversaciones, redimensiona de 100 × 32 a 80 × 24 y cierra el panel sin detener
+Core. El lanzador se prueba con procesos simulados: reutilización de ventana,
+enfoque y elevación por dirección exacta, y compatibilidad Lua/legacy de Hyprland.
+Las pruebas automáticas no abren aplicaciones reales ni usan micrófono o altavoces.
+
+La activación local conserva las tres tareas históricas y muestra los seis
+agentes registrados. Antes de migrar se creó una copia consistente y privada en
+`~/.local/state/argos/backups/before-monitors-20261020-141115.sqlite`.
+Los paneles reales se comprobaron en kitty, como ventanas flotantes de
+1180 × 780. En Hyprland 0.56.2, enfocar una ventana no bastaba para situarla por
+encima de otra: se añadió elevación explícita de esa misma ventana, siguiendo
+los [dispatchers oficiales de Hyprland](https://wiki.hypr.land/configuring/core/dispatchers/).
+
+Treinta consultas IPC de la proyección tardaron una mediana de 0,477 ms y un
+máximo de 0,761 ms en este equipo. No incluyen reconocimiento de voz, inferencia
+ni renderizado; los paneles actualizan sus datos aproximadamente cada 750 ms.
+Las órdenes se verificaron por la entrada textual compartida con la voz, sin
+una nueva prueba acústica. Se conservaron el idioma automático y la selección
+del micrófono SteelSeries.
+
+Las conversaciones generales empiezan a registrarse con esta versión. El
+historial anterior de tareas permanece disponible, pero no se reconstruyen
+mensajes generales antiguos ni conversaciones de Codex ajenas a ARGOS.

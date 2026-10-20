@@ -31,6 +31,33 @@ que un proyecto atasque a los demás.
 - `speech.py`, `voice_worker.py`: cola de voz, captura y proceso local de modelos.
 - `voice.py`, `console.py`: reproducción, RMS y esfera sin transcript.
 - `server.py`, `transport.py`, `launcher.py`: socket, exclusión del Core y apertura.
+- `telemetry.py`, `monitor.py`, `panels.py`: proyecciones de solo lectura,
+  diagrama/monitor de terminal y apertura/enfoque de ventanas propias.
+
+## Observación
+
+`monitor.snapshot` devuelve estados de agentes, contadores y páginas de tareas
+o conversaciones de la sesión seleccionada. `monitor.detail` devuelve páginas
+de mensajes públicos o eventos de un registro de esa misma sesión. Ambas rutas
+son de lectura y no escriben el caché de solicitudes al sondear. El estado de
+ocupación procede de RUNNING/QUEUED y las esperas tienen categoría propia.
+La conexión verificada del proveedor se distingue de su mera configuración.
+
+General registra entrada y respuesta visible en `conversations` y `messages`,
+vinculadas a sesión, proyecto e hilo; una respuesta que delega lleva también el
+ID de tarea. Los especialistas reutilizan sus eventos existentes: objetivo,
+preguntas, respuestas, progreso público y resultados de capacidades. No se
+serializan trazas ni eventos internos de razonamiento del proveedor.
+Al recuperar Core, los turnos RUNNING pasan a INTERRUPTED sin reproducirse.
+La migración aditiva SQLite de versión 1 a 2 conserva proyectos, tareas y eventos.
+
+El diagrama y monitor se ejecutan en procesos separados. Su cierre no afecta
+al Core, y no hay controles que aprueben ni cancelen trabajo desde estas vistas.
+El mapa mantiene siempre su función; T abre la otra ventana. El monitor tiene
+pestañas de tareas/conversaciones y M abre el mapa. Se usan kitty y curses de
+la biblioteca estándar. El lanzador limita enfoque y geometría a ventanas
+ARGOS identificadas por vista, carpeta de estado y sesión. En Hyprland admite
+el protocolo Lua actual y las órdenes anteriores, sin cambiar reglas persistentes.
 
 ## Codex
 

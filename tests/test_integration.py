@@ -146,3 +146,47 @@ class DaemonTests(unittest.IsolatedAsyncioTestCase):
                 console.kill()
                 await console.wait()
             os.close(master)
+
+    async def test_monitor_switches_views_resizes_and_closes_without_stopping_core(self):
+        import pty
+        import termios
+        master, slave = pty.openpty()
+        termios.tcsetwinsize(slave, (32, 100))
+        panel = await asyncio.create_subprocess_exec(
+            sys.executable, str(ROOT / "argos"), "--state-dir", str(self.state), "monitor", "tasks",
+            stdin=slave, stdout=slave, stderr=slave, env={**os.environ, "TERM": "xterm-256color"})
+        os.close(slave)
+        os.set_blocking(master, False)
+        output = bytearray()
+        def drain():
+            while True:
+                try:
+                    chunk = os.read(master, 65536)
+                    if not chunk:
+                        break
+                    output.extend(chunk)
+                except OSError:
+                    break
+        try:
+            for key in (b"", b"t", b"c", b"t"):
+                if key:
+                    os.write(master, key)
+                for _ in range(5):
+                    await asyncio.sleep(.04)
+                    drain()
+            termios.tcsetwinsize(master, (24, 80))
+            await asyncio.sleep(.15)
+            drain()
+            os.write(master, b"q")
+            await asyncio.wait_for(panel.wait(), 3)
+            drain()
+            self.assertEqual(panel.returncode, 0, output.decode(errors="replace"))
+            self.assertIn(b"TAREAS", output)
+            self.assertIn(b"CONVERSACIONES", output)
+            self.assertNotIn(b"Traceback", output)
+            self.assertEqual((await call(self.state, {"method": "say", "text": "hola"}))["speech"], "Hola.")
+        finally:
+            if panel.returncode is None:
+                panel.kill()
+                await panel.wait()
+            os.close(master)

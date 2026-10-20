@@ -15,6 +15,7 @@ take precedence.
 - Never enable an unimplemented capability in the advertised registry.
 - Preserve explicit scope, idempotency and recovery without effect replay.
 - Linux normal console contains voice feedback only; diagnostics use CLI commands.
+- Separate, user-requested monitor windows show agent diagrams and public task/conversation telemetry.
 - Model or provider changes, installation of large models, printer actuation
   and activation of a new executable must be deliberate, reviewable operations.
 - Test with `PYTHONPATH=src python -m unittest discover -s tests -v`.

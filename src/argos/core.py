@@ -25,6 +25,8 @@ class Core:
         self.dispatches = set()
         self.preparations = {}
         self.preparation_errors = {}
+        self.conversation_ids = {}
+        self.panels = None
         self.execution_slots = asyncio.Semaphore(workers)
         self.resource_locks = {}
         self.session_locks = {}
@@ -90,7 +92,8 @@ class Core:
         safe_data(message)
         if not isinstance(message, dict):
             raise ArgosError("Petición inválida.")
-        if message.get("method") in ("projects.list", "agents", "tasks", "task", "voice.state", "voice.inputs"):
+        if message.get("method") in ("projects.list", "agents", "tasks", "task", "voice.state", "voice.inputs",
+                                     "monitor.snapshot", "monitor.detail"):
             # Observation has no effects. Never persist audio meter samples or
             # issue SQLite writes for console/status polling.
             return (await self._dispatch(message)).json()
@@ -137,6 +140,12 @@ class Core:
         method = request.get("method", "say")
         session = request.get("session", "default")
         public_text(session, 100)
+        if method in ("monitor.snapshot", "monitor.detail"):
+            from .telemetry import snapshot, detail
+            return Response("", data=snapshot(self, request) if method.endswith("snapshot")
+                            else detail(self, request))
+        if method == "monitor.open":
+            return await self.open_panel(request.get("view"), session)
         if method == "projects.add":
             project = self.store.add_project(request["name"], request["path"])
             return Response(f"Proyecto {project['name']} registrado.", data=project)
@@ -305,6 +314,8 @@ class Core:
             self.speech.language = language
         project = self.store.project(request.get("project"))
         decision = self.router.resolve(text)
+        if decision.kind == "panel":
+            return await self.open_panel(decision.arguments["view"], session)
         if decision.kind == "language":
             language = decision.arguments["language"]
             self.reply_language.set(language)
@@ -352,9 +363,36 @@ class Core:
                 context["session"] = session
                 context["applications"] = self.application_names()
                 context["projects"] = [p["name"] for p in self.store.projects()]
-                decision = await self.interpreter.decide(text, context)
-                self.preparation_errors.pop((session, project["id"] if project else None), None)
+                conversation_key = (session, project["id"] if project else None)
+                conversation_id = self.store.begin_conversation(
+                    self.conversation_ids.get(conversation_key), session, conversation_key[1],
+                    self.interpreter.name, text)
+                self.conversation_ids[conversation_key] = conversation_id
+                try:
+                    decision = await self.interpreter.decide(text, context)
+                    self.preparation_errors.pop(conversation_key, None)
+                    response = self._decision(decision, text, project, session)
+                    thread = (self.interpreter.conversation_thread(context)
+                              if hasattr(self.interpreter, "conversation_thread") else None)
+                    self.store.finish_conversation(conversation_id, response.speech, thread_id=thread,
+                                                   task_id=response.task_id)
+                    return response
+                except asyncio.CancelledError:
+                    self.store.finish_conversation(conversation_id, "El turno se interrumpió.", "INTERRUPTED")
+                    raise
+                except Exception:
+                    self.store.finish_conversation(conversation_id, "No se pudo completar el turno.", "FAILED")
+                    raise
         return self._decision(decision, text, project, session)
+
+    async def open_panel(self, view, session):
+        if view not in ("agents", "tasks"):
+            raise ArgosError("Panel desconocido.")
+        if self.panels is None:
+            raise ArgosError("El lanzador de paneles no está conectado.")
+        result = await self.panels.open(view, session)
+        speech = "He solicitado abrir el mapa de agentes." if view == "agents" else "He solicitado abrir el monitor de tareas."
+        return Response(speech, data=result)
 
     def _local(self, decision, session):
         kind = decision.kind

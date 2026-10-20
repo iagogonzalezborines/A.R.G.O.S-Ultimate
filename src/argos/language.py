@@ -61,6 +61,8 @@ def localize(text, language):
     exact = {
         "Hola.": "Hello.", "Buenas.": "Hello.", "De nada.": "You're welcome.",
         "De acuerdo.": "Understood.",
+        "He solicitado abrir el mapa de agentes.": "I requested opening the agent map.",
+        "He solicitado abrir el monitor de tareas.": "I requested opening the task monitor.",
         "Petición aceptada.": "Request accepted.",
         "Petición aceptada por el especialista.": "Request accepted by the specialist.",
         "No hay tareas activas.": "There are no active tasks.",

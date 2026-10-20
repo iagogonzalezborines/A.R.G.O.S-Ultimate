@@ -31,7 +31,7 @@ class Store:
         self.db = sqlite3.connect(directory / "argos.sqlite")
         os.chmod(directory / "argos.sqlite", 0o600)
         self.db.row_factory = sqlite3.Row
-        if self.db.execute("PRAGMA user_version").fetchone()[0] not in (0, 1):
+        if self.db.execute("PRAGMA user_version").fetchone()[0] not in (0, 1, 2):
             self.db.close()
             raise ArgosError("Esta base de datos requiere otra versión de ARGOS.")
         self.db.executescript("""
@@ -53,7 +53,19 @@ class Store:
                 id TEXT PRIMARY KEY, digest TEXT NOT NULL, response TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
             CREATE INDEX IF NOT EXISTS task_session ON tasks(session,updated);
-            PRAGMA user_version=1;
+            CREATE INDEX IF NOT EXISTS task_activity ON tasks(session,agent,status,updated);
+            CREATE TABLE IF NOT EXISTS conversations(
+                id TEXT PRIMARY KEY, session TEXT NOT NULL, project TEXT REFERENCES projects(id),
+                provider TEXT NOT NULL, thread_id TEXT, status TEXT NOT NULL,
+                title TEXT NOT NULL, created REAL NOT NULL, updated REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS messages(
+                seq INTEGER PRIMARY KEY AUTOINCREMENT, conversation TEXT NOT NULL REFERENCES conversations(id),
+                role TEXT NOT NULL, content TEXT NOT NULL, task_id TEXT REFERENCES tasks(id), created REAL NOT NULL);
+            CREATE INDEX IF NOT EXISTS conversation_session ON conversations(session,updated);
+            CREATE INDEX IF NOT EXISTS conversation_activity ON conversations(session,status,updated);
+            CREATE INDEX IF NOT EXISTS message_conversation ON messages(conversation,seq);
+            CREATE INDEX IF NOT EXISTS event_task ON events(task,seq);
+            PRAGMA user_version=2;
         """)
         self.db.commit()
 
@@ -178,6 +190,34 @@ class Store:
         for task_id in ids:
             self.update(task_id, Status.INTERRUPTED,
                         question="El Core se detuvo. Revisa la tarea antes de reanudar.")
+        with self.db:
+            self.db.execute("UPDATE conversations SET status='INTERRUPTED',updated=? WHERE status='RUNNING'",
+                            (time.time(),))
+
+    def begin_conversation(self, conversation_id, session, project, provider, text):
+        public_text(text)
+        now = time.time()
+        with self.db:
+            if conversation_id is None:
+                conversation_id = uuid.uuid4().hex
+                self.db.execute("INSERT INTO conversations VALUES (?,?,?,?,?,?,?,?,?)",
+                                (conversation_id, session, project, provider, None, "RUNNING", text[:200], now, now))
+            else:
+                self.db.execute("UPDATE conversations SET status='RUNNING',updated=? WHERE id=?",
+                                (now, conversation_id))
+            self.db.execute("INSERT INTO messages(conversation,role,content,created) VALUES (?,?,?,?)",
+                            (conversation_id, "user", text, now))
+        return conversation_id
+
+    def finish_conversation(self, conversation_id, text, status="IDLE", thread_id=None, task_id=None):
+        safe_data({"text": text, "thread_id": thread_id})
+        with self.db:
+            self.db.execute("UPDATE conversations SET status=?,thread_id=COALESCE(?,thread_id),updated=? WHERE id=?",
+                            (status, thread_id, time.time(), conversation_id))
+            if text:
+                self.db.execute(
+                    "INSERT INTO messages(conversation,role,content,task_id,created) VALUES (?,?,?,?,?)",
+                    (conversation_id, "assistant" if status == "IDLE" else "system", text, task_id, time.time()))
 
     def cached(self, key, digest):
         row = self.db.execute("SELECT * FROM requests WHERE id=?", (key,)).fetchone()

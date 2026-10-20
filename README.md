@@ -37,6 +37,50 @@ Ejemplos: «hola», «abre Firefox», «lista las ventanas», «enfoca Firefox»
 «busca en la web documentación de Python», «qué estás haciendo»,
 «activa modo gaming».
 
+## Mapa de agentes y monitor de tareas
+
+Son dos ventanas de terminal independientes, actualizadas en directo. La esfera
+de voz sigue en su propia ventana.
+
+- «Argos, muéstrame a los agentes», «mapa de agentes» o «diagrama de agentes» abre
+  un diagrama con Core en el centro y los seis agentes conectados. Cada nodo
+  muestra su nombre, disponibilidad, ocupación o espera y actividad actual.
+  TAB o flechas seleccionan un agente para ver su rol, capacidades y proveedor.
+- «Abre el monitor de tareas», «historial de tareas» o «conversaciones de Codex»
+  abre tareas con objetivo, estado, agente, proyecto, hilo y secuencia de eventos.
+  C muestra conversaciones generales mantenidas a través de ARGOS; T vuelve a tareas.
+- Si la ventana ya existe, la orden la enfoca. Q cierra solo esa ventana.
+  El mapa abre el monitor con T; el monitor abre el mapa con M.
+
+En el monitor: **1–4** filtran todas/en proceso/en espera/finalizadas; **G**
+recorre agentes y **A** quita ese filtro. **↑↓** seleccionan registros, **←→**
+cambian la página del historial, **PgUp/PgDn** desplazan el texto y **[ / ]**
+consultan eventos o mensajes anteriores/posteriores del registro seleccionado.
+El texto sigue los eventos nuevos; PgUp permite revisar lo anterior y F vuelve
+al seguimiento en directo.
+Una conversación sin turno activo se distingue de una tarea finalizada.
+
+```bash
+./argos monitor agents --open
+./argos monitor tasks --open
+# Dentro de la terminal actual:
+./argos monitor agents
+./argos monitor tasks
+```
+
+Las vistas corresponden a la sesión seleccionada (`--session`, por defecto
+`default`). Muestran datos registrados por Core; no consultan al modelo para
+actualizarse. Incluyen el historial de tareas existente. Los mensajes de
+conversación general empiezan a registrarse con esta versión: no se recuperan
+conversaciones antiguas ni otros chats de Codex ajenos a ARGOS. Solo se muestran
+mensajes públicos, preguntas, resultados y comentarios de progreso, sin
+razonamiento interno. Estos mensajes se conservan en la base local privada.
+
+Los paneles son de observación; las respuestas a preguntas, aprobaciones y
+cancelaciones siguen usando las interfaces ya existentes. Al perder conexión,
+indican que sus datos han dejado de actualizarse y vuelven a conectar cuando
+Core está disponible.
+
 ## Qué ejecuta
 
 | Rol | Capacidades conectadas |

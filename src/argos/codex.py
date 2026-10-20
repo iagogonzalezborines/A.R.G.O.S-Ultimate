@@ -51,6 +51,7 @@ class Codex:
         self.start_lock = asyncio.Lock()
         self.chat_locks, self.chat_threads = {}, {}
         self.fast_models, self.fast_threads = set(), set()
+        self.connected = False
 
     async def start(self):
         async with self.start_lock:
@@ -88,6 +89,7 @@ class Codex:
                 self.fast_models = {model["model"] for model in models.get("data", [])
                                     if any(option.get("reasoningEffort") == "low"
                                            for option in model.get("supportedReasoningEfforts", []))}
+                self.connected = True
             except BaseException:
                 await self.close()
                 raise
@@ -263,6 +265,10 @@ class Codex:
             if key not in self.chat_threads:
                 self.chat_threads[key] = await self.thread("general", ephemeral=True)
 
+    def conversation_thread(self, context):
+        key = (context.get("session", "default"), (context.get("project") or {}).get("id"), "general")
+        return self.chat_threads.get(key)
+
     async def decide(self, text, context, agent="general"):
         key = (context.get("session", "default"), (context.get("project") or {}).get("id"), agent)
         lock = self.chat_locks.setdefault(key, asyncio.Lock())
@@ -301,6 +307,7 @@ class Codex:
         return result
 
     async def close(self):
+        self.connected = False
         for callback in list(self.callbacks):
             callback.cancel()
         await asyncio.gather(*self.callbacks, return_exceptions=True)

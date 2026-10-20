@@ -26,6 +26,9 @@ def parser():
     s.add_argument("--project", help="Proyecto seleccionado para las peticiones de voz")
     s = sub.add_parser("start", help="Abrir ARGOS con Codex y voz en una consola independiente")
     s.add_argument("--project")
+    s = sub.add_parser("monitor", help="Mapa de agentes o monitor de tareas y conversaciones")
+    s.add_argument("view", choices=("agents", "tasks"))
+    s.add_argument("--open", action="store_true", help="Abrir en otra ventana")
     s = sub.add_parser("say", help="Entrada textual para desarrollo; mismo punto de entrada que futuro STT")
     s.add_argument("text")
     s.add_argument("--project")
@@ -67,6 +70,16 @@ def parser():
 
 
 async def execute(args):
+    if args.command == "monitor":
+        if args.open:
+            result = await call(args.state_dir, {"method": "monitor.open", "view": args.view,
+                                                "session": args.session,
+                                                "request_id": args.request_id or uuid.uuid4().hex})
+            print(result["speech"])
+        else:
+            from .monitor import monitor
+            await monitor(args.state_dir, args.view, args.session)
+        return
     if args.command == "serve":
         from .server import serve
         from .providers import OllamaInterpreter

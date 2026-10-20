@@ -22,6 +22,20 @@ class Router:
         text = re.sub(r"^argos[, :]+\s*", "", text.strip(), flags=re.I)
         text = re.sub(r"^(?:por favor|please)[, ]+", "", text, flags=re.I)
         value = normalize(text)
+        panel = re.sub(r"[, ]+(?:por favor|please)$", "", value)
+        if re.fullmatch(
+                r"(?:(?:muestrame|muestra|abre|abrir|ver|ensename)(?: a)? )?(?:los |el )?"
+                r"(?:mapa(?: cerebral)? de agentes|diagrama de agentes|agentes)", panel):
+            return Decision("panel", arguments={"view": "agents"})
+        if re.fullmatch(
+                r"(?:(?:muestrame|muestra|abre|abrir|ver|ensename) )?(?:el |las )?"
+                r"(?:monitor de tareas|panel de tareas|historial de tareas|registro de tareas|log de tareas|"
+                r"log de tasks|tareas|conversaciones de codex)", panel):
+            return Decision("panel", arguments={"view": "tasks"})
+        if re.fullmatch(r"(?:show|open)(?: me)? (?:the )?(?:agents|agent map|agent diagram)", panel):
+            return Decision("panel", arguments={"view": "agents"})
+        if re.fullmatch(r"(?:show|open)(?: me)? (?:the )?(?:task monitor|task log|task history|tasks|codex conversations)", panel):
+            return Decision("panel", arguments={"view": "tasks"})
         exact = {
             "hola": ("greeting", "Hola."),
             "hello": ("greeting", "Hello."),
