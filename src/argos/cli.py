@@ -55,7 +55,7 @@ def parser():
     sub.add_parser("voice-status")
     sub.add_parser("voice-inputs", help="Listar micrófonos disponibles")
     s = sub.add_parser("voice-config", help="Guardar idioma y micrófono de ARGOS")
-    s.add_argument("--language", choices=("es", "en"))
+    s.add_argument("--language", choices=("auto", "es", "en"))
     s.add_argument("--input-device", help="ID mostrado por voice-inputs")
     s = sub.add_parser("play-wav", help="Salida PCM real y amplitud para la esfera; no es TTS")
     s.add_argument("path")

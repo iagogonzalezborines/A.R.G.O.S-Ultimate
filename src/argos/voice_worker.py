@@ -6,6 +6,40 @@ import sys
 import wave
 from pathlib import Path
 
+if __package__:
+    from .language import choose_language, language_command
+else:
+    from language import choose_language, language_command
+
+
+def transcribe(whisper, path, language="auto", previous="es"):
+    def decode(selected):
+        segments, info = whisper.transcribe(path, language=selected, beam_size=3, vad_filter=True,
+                                            condition_on_previous_text=False,
+                                            hotwords="ARGOS, español, inglés, Spanish, English.")
+        segments = [segment for segment in segments if segment.no_speech_prob < .7]
+        text = " ".join(segment.text.strip() for segment in segments).strip()
+        score = sum(segment.avg_logprob for segment in segments) / len(segments) if segments else -100
+        lexical_es = choose_language(text, "es")
+        lexical_en = choose_language(text, "en")
+        if text and lexical_es == lexical_en:
+            score += .25 if lexical_es == info.language else -.25
+        if language_command(text):
+            score += .5
+        return text, info, score
+
+    best = decode(None if language == "auto" else language)
+    original_language, confidence = best[1].language, best[1].language_probability
+    if language == "auto" and (original_language not in ("es", "en") or confidence < .9):
+        # Only uncertain clips get a second local decode. No second model or network call.
+        alternate = ("es" if original_language == "en" else "en") if original_language in ("es", "en") else previous
+        candidate = decode(alternate)
+        if original_language not in ("es", "en") or candidate[2] > best[2]:
+            best = candidate
+            confidence = 0.0  # A forced decode is not an acoustic language confidence.
+    return {"ok": True, "text": best[0], "language": best[1].language,
+            "language_probability": confidence}
+
 
 def main():
     # Downloads are an explicit setup step, never an accidental voice operation.
@@ -41,12 +75,8 @@ def main():
                     if whisper is None:
                         whisper = WhisperModel("base", device="cpu", compute_type="int8", cpu_threads=2,
                                                download_root=str(root / "whisper"), local_files_only=True)
-                    segments, info = whisper.transcribe(request["path"], language=request.get("language", "es"),
-                                                        beam_size=3, vad_filter=True,
-                                                        condition_on_previous_text=False)
-                    text = " ".join(segment.text.strip() for segment in segments
-                                    if segment.no_speech_prob < 0.7).strip()
-                    response = {"ok": True, "text": text, "language": info.language}
+                    response = transcribe(whisper, request["path"], request.get("language", "auto"),
+                                          request.get("previous_language", "es"))
                 else:
                     response = {"ok": False, "error": "Operación de voz desconocida."}
         except Exception:

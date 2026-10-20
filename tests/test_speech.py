@@ -11,7 +11,7 @@ from argos.models import ArgosError
 
 
 class SpeechTests(unittest.IsolatedAsyncioTestCase):
-    async def test_recognition_language_cannot_switch_speaking_language(self):
+    async def test_auto_recognition_passes_evidence_to_core_without_mutating_voice(self):
         with tempfile.TemporaryDirectory() as temp:
             speech = Speech(None, None, Path(temp))
             core = SimpleNamespace(speech=speech, request=AsyncMock())
@@ -20,9 +20,10 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
             capture.path = str(Path(temp) / "recording.wav")
             Path(capture.path).touch()
             await capture._transcribe()
-            self.assertEqual(worker.request.call_args.args[0]["language"], "es")
+            self.assertEqual(worker.request.call_args.args[0]["language"], "auto")
             self.assertEqual(speech.language, "es")
             self.assertEqual(core.request.call_args.args[0]["text"], "hola")
+            self.assertEqual(core.request.call_args.args[0]["detected_language"], "en")
             self.assertEqual(list(Path(temp).iterdir()), [])
 
     async def test_selected_microphone_is_passed_to_recorder(self):
@@ -111,3 +112,25 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
             await speech.job
             self.assertEqual(observed, ["Uno.", "Dos."])
             self.assertEqual(list(Path(temp).iterdir()), [])
+
+    async def test_queued_utterances_keep_their_own_language(self):
+        observed = []
+        class Worker:
+            async def request(self, message):
+                observed.append((message["text"], message["language"]))
+                Path(message["path"]).touch()
+        class Output:
+            job = None
+            async def play(self, path):
+                self.job = asyncio.create_task(asyncio.sleep(0))
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(Worker(), Output(), Path(temp))
+            speech.paused = True
+            speech.enqueue("Hola.", language="es")
+            speech.language = "en"
+            speech.enqueue("Hello.", language="en")
+            speech.language = "es"
+            speech.paused = False
+            speech.resume_queue()
+            await speech.job
+            self.assertEqual(observed, [("Hola.", "es"), ("Hello.", "en")])

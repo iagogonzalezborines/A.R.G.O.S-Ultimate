@@ -10,6 +10,7 @@ import uuid
 from pathlib import Path
 
 from .models import ArgosError
+from .language import localize
 
 
 VOICE_PYTHON = Path.home() / ".local/share/argos/voice-env/bin/python"
@@ -68,15 +69,17 @@ class Speech:
         self.job = None
         self.state = "idle"
         self.language = "es"
+        self.automatic_language = True
         self.last_error = None
         self.paused = False
 
-    def enqueue(self, text):
+    def enqueue(self, text, language=None):
+        language = language or self.language
         # Spoken output is concise; the full structured result remains in the task.
-        text = re.sub(r"https?://\S+", "enlace en los detalles", text)
+        text = re.sub(r"https?://\S+", "link in the details" if language == "en" else "enlace en los detalles", text)
         text = re.sub(r"[`*_#]", "", text).strip()
         if text and not self.queue.full():
-            self.queue.put_nowait(text[:1200])
+            self.queue.put_nowait((text[:1200], language))
             self.resume_queue()
 
     def resume_queue(self):
@@ -86,13 +89,13 @@ class Speech:
     async def _run(self):
         try:
             while not self.queue.empty():
-                text = self.queue.get_nowait()
+                text, language = self.queue.get_nowait()
                 fd, filename = tempfile.mkstemp(prefix="speech-", suffix=".wav", dir=self.directory)
                 os.close(fd)
                 try:
                     self.state = "thinking"
                     await self.worker.request({"op": "synthesize", "text": text,
-                                               "language": self.language, "path": filename})
+                                               "language": language, "path": filename})
                     await self.output.play(filename)
                     if self.output.job:
                         await self.output.job
@@ -194,16 +197,20 @@ class Capture:
     async def _transcribe(self):
         try:
             result = await self.worker.request({"op": "transcribe", "path": self.path,
-                                               "language": self.core.speech.language})
+                                               "language": "auto" if self.core.speech.automatic_language else self.core.speech.language,
+                                               "previous_language": self.core.speech.language})
             if result["text"]:
                 await self.core.request({"method": "say", "text": result["text"], "project": self.project,
-                                         "session": "default", "request_id": uuid.uuid4().hex, "speak": True})
+                                         "session": "default", "request_id": uuid.uuid4().hex, "speak": True,
+                                         "detected_language": result.get("language"),
+                                         "language_probability": result.get("language_probability", 0.0)})
             else:
-                self.core.speech.enqueue("No he entendido la petición.")
+                self.core.speech.enqueue(localize("No he entendido la petición.", self.core.speech.language))
             self.last_error = None
         except (ArgosError, OSError, ValueError) as error:
             self.last_error = str(error)
-            self.core.speech.enqueue("No he podido procesar la petición. Revisa el diagnóstico de voz.")
+            self.core.speech.enqueue(localize("No he podido procesar la petición. Revisa el diagnóstico de voz.",
+                                             self.core.speech.language))
         finally:
             if self.path:
                 Path(self.path).unlink(missing_ok=True)

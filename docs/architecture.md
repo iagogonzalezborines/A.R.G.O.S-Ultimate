@@ -83,9 +83,19 @@ Procesos ajenos de la misma cuenta no se consideran adversarios aislados.
 
 Espacio inicia captura PipeWire; la segunda pulsación envía a Whisper; límite
 de 30 segundos. No hay wake word. Se pausa TTS durante captura/transcripción.
-El idioma es una preferencia persistente, español por defecto; una detección
-de Whisper no la modifica. El micrófono puede fijarse por nombre de nodo PipeWire
-sin cambiar la configuración global del escritorio.
+El modo predeterminado de idioma es automático español/inglés. Whisper aporta
+idioma y confianza; las expresiones inequívocas y las órdenes explícitas tienen
+prioridad. Palabras compartidas o ambiguas conservan el idioma anterior.
+Una identificación acústica dudosa admite una segunda transcripción local en
+el otro idioma; las identificaciones claras usan una sola. No se añade un LLM
+para detectar el idioma ni traducir respuestas locales.
+
+El idioma de respuesta viaja en el contexto de cada petición y se guarda para
+cada tarea. Cada elemento de la cola TTS conserva su propio idioma: una petición
+posterior no altera una respuesta pendiente. Los comandos de cambio se resuelven
+antes de consultar al proveedor. El contrato del modelo usa el idioma del turno,
+con prioridad sobre el del historial. El micrófono puede fijarse por nombre de
+nodo PipeWire sin cambiar la configuración global del escritorio.
 Un único propietario de reproducción evita solapamientos. Escape detiene audio,
 no trabajos ya encolados. El RMS sigue el reloj del proceso de reproducción;
 puede diferir por el buffer físico del dispositivo.

@@ -104,3 +104,30 @@ SteelSeries y el usuario confirmó que se oía, aunque con idioma/voz inadecuado
 Se seleccionó el micrófono SteelSeries expresamente solicitado y español fijo
 para reconocimiento, contexto del modelo y síntesis. La calidad subjetiva de
 la voz requiere valoración del usuario; un exit code 0 no demuestra inteligibilidad.
+
+## Idioma automático español/inglés
+
+La preferencia fija anterior se sustituye, a petición del usuario, por modo
+automático predeterminado. CLI conserva las opciones de idioma fijo.
+
+84 pruebas aprobadas. Se cubren cambios explícitos en ambos idiomas, rechazo
+de órdenes citadas/negadas como acciones, saludos cortos frente a detecciones
+acústicas equivocadas, conservación del idioma ante palabras ambiguas, contexto
+de peticiones simultáneas, idioma persistido por tarea y voces independientes
+por elemento de la cola TTS. Solo clips con identificación dudosa se vuelven
+a transcribir localmente en el otro idioma.
+
+Prueba de audio generado, sin altavoces: español → respuesta española, inglés
+→ respuesta inglesa, «Cambia al inglés» → cambio inglés, «Please speak Spanish»
+→ cambio español. En una primera ejecución Whisper deformó el comando español;
+se añadió vocabulario de contexto y revisión del segundo idioma para casos
+dudosos. La ejecución posterior reconoció las cuatro intenciones. Esto no
+garantiza reconocimiento perfecto de cualquier acento, ruido o frase mixta.
+
+Codex real, en el mismo hilo: una pregunta sobre carpetas en inglés recibió
+respuesta inglesa; la siguiente pregunta española recibió respuesta española.
+El contexto de cada turno tuvo prioridad sobre el idioma del historial.
+
+La instancia abierta quedó en modo auto, con el micrófono SteelSeries conservado.
+Se comprobaron por IPC los cambios inglés/español y las respuestas locales,
+sin consultar al modelo para cambiar una preferencia.

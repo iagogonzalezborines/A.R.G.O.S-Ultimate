@@ -35,6 +35,7 @@ class Response:
     task_id: str | None = None
     data: Any = None
     route: str = "local"
+    language: str = "es"
 
     def json(self):
         return asdict(self)

@@ -26,8 +26,11 @@ Reutiliza Core si ya está activo. No configura inicio automático al arrancar L
 La esfera es verde mientras escucha, amarilla mientras procesa voz, cian durante
 la reproducción y roja si falla la voz. La amplitud procede del WAV reproducido.
 El micrófono solo se abre al pulsar Espacio y se limita a 30 segundos.
-No hay palabra de activación todavía. El idioma predeterminado es español;
-la detección de Whisper no cambia el idioma de la voz automáticamente.
+No hay palabra de activación todavía. El modo de idioma predeterminado es
+automático: responde en español si hablas español y en inglés si hablas inglés.
+También reconoce «habla en inglés», «cambia a español» y «speak Spanish».
+Si después vuelves a hablar en el otro idioma, la respuesta vuelve a seguirte.
+Palabras ambiguas como «okay» conservan el idioma anterior.
 
 Ejemplos: «hola», «abre Firefox», «lista las ventanas», «enfoca Firefox»,
 «busca en la web documentación de Python», «qué estás haciendo»,
@@ -107,7 +110,7 @@ Otras operaciones:
 ./argos say "hola" --speak
 ./argos voice-status
 ./argos voice-inputs
-./argos voice-config --language es --input-device ID_DEL_MICROFONO
+./argos voice-config --language auto --input-device ID_DEL_MICROFONO
 ./argos doctor --codex
 ```
 
@@ -131,8 +134,11 @@ python scripts/setup_voice.py
 
 Descarga paquetes y modelos de forma explícita. PyAV se fija a 16.1.0:
 la versión 19 instalada inicialmente era incompatible con faster-whisper 1.2.1.
-El idioma y el micrófono se guardan en la configuración de ARGOS.
-`voice-config --language en` selecciona inglés explícitamente. Un micrófono
+El modo de idioma y el micrófono se guardan en la configuración de ARGOS.
+`voice-config --language auto` activa el seguimiento automático. Las opciones
+`--language es` y `--language en` permiten fijar un idioma manualmente desde CLI.
+Una orden hablada de cambio selecciona ese idioma y vuelve al modo automático.
+Un micrófono
 seleccionado que se desconecta produce un error; no se cambia a la webcam.
 Esta selección no cambia los dispositivos predeterminados de otras aplicaciones.
 

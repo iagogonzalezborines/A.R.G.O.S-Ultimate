@@ -2,6 +2,7 @@ import re
 import unicodedata
 
 from .models import Decision
+from .language import language_command
 
 
 def normalize(text):
@@ -13,6 +14,9 @@ class Router:
     """Conservative fast paths. Unresolved language goes to one interpreter."""
 
     def resolve(self, text):
+        language = language_command(text)
+        if language:
+            return Decision("language", arguments={"language": language}, reason="explicit_language_request")
         value = normalize(text)
         value = re.sub(r"^argos[, :] *", "", value)
         value = re.sub(r"^(?:por favor|please)[, ]+", "", value)

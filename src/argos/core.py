@@ -3,6 +3,7 @@ import hashlib
 import json
 import time
 from collections import deque
+from contextvars import ContextVar
 
 from .agents import AGENTS, catalogue, contract
 from .capabilities import CAPABILITIES
@@ -11,6 +12,7 @@ from .policy import Operation, Policy, ApprovalNeeded
 from .router import Router
 from .security import public_text, safe_data
 from .store import Store
+from .language import choose_language, localize
 
 
 class Core:
@@ -29,6 +31,10 @@ class Core:
         self.speech = None
         self.capture = None
         self.closing = False
+        self.reply_language = ContextVar("argos_reply_language", default=None)
+
+    def language(self):
+        return self.reply_language.get() or self.store.setting("voice.language", "es")
 
     async def start(self):
         self.store.recover()
@@ -49,7 +55,7 @@ class Core:
 
     def context(self, project, agent="general"):
         return {
-            "response_language": self.store.setting("voice.language", "es"),
+            "response_language": self.language(),
             "project": {"id": project["id"], "name": project["name"]} if project else None,
             "capabilities": [c.public() for c in CAPABILITIES.values()
                              if agent == "general" or c.name in AGENTS[agent].capabilities],
@@ -81,12 +87,18 @@ class Core:
         self.store.reserve(key, digest)
         future = asyncio.get_running_loop().create_future()
         self.inflight[key] = digest, future
+        token = self.reply_language.set(self.store.setting("voice.language", "es"))
         try:
             response = await self._dispatch(message)
+            response.language = self.language()
+            if response.route == "local":
+                response.speech = localize(response.speech, response.language)
+            if response.task_id and self.store.setting("task.language:" + response.task_id) is None:
+                self.store.set_setting("task.language:" + response.task_id, response.language)
             data = response.json()
             self.store.cache(key, digest, data)
             if message.get("speak") and self.speech and response.speech:
-                self.speech.enqueue(response.speech)
+                self.speech.enqueue(response.speech, language=response.language)
             future.set_result(data)
             return data
         except BaseException as exc:
@@ -95,6 +107,7 @@ class Core:
             future.exception()
             raise
         finally:
+            self.reply_language.reset(token)
             self.inflight.pop(key, None)
 
     async def _dispatch(self, request):
@@ -185,21 +198,26 @@ class Core:
             if self.capture.state in ("listening", "thinking") or self.speech.state == "thinking" or (
                     self.voice and self.voice.state == "speaking"):
                 raise ArgosError("Termina la petición de voz antes de cambiar la configuración.")
-            language = request.get("language", self.speech.language)
+            language = request.get("language", "auto" if self.speech.automatic_language else self.speech.language)
             device = request.get("input_device", self.capture.input_device)
-            if language not in ("es", "en"):
-                raise ArgosError("El idioma debe ser es o en.")
+            if language not in ("es", "en", "auto"):
+                raise ArgosError("El idioma debe ser es, en o auto.")
             if device:
                 from .speech import input_devices
                 if device not in [item["id"] for item in await input_devices()]:
                     raise ArgosError("Ese micrófono no está conectado.")
+            self.store.set_setting("voice.language_mode", "auto" if language == "auto" else "fixed")
+            self.speech.automatic_language = language == "auto"
+            if language == "auto":
+                language = self.speech.language
             self.store.set_setting("voice.language", language)
             self.store.set_setting("voice.input_device", device)
             self.speech.language = language
             self.capture.input_device = device
             self.capture.last_error = self.speech.last_error = None
             return Response("Configuración de voz guardada.",
-                            data={"language": language, "input_device": device})
+                            data={"language": language, "language_mode": self.store.setting("voice.language_mode"),
+                                  "input_device": device})
         if method == "voice.state":
             data = self.voice.snapshot() if self.voice else {"state": "idle", "level": 0}
             if self.capture and self.capture.state != "idle":
@@ -209,6 +227,7 @@ class Core:
             data["stt"] = "whisper-base" if self.capture else "not_connected"
             data["tts"] = "pocket-peter-yearsley" if self.speech else "not_connected"
             data["language"] = self.speech.language if self.speech else None
+            data["language_mode"] = self.store.setting("voice.language_mode", "auto")
             data["input_device"] = self.capture.input_device if self.capture else None
             data["error"] = ((self.capture.last_error if self.capture else None)
                              or (self.speech.last_error if self.speech else None)
@@ -237,8 +256,25 @@ class Core:
         text = public_text(request.get("text", "")).strip()
         if not text:
             raise ArgosError("La petición está vacía.")
+        automatic = self.store.setting("voice.language_mode", "auto") == "auto"
+        language = choose_language(text, self.language(), request.get("detected_language"),
+                                   request.get("language_probability", 0.0)) if automatic else self.language()
+        self.reply_language.set(language)
+        if self.store.setting("voice.language", "es") != language:
+            self.store.set_setting("voice.language", language)
+        if self.speech:
+            self.speech.language = language
         project = self.store.project(request.get("project"))
         decision = self.router.resolve(text)
+        if decision.kind == "language":
+            language = decision.arguments["language"]
+            self.reply_language.set(language)
+            self.store.set_setting("voice.language", language)
+            self.store.set_setting("voice.language_mode", "auto")
+            if self.speech:
+                self.speech.language = language
+                self.speech.automatic_language = True
+            return Response("I'll speak English." if language == "en" else "Hablaré en español.")
         if decision.kind in ("greeting", "status", "capabilities", "agents", "projects",
                              "gaming_on", "gaming_off"):
             return self._local(decision, session)
@@ -422,6 +458,7 @@ class Core:
 
     async def _run(self, task_id):
         task = self.store.update(task_id, Status.RUNNING)
+        language_token = self.reply_language.set(self.store.setting("task.language:" + task_id, "es"))
         started = time.perf_counter()
         try:
             project = self.store.project(task["project"])
@@ -519,12 +556,16 @@ class Core:
                 "La operación no pudo completarse. Comprueba el archivo, formato o herramienta requerida.")
             self.store.update(task_id, Status.FAILED, question=message)
             self._notify(task_id, message)
+        finally:
+            self.reply_language.reset(language_token)
 
     def _notify(self, task_id, speech):
+        language = self.store.setting("task.language:" + task_id, self.language())
+        speech = localize(speech, language)
         if not self.store.setting("gaming", False):
             self.notifications.append({"task_id": task_id, "speech": speech})
             if self.speech and speech:
-                self.speech.enqueue(speech)
+                self.speech.enqueue(speech, language=language)
 
     @staticmethod
     def application_names():
@@ -556,6 +597,7 @@ class Core:
         self.policy.authorize(operation)
         self.store.event(task["id"], "CAPABILITY_STARTED", {"capability": name})
         result = await asyncio.wait_for(cap.execute(project, args), 150)
+        result["speech"] = localize(result["speech"], self.store.setting("task.language:" + task["id"], self.language()))
         safe_data(result)
         self.store.event(task["id"], "CAPABILITY_RESULT", {"capability": name, "result": result})
         return result
