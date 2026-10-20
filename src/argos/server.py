@@ -10,7 +10,7 @@ from .store import Store
 from .voice import VoiceOutput
 
 
-async def serve(directory, interpreter=None):
+async def serve(directory, interpreter=None, voice_enabled=False):
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     if directory.resolve() in (directory.resolve().parent, __import__("pathlib").Path.home()):
         raise ArgosError("La carpeta de estado debe ser exclusiva de ARGOS.")
@@ -25,6 +25,16 @@ async def serve(directory, interpreter=None):
     store = Store(directory)
     core = Core(store, interpreter)
     core.voice = VoiceOutput()
+    voice_worker = None
+    if voice_enabled:
+        from .speech import Capture, Speech, VoiceWorker
+        voice_worker = VoiceWorker()
+        audio_directory = directory / "audio"
+        audio_directory.mkdir(mode=0o700, exist_ok=True)
+        for stale in audio_directory.glob("*.wav"):
+            stale.unlink(missing_ok=True)
+        core.speech = Speech(voice_worker, core.voice, audio_directory)
+        core.capture = Capture(core, voice_worker, audio_directory)
     stopped = asyncio.Event()
     clients = set()
     sessions = asyncio.Semaphore(32)
@@ -57,7 +67,7 @@ async def serve(directory, interpreter=None):
     try:
         socket.unlink(missing_ok=True)
         await core.start()
-        server = await asyncio.start_unix_server(client, str(socket), limit=65536)
+        server = await asyncio.start_unix_server(client, str(socket), limit=256000)
         socket.chmod(0o600)
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
@@ -68,6 +78,12 @@ async def serve(directory, interpreter=None):
         for client_task in list(clients):
             client_task.cancel()
         await asyncio.gather(*clients, return_exceptions=True)
+        if core.capture:
+            await core.capture.cancel()
+        if core.speech:
+            await core.speech.stop()
+        if voice_worker:
+            await voice_worker.close()
         await core.voice.stop()
         await core.close()
         store.close()

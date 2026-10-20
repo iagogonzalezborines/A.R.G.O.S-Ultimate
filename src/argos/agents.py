@@ -14,8 +14,12 @@ AGENTS = {
     a.id: a
     for a in (
         Agent("general", "Conversación e interpretación contextual", (), "ARGOS.md"),
-        Agent("engineering", "Programación y mantenimiento", ("repo.inspect",), "ENGINEERING.md"),
-        Agent("computer", "Manejo del PC", ("system.info",), "COMPUTER.md"),
+        Agent("engineering", "Programación y mantenimiento",
+              ("repo.inspect", "files.list", "files.read", "files.write", "commands.run", "web.search"), "ENGINEERING.md"),
+        Agent("computer", "Manejo del PC",
+              ("system.info", "apps.list", "apps.open", "windows.list", "windows.focus",
+               "windows.close", "files.open", "web.open"), "COMPUTER.md"),
+        Agent("research", "Búsqueda web y fuentes", ("web.search",), "RESEARCH.md"),
         Agent("design3d", "Diseño y geometría 3D", ("stl.inspect",), "DESIGN3D.md"),
         Agent("printing3d", "Preparación e impresión 3D", ("gcode.inspect",), "PRINTING3D.md"),
     )

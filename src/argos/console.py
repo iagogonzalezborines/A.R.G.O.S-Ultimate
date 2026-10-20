@@ -4,6 +4,9 @@ import math
 import shutil
 import sys
 import time
+import os
+import termios
+import tty
 
 from .models import ArgosError
 from .transport import call
@@ -34,21 +37,43 @@ def frame(width, height, level=0.0, phase=0.0):
     return "\n".join(rows)
 
 
-async def console(directory):
+async def console(directory, project=None):
     if not sys.stdout.isatty():
         raise ArgosError("La esfera necesita una terminal interactiva.")
     # Check connection before entering alternate screen.
-    await call(directory, {"method": "voice.state"})
+    data = (await call(directory, {"method": "voice.state"}))["data"]
+    keys = asyncio.Queue()
+    loop = asyncio.get_running_loop()
+    fd = sys.stdin.fileno()
+    settings = termios.tcgetattr(fd)
+    tty.setcbreak(fd)
+    loop.add_reader(fd, lambda: keys.put_nowait(os.read(fd, 16)))
     sys.stdout.write("\x1b[?1049h\x1b[?25l")
     try:
         while True:
             now = time.monotonic()
+            while not keys.empty():
+                key = keys.get_nowait()
+                if b"q" in key.lower():
+                    return
+                if b"\x1b" in key:
+                    await call(directory, {"method": "voice.stop"})
+                elif b" " in key:
+                    await call(directory, {"method": "voice.toggle", "project": project})
             data = (await call(directory, {"method": "voice.state"}))["data"]
             width, height = shutil.get_terminal_size((80, 24))
             screen = frame(width, max(6, height - 1), data["level"], now)
-            sys.stdout.write("\x1b[H\x1b[36m" + screen + "\x1b[0m\x1b[J")
+            color = {"listening": "32", "thinking": "33", "speaking": "96", "error": "31"}.get(data["state"], "36")
+            sys.stdout.write("\x1b[H\x1b[" + color + "m" + screen + "\x1b[0m\x1b[J")
             sys.stdout.flush()
             await asyncio.sleep(max(0, 0.1 - (time.monotonic() - now)))
     finally:
+        loop.remove_reader(fd)
+        termios.tcsetattr(fd, termios.TCSADRAIN, settings)
         sys.stdout.write("\x1b[0m\x1b[?25h\x1b[?1049l")
         sys.stdout.flush()
+        if data.get("state") == "listening":
+            try:
+                await call(directory, {"method": "voice.stop"})
+            except ArgosError:
+                pass

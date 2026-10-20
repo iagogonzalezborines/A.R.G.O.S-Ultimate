@@ -59,6 +59,31 @@ class Router:
             return Decision("capability", agent="computer", capability="system.info")
         if value in ("inspecciona el proyecto", "analiza el repositorio", "inspect repository", "inspect project"):
             return Decision("capability", agent="engineering", capability="repo.inspect")
+        for names, capability, agent, arguments in (
+            (("lista las aplicaciones", "listar aplicaciones", "list apps"), "apps.list", "computer", {}),
+            (("lista las ventanas", "listar ventanas", "list windows"), "windows.list", "computer", {}),
+            (("lista los archivos", "listar archivos", "list files"), "files.list", "engineering", {"path": "."}),
+        ):
+            if value in names:
+                return Decision("capability", agent=agent, capability=capability, arguments=arguments)
+        m = re.fullmatch(r"(?:busca en (?:la )?web|busca en internet|search the web for)\s+(.+)",
+                         text.strip().rstrip(".?!"), re.I)
+        if m:
+            return Decision("capability", agent="research", capability="web.search", arguments={"query": m[1]})
+        m = re.fullmatch(r"(?:abre|abrir|open)\s+(.+)", text.strip().rstrip(".?!"), re.I)
+        if m:
+            from .linux_tools import find_app
+            from .models import ArgosError
+            try:
+                app = find_app(m[1])
+                return Decision("capability", agent="computer", capability="apps.open",
+                                arguments={"app": app["id"]})
+            except ArgosError:
+                pass
+        m = re.fullmatch(r"(?:enfoca|focus)\s+(.+)", text.strip().rstrip(".?!"), re.I)
+        if m:
+            return Decision("capability", agent="computer", capability="windows.focus",
+                            arguments={"window": m[1]})
         # The complete command must match. Do not turn quoted/negated sentences into effects.
         m = re.fullmatch(r"(?:inspecciona|analiza|revisa|inspect|review)\s+(?:el\s+)?(?:stl|gcode)\s+(.+)",
                          text.strip(), re.I)
@@ -69,10 +94,10 @@ class Router:
                 return Decision("capability", agent="design3d" if suffix == "stl" else "printing3d",
                                 capability=f"{suffix}.inspect", arguments={"file": filename})
         # Explicit specialist addressing preserves the exact objective.
-        m = re.match(r"^(engineering|programacion|computer|pc|design3d|diseno 3d|printing3d|impresion 3d):\s*\S", value)
+        m = re.match(r"^(engineering|programacion|computer|pc|research|investigacion|design3d|diseno 3d|printing3d|impresion 3d):\s*\S", value)
         if m:
             agent = {"programacion": "engineering", "pc": "computer", "diseno 3d": "design3d",
-                     "impresion 3d": "printing3d"}.get(m[1], m[1])
+                     "impresion 3d": "printing3d", "investigacion": "research"}.get(m[1], m[1])
             return Decision("delegate", agent=agent, reason="explicit_specialist")
         # Obvious imperative domain requests bypass General, but never imply that
         # an unconnected operation can actually execute.

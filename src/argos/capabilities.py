@@ -21,18 +21,20 @@ class Capability:
     arguments: tuple[str, ...]
     needs_project: bool
     execute: Callable
+    effect: str = "read"
 
     def validate(self, args):
         if not isinstance(args, dict) or set(args) != set(self.arguments):
             raise ArgosError(f"Argumentos incorrectos para {self.name}.")
-        if any(not isinstance(v, str) or not v or len(v) > 512 for v in args.values()):
+        if any(not isinstance(v, str) or len(v) > (64000 if k == "content" else 2000)
+               or (not v and k not in ("content", "expected_sha256")) for k, v in args.items()):
             raise ArgosError("Los argumentos deben ser textos válidos.")
         safe_data(args)
 
     def public(self):
         return dict(name=self.name, agent=self.agent, description=self.description,
                     arguments=list(self.arguments), needs_project=self.needs_project,
-                    effect="read", available=True)
+                    effect=self.effect, available=True)
 
 
 async def system_info(project, args):
@@ -182,3 +184,6 @@ CAPABILITIES = {
         Capability("gcode.inspect", "printing3d", "Revisar metadatos G-code sin imprimir", ("file",), True, gcode_inspect),
     )
 }
+
+from .linux_tools import capabilities as linux_capabilities
+CAPABILITIES.update({c.name: c for c in linux_capabilities(Capability)})

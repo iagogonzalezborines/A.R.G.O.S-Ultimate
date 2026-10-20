@@ -7,7 +7,7 @@ from collections import deque
 from .agents import AGENTS, catalogue, contract
 from .capabilities import CAPABILITIES
 from .models import ArgosError, Decision, Response, Status, TERMINAL
-from .policy import Operation, Policy
+from .policy import Operation, Policy, ApprovalNeeded
 from .router import Router
 from .security import public_text, safe_data
 from .store import Store
@@ -26,6 +26,8 @@ class Core:
         self.session_locks = {}
         self.notifications = deque(maxlen=32)
         self.voice = None
+        self.speech = None
+        self.capture = None
         self.closing = False
 
     async def start(self):
@@ -42,12 +44,14 @@ class Core:
         await asyncio.gather(*self.dispatches, return_exceptions=True)
         # Graceful shutdown and crashes have the same conservative recovery rule.
         self.store.recover()
+        if self.interpreter and hasattr(self.interpreter, "close"):
+            await self.interpreter.close()
 
     def context(self, project, agent="general"):
         return {
             "project": {"id": project["id"], "name": project["name"]} if project else None,
             "capabilities": [c.public() for c in CAPABILITIES.values()
-                             if agent == "general" or c.agent == agent],
+                             if agent == "general" or c.name in AGENTS[agent].capabilities],
             "agents": catalogue(self.interpreter.name if self.interpreter else "none"),
             "scope": "No source files, credentials, other project tasks or raw logs are supplied.",
         }
@@ -80,6 +84,8 @@ class Core:
             response = await self._dispatch(message)
             data = response.json()
             self.store.cache(key, digest, data)
+            if message.get("speak") and self.speech and response.speech:
+                self.speech.enqueue(response.speech)
             future.set_result(data)
             return data
         except BaseException as exc:
@@ -97,6 +103,30 @@ class Core:
         if method == "projects.add":
             project = self.store.add_project(request["name"], request["path"])
             return Response(f"Proyecto {project['name']} registrado.", data=project)
+        if method == "commands.register":
+            project = self.store.project(request["project"])
+            if project is None:
+                raise ArgosError("Selecciona un proyecto.")
+            argv = request.get("argv")
+            if not isinstance(argv, list) or not argv or not all(isinstance(x, str) for x in argv):
+                raise ArgosError("El comando necesita una lista de argumentos.")
+            if not request.get("name") or len(argv) > 50:
+                raise ArgosError("Definición de comando inválida.")
+            public_text(request["name"], 80)
+            if argv[0].startswith("-") or any("\x00" in x or len(x) > 4000 for x in argv):
+                raise ArgosError("Argumentos de comando inválidos.")
+            import shutil
+            resolved = shutil.which(argv[0])
+            if not resolved:
+                raise ArgosError("No se encuentra el ejecutable del comando.")
+            spec = {"argv": [resolved, *argv[1:]]}
+            key = "commands:" + project["id"]
+            commands = self.store.setting(key, {})
+            commands[request["name"]] = spec
+            self.store.set_setting(key, commands)
+            return Response("Comando registrado. Su ejecución pedirá aprobación.", data={
+                "command": request["name"], "expected_sha256":
+                hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()})
         if method == "projects.list":
             return self._local(Decision("projects"), session)
         if method == "agents":
@@ -114,10 +144,22 @@ class Core:
         if method == "task":
             task = self.store.task(request["task_id"])
             return Response(self.describe(task), data={**task, "events": self.store.events(task["id"])})
-        if method in ("cancel", "resume", "reply"):
+        if method in ("cancel", "resume", "reply", "approve"):
             task = self.store.task(request["task_id"])
             if task["session"] != session:
                 raise ArgosError("La tarea pertenece a otra sesión.")
+            if method == "approve":
+                if task["status"] != Status.WAITING_APPROVAL:
+                    raise ArgosError("La tarea no espera aprobación.")
+                pending = (task["result"] or {}).get("pending_operation")
+                if not pending:
+                    raise ArgosError("No hay una operación revisable.")
+                operation = self.operation(task["id"], pending["capability"],
+                                           pending["arguments"], task["project"])
+                self.policy.approve(operation, request.get("fingerprint", ""))
+                self.store.event(task["id"], "APPROVED", pending)
+                self._enqueue(task)
+                return Response("Aprobación recibida. Continúo la misma tarea.", "accepted", task["id"])
             if method == "cancel":
                 if task["status"] in TERMINAL:
                     return Response("La tarea ya terminó.", task_id=task["id"])
@@ -134,13 +176,31 @@ class Core:
                 return Response("Tarea reanudada en la cola.", task_id=task["id"])
             return await self._answer(task, public_text(request.get("text", "")))
         if method == "voice.state":
-            return Response("", data=self.voice.snapshot() if self.voice else {"state": "idle", "level": 0})
+            data = self.voice.snapshot() if self.voice else {"state": "idle", "level": 0}
+            if self.capture and self.capture.state != "idle":
+                data = {**data, "state": self.capture.state}
+            elif self.speech and self.speech.state != "idle" and data["state"] != "speaking":
+                data = {**data, "state": self.speech.state}
+            data["stt"] = "whisper-base" if self.capture else "not_connected"
+            data["tts"] = "pocket-peter-yearsley" if self.speech else "not_connected"
+            data["error"] = ((self.capture.last_error if self.capture else None)
+                             or (self.speech.last_error if self.speech else None))
+            return Response("", data=data)
+        if method == "voice.toggle":
+            if not self.capture:
+                raise ArgosError("El micrófono no está conectado.")
+            await self.capture.toggle(request.get("project"))
+            return Response("")
         if method == "voice.play":
             if self.voice is None:
                 raise ArgosError("No hay salida de audio conectada.")
             await self.voice.play(request["path"])
             return Response("Reproducción iniciada.")
         if method == "voice.stop":
+            if self.capture:
+                await self.capture.cancel()
+            if self.speech:
+                await self.speech.stop()
             if self.voice:
                 await self.voice.stop()
             return Response("Audio detenido.")
@@ -155,6 +215,8 @@ class Core:
                              "gaming_on", "gaming_off"):
             return self._local(decision, session)
         if decision.kind == "stop_speech":
+            if self.speech:
+                await self.speech.stop()
             if self.voice:
                 await self.voice.stop()
             return Response("De acuerdo.")
@@ -183,7 +245,11 @@ class Core:
                     "clarify", data={"available": [c.public() for c in CAPABILITIES.values()]})
             lock = self.session_locks.setdefault(session, asyncio.Lock())
             async with lock:
-                decision = await self.interpreter.decide(text, self.context(project))
+                context = self.context(project)
+                context["session"] = session
+                context["applications"] = self.application_names()
+                context["projects"] = [p["name"] for p in self.store.projects()]
+                decision = await self.interpreter.decide(text, context)
         return self._decision(decision, text, project, session)
 
     def _local(self, decision, session):
@@ -193,8 +259,11 @@ class Core:
         if kind in ("agents", "capabilities"):
             agents = catalogue(self.interpreter.name if self.interpreter else "none")
             return Response(
-                "Puedo inspeccionar repositorios, consultar el PC y analizar archivos STL y G-code. "
-                "La edición, el control de aplicaciones y la impresión todavía no están conectados.",
+                "Puedo buscar en la web, gestionar aplicaciones y ventanas y trabajar con archivos. "
+                + ("Codex está configurado para programación. " if self.interpreter and
+                   self.interpreter.name == "codex-chatgpt" else "")
+                +
+                "Los cambios y comandos requieren aprobación; la impresora sigue sin conectar.",
                 data={"agents": agents, "capabilities": [c.public() for c in CAPABILITIES.values()]})
         if kind == "projects":
             projects = self.store.projects()
@@ -328,12 +397,64 @@ class Core:
         started = time.perf_counter()
         try:
             project = self.store.project(task["project"])
+            if project:
+                project["commands"] = self.store.setting("commands:" + project["id"], {})
             if not task["capability"]:
                 events = self.store.events(task_id)
                 context = self.context(project, task["agent"])
                 context["task"] = {"id": task_id, "objective": task["objective"],
                                    "answers": [e["data"]["answer"] for e in reversed(events)
                                                if e["kind"] == "USER_ANSWER"][-8:]}
+                if project:
+                    context["commands"] = [
+                        {"command": name, "expected_sha256":
+                         hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()}
+                        for name, spec in project["commands"].items()]
+                if hasattr(self.interpreter, "work"):
+                    history = [e["data"] for e in reversed(events) if e["kind"] == "CAPABILITY_RESULT"]
+                    approved = next((e["data"] for e in events if e["kind"] == "APPROVED"), None)
+                    if approved and self.policy.is_approved(self.operation(
+                            task_id, approved["capability"], approved["arguments"], task["project"])):
+                        result = await self.execute_capability(
+                            task, project, approved["capability"], approved["arguments"])
+                        history.append({"capability": approved["capability"], "result": result})
+                    context["previous_operations"] = history[-12:]
+                    async def execute(name, args):
+                        if name not in AGENTS[task["agent"]].capabilities:
+                            raise ArgosError("La capacidad está fuera del alcance de este especialista.")
+                        result = await self.execute_capability(task, project, name, args)
+                        history.append({"capability": name, "result": result})
+                        return result
+                    def save_thread(thread):
+                        self.store.update(task_id, Status.RUNNING, thread_id=thread)
+                    def progress(text):
+                        try:
+                            public_text(text, 4000)
+                            self.store.event(task_id, "PROGRESS", {"summary": text})
+                        except ArgosError:
+                            pass
+                    result = await self.interpreter.work(task, context, execute, save_thread, progress)
+                    if result.get("kind") == "question":
+                        self.store.update(task_id, Status.WAITING_INPUT, question=result["speech"])
+                    elif history:
+                        last_write = max((i for i, h in enumerate(history)
+                                          if h["capability"] == "files.write"), default=-1)
+                        checks = [h for i, h in enumerate(history) if i > last_write
+                                  and h["capability"] == "commands.run"]
+                        failed = bool(checks and checks[-1]["result"].get("verification") == "command_failed")
+                        verified = bool(checks and checks[-1]["result"].get("verification") == "command_passed")
+                        writes = any(h["capability"] == "files.write" for h in history)
+                        outcome = {"speech": result["speech"], "detail": result["detail"],
+                                   "verification": "command_failed" if failed else
+                                       "command_passed" if verified else "changes_not_tested" if writes else "inspection_only",
+                                   "operations": len(history)}
+                        self.store.update(task_id, Status.FAILED if failed else Status.COMPLETED, result=outcome)
+                    else:
+                        self.store.update(task_id, Status.BLOCKED,
+                                          result={"speech": result.get("speech", ""), "verification": "proposal_only"},
+                                          question="Codex respondió sin ejecutar operaciones.")
+                    self._notify(task_id, result.get("speech", ""))
+                    return
                 decision = await self.interpreter.decide(task["objective"], context, task["agent"])
                 if decision.kind == "clarify":
                     self.store.update(task_id, Status.WAITING_INPUT, question=decision.speech)
@@ -347,21 +468,20 @@ class Core:
                     self._notify(task_id, "El especialista ha devuelto una propuesta; no ha ejecutado cambios.")
                     return
                 cap = CAPABILITIES.get(decision.capability)
-                if not cap or cap.agent != task["agent"]:
+                if not cap or cap.name not in AGENTS[task["agent"]].capabilities:
                     raise ArgosError("La capacidad propuesta está fuera del especialista.")
                 task = self.store.update(task_id, Status.RUNNING, capability=cap.name,
                                           arguments=decision.arguments)
-            cap = CAPABILITIES[task["capability"]]
-            cap.validate(task["arguments"])
-            if cap.needs_project and not project:
-                raise ArgosError("Falta el proyecto para ejecutar la capacidad.")
-            self.policy.authorize(Operation(cap.name, task["arguments"], task["project"]))
-            self.store.event(task_id, "CAPABILITY_STARTED", {"capability": cap.name})
-            result = await asyncio.wait_for(cap.execute(project, task["arguments"]), 60)
-            safe_data(result)
+            result = await self.execute_capability(task, project, task["capability"], task["arguments"])
             result["elapsed_ms"] = round((time.perf_counter() - started) * 1000, 2)
-            self.store.update(task_id, Status.COMPLETED, result=result)
+            self.store.update(task_id, Status.FAILED if result.get("verification") == "command_failed"
+                              else Status.COMPLETED, result=result)
             self._notify(task_id, result["speech"])
+        except ApprovalNeeded as error:
+            self.store.update(task_id, Status.WAITING_APPROVAL,
+                              result={"pending_operation": error.pending},
+                              question=f"Necesito aprobación para {error.pending['capability']}.")
+            self._notify(task_id, f"La operación {error.pending['capability']} está preparada y necesita tu aprobación.")
         except asyncio.CancelledError:
             if self.store.task(task_id)["status"] == Status.RUNNING:
                 self.store.update(task_id, Status.INTERRUPTED if self.closing else Status.CANCELLED)
@@ -375,3 +495,39 @@ class Core:
     def _notify(self, task_id, speech):
         if not self.store.setting("gaming", False):
             self.notifications.append({"task_id": task_id, "speech": speech})
+            if self.speech and speech:
+                self.speech.enqueue(speech)
+
+    @staticmethod
+    def application_names():
+        from .linux_tools import discover_apps
+        return [{"id": a["id"], "name": a["name"]} for a in discover_apps().values()][:100]
+
+    @staticmethod
+    def operation(task_id, name, args, project):
+        return Operation(name, {**args, "_task_id": task_id}, project, CAPABILITIES[name].effect)
+
+    async def execute_capability(self, task, project, name, args):
+        cap = CAPABILITIES.get(name)
+        if not cap:
+            raise ArgosError("La capacidad no existe.")
+        cap.validate(args)
+        if cap.needs_project and not project:
+            raise ArgosError("Falta el proyecto para ejecutar la capacidad.")
+        operation = self.operation(task["id"], name, args, task["project"])
+        if not self.policy.is_approved(operation):
+            pending = {"capability": name, "arguments": args, "effect": cap.effect,
+                       "fingerprint": operation.fingerprint}
+            if name == "commands.run":
+                spec = project.get("commands", {}).get(args["command"])
+                if not spec:
+                    raise ArgosError("El comando no está registrado en este proyecto.")
+                pending["review"] = {"argv": spec["argv"], "cwd": project["root"],
+                                     "scope": "Ejecuta código local con los permisos de tu usuario."}
+            raise ApprovalNeeded(pending)
+        self.policy.authorize(operation)
+        self.store.event(task["id"], "CAPABILITY_STARTED", {"capability": name})
+        result = await asyncio.wait_for(cap.execute(project, args), 150)
+        safe_data(result)
+        self.store.event(task["id"], "CAPABILITY_RESULT", {"capability": name, "result": result})
+        return result

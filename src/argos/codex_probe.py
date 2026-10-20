@@ -2,12 +2,25 @@
 import asyncio
 import json
 import shutil
+from pathlib import Path
 
 from .models import ArgosError
 
 
-async def probe():
+def find_binary():
     binary = shutil.which("codex")
+    if binary:
+        return binary
+    for root in (".vscode-oss", ".vscode"):
+        candidates = sorted((Path.home() / root / "extensions").glob(
+            "openai.chatgpt-*/bin/linux-x86_64/codex"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if candidates:
+            return str(candidates[0])
+    return None
+
+
+async def probe():
+    binary = find_binary()
     if not binary:
         return {"available": False, "reason": "Codex no está instalado."}
     proc = await asyncio.create_subprocess_exec(
@@ -39,8 +52,8 @@ async def probe():
         kind = account.get("type") if isinstance(account, dict) else None
         return {"available": True, "transport": "app-server/stdio", "auth_type": kind,
                 "subscription_login": kind == "chatgpt",
-                "inference_connected": False,
-                "reason": "Handshake comprobado. El bridge de ejecución Codex aún no está conectado."}
+                "inference_tested": False,
+                "reason": "Handshake comprobado sin consultar el modelo."}
     except (OSError, ValueError, TimeoutError, ArgosError):
         return {"available": False, "reason": "No se pudo validar App Server."}
     finally:

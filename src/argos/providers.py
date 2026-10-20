@@ -43,7 +43,7 @@ def validate_decision(data, agent="general"):
         raise ArgosError("El proveedor solicitó un agente inexistente.")
     if data["kind"] == "capability":
         cap = CAPABILITIES.get(data["capability"])
-        if not cap or (agent != "general" and cap.agent != agent):
+        if not cap or (agent != "general" and cap.name not in AGENTS[agent].capabilities):
             raise ArgosError("El proveedor solicitó una capacidad fuera de su alcance.")
         cap.validate(data["arguments"])
         data = {**data, "agent": cap.agent}

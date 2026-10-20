@@ -62,7 +62,7 @@ unless the runtime catalogue says so.
 Return a JSON object:
 kind: answer | clarify | delegate | capability
 speech: short user-facing text (never an unsupported success claim)
-agent: general | engineering | computer | design3d | printing3d, or empty
+agent: general | engineering | computer | research | design3d | printing3d, or empty
 capability: an exact available capability name, or empty
 arguments: JSON object matching that capability
 

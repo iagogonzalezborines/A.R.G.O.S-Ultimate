@@ -1,4 +1,4 @@
-"""PCM output meter. No synthetic TTS, microphone, or pretend voice activation."""
+"""Single PCM playback owner and output meter, shared by TTS and WAV playback."""
 import asyncio
 import math
 import shutil

@@ -28,8 +28,17 @@ class Policy:
         self._approved.add(operation.fingerprint)
 
     def authorize(self, operation: Operation):
-        if operation.effect == "read":
+        if operation.effect in ("read", "routine"):
             return
         if operation.fingerprint not in self._approved:
             raise ArgosError("Esta operación requiere una aprobación concreta.")
         self._approved.remove(operation.fingerprint)
+
+    def is_approved(self, operation):
+        return operation.effect in ("read", "routine") or operation.fingerprint in self._approved
+
+
+class ApprovalNeeded(ArgosError):
+    def __init__(self, pending):
+        self.pending = pending
+        super().__init__("La operación está preparada y necesita aprobación.")

@@ -1,95 +1,98 @@
-# Arquitectura de la base
+# Arquitectura
 
 ```text
-CLI de desarrollo / futuro STT / futura GUI Windows
-                       ↓
-          Socket Unix privado → Core
-                       ↓
-       intención conocida / consulta de estado
-          ├─ respuesta local inmediata
-          └─ resolución insuficiente → intérprete opcional
-                       ↓
-     capacidad registrada / especialista / pregunta / bloqueo
-                       ↓
-        Policy → cola → trabajador → evidencia → resultado
-                       ↓
-           aviso de voz / consulta de detalle
-
-Audio de salida → RMS → esfera ASCII independiente
+Micrófono → Whisper ─┐
+CLI ────────────────┴→ Core → intención conocida → capacidad local
+                         └→ Codex General → respuesta / capacidad / especialista
+                                                        ↓
+                                    hilo Codex ligado a tarea y proyecto
+                                                        ↓
+                                  argos_capability → Policy → operación
+                                                        ↓
+                                       evidencia SQLite → resultado
+                                                        ↓
+                                 Pocket TTS → WAV → PipeWire → RMS → esfera
 ```
 
-El Core decide; un modelo propone. El catálogo describe capacidades realmente
-conectadas. Los roles son programación, PC, diseño 3D e impresión 3D; General
-sirve para conversación e interpretación, sin ser un paso obligatorio.
+Core, consola y proceso de voz tienen ciclos de vida distintos. Cerrar la consola
+no cancela tareas. Hay dos huecos de ejecución y una cola acotada a 64. Las tareas
+del mismo proyecto se serializan; esperar ese bloqueo no ocupa un hueco e impide
+que un proyecto atasque a los demás.
 
-## Responsabilidades
+## Módulos
 
-- `router.py`: atajos conservadores de intención completa; el resto no se ejecuta
-  por coincidencia de una palabra. Un proveedor opcional resuelve lenguaje libre.
-- `providers.py`: protocolo de interpretación y validación estricta; adaptador
-  Ollama local opcional. No descarga ni selecciona un modelo por el usuario.
-- `agents.py`, `contracts/`: catálogo y contratos cargados por el runtime.
-- `core.py`: propiedad de tarea/pregunta, planificación, cancelación y resultados.
-- `store.py`: SQLite, eventos, proyectos e idempotencia; sin modelo de memoria paralelo.
-- `capabilities.py`: operaciones concretas, tipadas y verificables.
-- `policy.py`: autorización por operación y huella; no concede autoridad a prompts.
-- `server.py`, `transport.py`: proceso persistente, IPC local y exclusión de doble Core.
-- `voice.py`, `console.py`: reproducción/medición y superficie visual desacopladas.
-- `codex_probe.py`: diagnóstico de compatibilidad, no ejecución Engineering.
+- `core.py`, `store.py`: tareas, eventos, contexto, idempotencia y recuperación.
+- `router.py`: comandos completos conocidos, sin ejecución por coincidencia parcial.
+- `codex.py`: App Server persistente, RPC, turnos y herramientas dinámicas.
+- `providers.py`: decisiones estructuradas y alternativa Ollama.
+- `agents.py`, `contracts/`: capacidades por rol e instrucciones en ejecución.
+- `linux_tools.py`: operaciones de archivos, procesos, escritorio y búsqueda.
+- `policy.py`: autorización por huella, tarea, proyecto y argumentos.
+- `speech.py`, `voice_worker.py`: cola de voz, captura y proceso local de modelos.
+- `voice.py`, `console.py`: reproducción, RMS y esfera sin transcript.
+- `server.py`, `transport.py`, `launcher.py`: socket, exclusión del Core y apertura.
 
-## Estado verdadero
+## Codex
 
-QUEUED significa aceptado y en cola; RUNNING significa que un trabajador
-posee esa tarea. WAITING_INPUT libera el trabajador y conserva el ID.
-BLOCKED significa que falta una integración o que solo se obtuvo una propuesta.
-COMPLETED exige resultado de una capacidad. FAILED conserva un error seguro.
-INTERRUPTED requiere revisión antes de volver a ejecutar.
+Se comparte un App Server; cada tarea especialista conserva `thread_id`.
+General mantiene hilos efímeros por sesión/proyecto. Los turnos tienen salida
+estructurada y no se añade una segunda llamada de Persona.
 
-Cada solicitud tiene un ID y digest. Se reserva antes de posibles efectos;
-los reintentos confirmados devuelven la respuesta original. Si Core cae antes
-de confirmar, el mismo ID no vuelve a ejecutar. La investigación del resultado
-incierto es explícita.
+El proceso se inicia con herramientas nativas, plugins, apps y descubrimiento
+de skills desactivados. Usa una carpeta vacía de ARGOS, sandbox de lectura y
+sin red en herramientas nativas. Solo el bridge `argos_capability` entrega
+operaciones del catálogo del rol. Las peticiones inesperadas se rechazan.
+La conexión de inferencia del propio App Server requiere internet.
 
-Las consultas de estado y los comandos locales no esperan a la inferencia.
-La cola está acotada a 64 y hay dos trabajadores por defecto. El acceso de
-especialistas al mismo proyecto se serializa. No se mantienen modelos
-cargados por cada agente. El intérprete opcional comparte un slot local.
-No existen conversaciones de agentes entre sí ni un servicio de mensajería extra.
+La cuenta debe ser ChatGPT. Se descartan variables de clave API del entorno
+del hijo. Core no cambia configuración ni autenticación de Codex. Los archivos
+solicitados mediante herramientas pasan al proveedor; los registros de tarea
+conservan esa evidencia filtrada. No se conserva razonamiento.
 
-## Continuidad y contexto
+El protocolo de herramientas dinámicas es experimental y depende de la versión
+instalada. Se comprobó con Codex 0.154.0-alpha.6.2.
 
-Una tarea posee su proyecto, objetivo, capacidad, argumentos, preguntas,
-respuestas y eventos. Una respuesta explícita continúa el mismo ID. El nombre
-exacto de un proyecto puede resolver una única pregunta de proyecto pendiente.
-Las respuestas ambiguas se aclaran; saludos y consultas no se convierten en
-respuestas a una pregunta pendiente.
+## Evidencia y autorización
 
-`thread_id` reserva el enlace futuro con sesiones de proveedor; no se afirma
-que una sesión Codex ya exista. No se carga el historial completo en un modelo.
-Solo se suministran datos del proyecto/tarea seleccionados.
+QUEUED significa encolado; RUNNING, que un trabajador posee la tarea.
+WAITING_INPUT y WAITING_APPROVAL liberan el trabajador conservando identidad.
+Una aprobación contiene la operación preparada y su huella. Al continuar,
+Core ejecuta esa operación exacta antes del siguiente turno del modelo.
+La autoridad desaparece después de usarla o reiniciar Core.
 
-## Límites de autorización
+COMPLETED requiere operaciones registradas; el resultado distingue inspección,
+cambios sin comprobación y comando ejecutado correctamente. Un comando fallido
+queda FAILED. Un comando anterior al último cambio no verifica ese cambio.
+Un turno de modelo sin operaciones queda como propuesta BLOCKED. El detalle
+narrativo del modelo no sustituye la evidencia de las herramientas.
 
-El socket y datos son privados al usuario. Procesos de ese mismo usuario forman
-parte del perímetro de confianza. Esto no es aislamiento frente a software
-malicioso ejecutado por la misma cuenta.
+Cada solicitud se reserva por ID y digest antes de efectos. Los reintentos
+confirmados devuelven su resultado; los resultados inciertos después de una
+caída requieren revisión. Reiniciar no reproduce efectos.
 
-No hay un ejecutor genérico de shell. Git recibe argumentos fijos y desactiva
-fsmonitor; STL y G-code solo admiten archivos acotados del proyecto. No se
-envían contenidos de fuentes ni credenciales a proveedores.
-No se considera un análisis de STL/G-code aprobación para imprimir.
+Lecturas y acciones rutinarias como abrir/enfocar aplicaciones no necesitan
+aprobación adicional. Escritura, cierre de ventana y comandos sí.
+Los comandos son argv registrados, acotados en tiempo y salida; ejecutan código
+con permisos del usuario. No son una sandbox frente a código hostil.
 
-## Próximos bloques
+Las rutas de texto se recorren con descriptores y O_NOFOLLOW. La escritura
+prepara un temporal, compara la versión anterior, reemplaza y verifica.
+Procesos ajenos de la misma cuenta no se consideran adversarios aislados.
 
-1. Conectar Codex con hilos por tarea, bridge de herramientas, contexto filtrado
-   y pruebas reales de implementación/verificación.
-2. STT, TTS y activación de voz sobre el punto de entrada existente. Consumidor
-   de avisos, interrupción, eco y validación con micrófono físico.
-3. Capacidades Linux para aplicaciones y una integración Blender comprobable.
-4. Actualización por voz con candidato, hash, pruebas, aprobación, activación
-   y rollback. Nunca reemplazar el proceso en mitad de una operación incierta.
-5. Integración de impresora con perfil, artefacto, aprobación y monitorización.
-6. GUI Windows reutilizando el Core y adaptadores de plataforma.
+## Audio
 
-Los conectores externos se añaden cuando su flujo se puede probar de extremo
-a extremo. Hasta entonces se muestran como ausentes, no como agentes operativos.
+Espacio inicia captura PipeWire; la segunda pulsación envía a Whisper; límite
+de 30 segundos. No hay wake word. Se pausa TTS durante captura/transcripción.
+Un único propietario de reproducción evita solapamientos. Escape detiene audio,
+no trabajos ya encolados. El RMS sigue el reloj del proceso de reproducción;
+puede diferir por el buffer físico del dispositivo.
+
+El entorno de voz se instala explícitamente con versiones fijadas, separado
+del Python del sistema. El runtime no descarga modelos ni guarda grabaciones.
+Las pruebas de modelo usan audio generado y no comprueban el micrófono físico.
+
+## Siguientes integraciones
+
+Activación por palabra, aprobaciones por voz, lectura web, Blender, impresión,
+actualización mediante candidato/pruebas/activación/rollback y GUI Windows.
+No se anuncian como capacidades conectadas.
