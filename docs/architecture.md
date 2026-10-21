@@ -29,6 +29,8 @@ que un proyecto atasque a los demás.
 - `linux_tools.py`: procesos, escritorio y búsqueda.
 - `host.py`: observaciones Linux acotadas y comprobación de requisitos por capacidad.
 - `filesystem.py`: rutas absolutas, páginas/tramos, árboles, papelera y workspaces.
+- `development.py`: planes, autoridad por tarea, ejecución delegada y evidencia de candidatas.
+- `development_workspace.py`: copias privadas, manifiestos/diffs y pruebas Linux en bubblewrap.
 - `web_reader.py`: HTTP público, extracción de texto/enlaces y paginación.
 - `wake.py`: endpointing PCM y filtro local de invocación.
 - `echo.py`: cancelación de eco PipeWire temporal y supervisada para interrupción.
@@ -84,6 +86,11 @@ El proceso se inicia con herramientas nativas, plugins, apps y descubrimiento
 de skills desactivados. Usa una carpeta vacía de ARGOS, sandbox de lectura y
 sin red en herramientas nativas. Solo el bridge `argos_capability` entrega
 operaciones del catálogo del rol. Las peticiones inesperadas se rechazan.
+Se mantiene `code_mode_host` habilitado: los modelos actuales lo necesitan para
+despachar herramientas dinámicas. No habilita shell, navegador ni operaciones
+del anfitrión; las llamadas del puente siguen pasando por Core. Desactivarlo
+permitía conversar pero impedía utilizar las herramientas, un fallo descubierto
+en una evaluación con inferencia real que no detectaban los proveedores simulados.
 La conexión de inferencia del propio App Server requiere internet.
 
 La cuenta debe ser ChatGPT. Se descartan variables de clave API del entorno
@@ -132,7 +139,37 @@ QUEUED significa encolado; RUNNING, que un trabajador posee la tarea.
 WAITING_INPUT y WAITING_APPROVAL liberan el trabajador conservando identidad.
 Una aprobación contiene la operación preparada y su huella. Al continuar,
 Core ejecuta esa operación exacta antes del siguiente turno del modelo.
-La autoridad desaparece después de usarla o reiniciar Core.
+La autoridad de una operación individual desaparece después de usarla o reiniciar Core.
+
+El flujo `develop` crea una tarea Engineering y una copia privada, incluyendo el
+destino `self` resuelto desde la instalación por el adaptador inyectado en Core.
+Codex investiga con lecturas y propone `development.plan` (explicación hablada,
+pasos y argv exactos de pruebas); se suspende en WAITING_APPROVAL sin escrituras.
+La huella vincula tarea, origen, copia, base y plan. Core comprueba de nuevo el
+hash de la candidata al confirmar y conserva la autoridad solo en memoria.
+Cada efecto posterior sigue pasando por Policy con una autorización de un uso;
+solo se emite tras validar la capacidad, la tarea y sus rutas dentro de la copia.
+Los comandos del anfitrión no reciben permisos derivados de este plan.
+
+`development.check` ejecuta un índice de la lista de pruebas aprobada, mediante
+bubblewrap sin red, home, escritorio ni audio. Solo monta runtimes de sistema en
+lectura y la candidata en escritura. Tiene límite de 120 s y 64 KB de salida;
+cancelar termina el grupo de procesos. Nunca degrada a comandos sin aislamiento.
+`development.review` mide hashes, archivos modificados y pruebas sobre el hash
+actual. Un resultado sin candidata modificada/revisada queda BLOCKED; pruebas
+acordadas fallidas, ausentes o invalidadas por cambios quedan FAILED. Una lista
+de pruebas vacía produce `changes_not_tested`, nunca una verificación inventada.
+Los artefactos contienen la candidata, diff y manifiesto; no se aplican al origen.
+
+La respuesta final del mismo turno Codex sirve como aviso. Core espera al final
+de una respuesta conversacional en curso antes de encolarlo; TTS serializa audio.
+General recibe identidad observada y tareas de su sesión; `task_status` selecciona
+evidencia de Core. No existe llamada adicional para Persona o notificaciones.
+Un plan oído por completo habilita un sí de corta duración en esa sesión cuando
+solo hay una pregunta/aprobación pendiente. Una interrupción, cambio de tema,
+caducidad o reinicio lo invalida. La revisión por código sigue disponible. Ninguna
+decisión del modelo autoriza planes; al reanudar tras interrupción se vuelve a
+planificar sin reproducir efectos y con autorización nueva.
 
 COMPLETED requiere operaciones registradas; el resultado distingue inspección,
 cambios sin comprobación y comando ejecutado correctamente. Un comando fallido
@@ -145,7 +182,7 @@ confirmados devuelven su resultado; los resultados inciertos después de una
 caída requieren revisión. Reiniciar no reproduce efectos.
 
 Lecturas y acciones rutinarias como abrir/enfocar aplicaciones no necesitan
-aprobación adicional. Escritura, cierre de ventana y comandos sí.
+aprobación adicional. Escritura, cierre de ventana y comandos sobre el anfitrión sí.
 Los comandos son argv registrados, acotados en tiempo y salida; ejecutan código
 con permisos del usuario. No son una sandbox frente a código hostil.
 
@@ -286,5 +323,5 @@ se expresa en el contrato de conversación y nunca con un recorte del texto.
 ## Siguientes integraciones
 
 Lectura web dinámica/PDF, validación acústica de manos libres, Blender, impresión,
-actualización mediante candidato/pruebas/activación/rollback y GUI Windows.
+aplicación/activación/rollback de candidatas de actualización y GUI Windows.
 No se anuncian como capacidades conectadas.

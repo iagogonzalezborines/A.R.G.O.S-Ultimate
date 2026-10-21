@@ -33,6 +33,10 @@ def parser():
     s.add_argument("text")
     s.add_argument("--project")
     s.add_argument("--speak", action="store_true")
+    s = sub.add_parser("develop", help="Preparar un plan Codex y una candidata aislada")
+    s.add_argument("text")
+    s.add_argument("--target", choices=("self", "project", "new"), default="project")
+    s.add_argument("--project")
     for name in ("agents", "tasks", "projects"):
         sub.add_parser(name)
     s = sub.add_parser("add-project")
@@ -146,7 +150,7 @@ async def execute(args):
     message = {"method": methods.get(args.command, args.command), "session": args.session,
                "request_id": args.request_id or uuid.uuid4().hex}
     for name in ("text", "project", "task_id", "name", "path", "capability", "fingerprint", "speak", "argv",
-                 "language", "input_device"):
+                 "language", "input_device", "target"):
         if hasattr(args, name) and getattr(args, name) is not None:
             message[name] = getattr(args, name)
     if args.command == "run":

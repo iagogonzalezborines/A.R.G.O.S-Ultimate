@@ -15,7 +15,7 @@ from .security import safe_data
 SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
-        "kind": {"enum": ["answer", "clarify", "delegate", "capability", "panel", "reply"]},
+        "kind": {"enum": ["answer", "clarify", "delegate", "capability", "panel", "reply", "develop", "task_status"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
         "capability": {"type": "string"}, "arguments": {"type": "object"},
     },
@@ -41,7 +41,18 @@ def validate_decision(data, agent="general"):
         raise ArgosError("El proveedor excedió los límites de respuesta.")
     if data["agent"] and data["agent"] not in AGENTS:
         raise ArgosError("El proveedor solicitó un agente inexistente.")
-    if data["kind"] == "reply":
+    if data["kind"] == "develop":
+        if (agent != "general" or data["agent"] or data["capability"]
+                or set(data["arguments"]) != {"target"}
+                or data["arguments"]["target"] not in ("self", "project", "new")):
+            raise ArgosError("El desarrollo debe seleccionar self, project o new.")
+    elif data["kind"] == "task_status":
+        if (agent != "general" or data["agent"] or data["capability"]
+                or set(data["arguments"]) != {"task_id"}
+                or not isinstance(data["arguments"]["task_id"], str)
+                or (data["arguments"]["task_id"] != "all" and len(data["arguments"]["task_id"]) != 32)):
+            raise ArgosError("El estado debe seleccionar una tarea del contexto o all.")
+    elif data["kind"] == "reply":
         if (agent != "general" or data["agent"] or data["capability"]
                 or set(data["arguments"]) != {"task_id"}
                 or not isinstance(data["arguments"]["task_id"], str)

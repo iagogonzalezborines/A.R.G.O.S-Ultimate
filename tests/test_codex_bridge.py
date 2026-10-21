@@ -71,6 +71,16 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self.codex.thread("engineering", thread), thread)
         self.assertNotIn(thread, self.codex.tools)
 
+    async def test_bridge_host_is_enabled_while_native_effect_tools_remain_disabled(self):
+        with patch("argos.codex.asyncio.create_subprocess_exec", wraps=asyncio.create_subprocess_exec) as spawn:
+            await self.codex.start()
+        argv = spawn.call_args.args
+        enabled = {argv[i + 1] for i, value in enumerate(argv[:-1]) if value == "--enable"}
+        disabled = {argv[i + 1] for i, value in enumerate(argv[:-1]) if value == "--disable"}
+        self.assertIn("code_mode_host", enabled)
+        self.assertNotIn("code_mode_host", disabled)
+        self.assertTrue({"shell_tool", "unified_exec", "browser_use", "computer_use", "multi_agent"} <= disabled)
+
     async def test_approval_suspends_turn_and_removes_tool_authority(self):
         async def tool(name, args):
             raise ApprovalNeeded({"capability": name, "arguments": args})

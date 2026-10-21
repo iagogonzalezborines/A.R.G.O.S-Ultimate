@@ -65,6 +65,8 @@ def localize(text, language):
         "He solicitado abrir el monitor de tareas.": "I requested opening the task monitor.",
         "Petición aceptada.": "Request accepted.",
         "Petición aceptada por el especialista.": "Request accepted by the specialist.",
+        "Prepararé el plan para que lo revises.": "I'll prepare the plan for your review.",
+        "Plan confirmado. Continúo en segundo plano.": "Plan confirmed. Continuing in the background.",
         "No hay tareas activas.": "There are no active tasks.",
         "No hay proyectos registrados.": "There are no registered projects.",
         "¿En qué proyecto registrado?": "Which registered project?",

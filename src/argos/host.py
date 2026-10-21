@@ -14,7 +14,7 @@ from .security import safe_data
 
 TOOLS = ("git", "python", "python3", "uv", "node", "npm", "cargo", "cmake",
          "docker", "code", "codex", "kitty", "hyprctl", "gio", "xdg-open",
-         "pw-cli", "pw-dump", "pw-record", "pw-play", "pactl")
+         "pw-cli", "pw-dump", "pw-record", "pw-play", "pactl", "bwrap")
 
 
 def observation(value, source, status="observed", reason=None):
@@ -183,6 +183,8 @@ class LinuxEnvironment:
         if facts["tools"]["status"] != "observed" and name not in ("system.info", "system.inspect"):
             return status("not_checked", "No se ha podido comprobar la presencia de herramientas.")
         if capability.needs_project and not project:
+            if name.startswith("development."):
+                return status("needs_context", "Disponible dentro de una tarea de desarrollo; Core prepara su copia.")
             return status("needs_context", "Requiere un proyecto seleccionado.")
         required = {"repo.inspect": ["git"], "apps.open": ["gio"], "files.open": ["xdg-open"],
                     "web.open": ["xdg-open"]}.get(name, [])
@@ -213,6 +215,12 @@ class LinuxEnvironment:
             return status("not_checked", "Adaptador implementado; red y fuente se comprueban en cada consulta.")
         if name in ("commands.exec", "commands.run"):
             return status("not_checked", "Depende de argv/cwd; siempre requiere aprobación. No es una sandbox.")
+        if name == "development.check":
+            if not tools.get("bwrap"):
+                return status("unavailable", "Falta bubblewrap para ejecutar las pruebas aisladas del plan.")
+            return status("not_checked", "Bubblewrap instalado; namespaces y prueba concreta se verifican al ejecutar.")
+        if name in ("development.plan", "development.review"):
+            return status("not_checked", "Requiere una tarea de desarrollo aislada gestionada por Core.")
         if name.startswith("files.") or name in ("projects.create", "stl.inspect", "gcode.inspect", "repo.inspect"):
             return status("not_checked", "Adaptador presente; ruta, formato y permisos se verifican en la operación concreta.")
         if name in ("system.info", "system.inspect", "apps.list"):

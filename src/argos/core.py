@@ -16,9 +16,12 @@ from .language import choose_language, localize
 
 
 class Core:
-    def __init__(self, store: Store, interpreter=None, workers=2, environment=None):
+    def __init__(self, store: Store, interpreter=None, workers=2, environment=None, development=None):
         self.store, self.interpreter = store, interpreter
         self.environment = environment
+        self.development = development
+        self.conversing = 0
+        self.deferred_notifications = deque(maxlen=32)
         self.router, self.policy = Router(), Policy()
         self.queue = asyncio.Queue(maxsize=64)
         self.worker_count = workers
@@ -47,6 +50,9 @@ class Core:
 
     async def start(self):
         self.store.recover()
+        if self.development:
+            self.development.grants.clear()
+            self.development.offers.clear()
         if self.environment:
             await self.environment.refresh()
         self.workers = [asyncio.create_task(self._worker()) for _ in range(self.worker_count)]
@@ -66,6 +72,9 @@ class Core:
         await asyncio.gather(*self.dispatches, return_exceptions=True)
         # Graceful shutdown and crashes have the same conservative recovery rule.
         self.store.recover()
+        if self.development:
+            self.development.grants.clear()
+            self.development.offers.clear()
         if self.interpreter and hasattr(self.interpreter, "close"):
             await self.interpreter.close()
 
@@ -91,10 +100,12 @@ class Core:
 
     def capability_catalogue(self, project=None, agent="general"):
         return [c.public(self.environment.capability_status(c, project) if self.environment else None)
-                for c in CAPABILITIES.values() if agent == "general" or c.name in AGENTS[agent].capabilities]
+                for c in CAPABILITIES.values() if (agent == "general" or c.name in AGENTS[agent].capabilities)
+                and (self.development or not c.name.startswith("development."))]
 
     def context(self, project, agent="general"):
         return {
+            "identity": self.development.workspace.identity() if self.development else {"name": "ARGOS"},
             "response_language": self.language(),
             "project": {"id": project["id"], "name": project["name"], "root": project["root"]} if project else None,
             "capabilities": self.capability_catalogue(project, agent),
@@ -131,7 +142,10 @@ class Core:
         self.store.reserve(key, digest)
         future = asyncio.get_running_loop().create_future()
         self.inflight[key] = digest, future
-        token = self.reply_language.set(self.store.setting("voice.language", "es"))
+        language_token = self.reply_language.set(self.store.setting("voice.language", "es"))
+        conversational = message.get("method", "say") == "say"
+        if conversational:
+            self.conversing += 1
         try:
             response = await self._dispatch(message)
             response.language = self.language()
@@ -142,7 +156,13 @@ class Core:
             data = response.json()
             self.store.cache(key, digest, data)
             if message.get("speak") and self.speech and response.speech:
-                self.speech.enqueue(response.speech, language=response.language)
+                if response.kind == "plan_review" and self.development:
+                    self.speech.enqueue(response.speech, language=response.language,
+                                        on_complete=lambda: self.development.present(response.task_id))
+                else:
+                    self.speech.enqueue(response.speech, language=response.language)
+            elif response.kind == "plan_review" and self.development:
+                self.development.present(response.task_id)
             future.set_result(data)
             return data
         except BaseException as exc:
@@ -151,7 +171,12 @@ class Core:
             future.exception()
             raise
         finally:
-            self.reply_language.reset(token)
+            if conversational:
+                self.conversing -= 1
+                if not self.conversing:
+                    while self.deferred_notifications:
+                        self._speak_notification(*self.deferred_notifications.popleft())
+            self.reply_language.reset(language_token)
             self.inflight.pop(key, None)
 
     async def _dispatch(self, request):
@@ -218,6 +243,10 @@ class Core:
             return self._decision(Decision("capability", agent=cap.agent, capability=cap.name,
                                            arguments=request.get("arguments", {})),
                                   cap.description, project, session)
+        if method == "develop":
+            return self._development_task(public_text(request.get("text", "")),
+                                          request.get("target", "project"),
+                                          self.store.project(request.get("project")), session)
         if method == "task":
             task = self.store.task(request["task_id"])
             return Response(self.describe(task), data={**task, "events": self.store.events(task["id"])})
@@ -228,6 +257,11 @@ class Core:
             if method == "approve":
                 if task["status"] != Status.WAITING_APPROVAL:
                     raise ArgosError("La tarea no espera aprobación.")
+                if self.development and (task["result"] or {}).get("pending_plan"):
+                    self._check_queue()
+                    await self.development.approve(task, request.get("fingerprint", ""))
+                    self._enqueue(task)
+                    return Response("Plan confirmado. Continúo en segundo plano.", "accepted", task["id"])
                 pending = (task["result"] or {}).get("pending_operation")
                 if not pending:
                     raise ArgosError("No hay una operación revisable.")
@@ -238,6 +272,8 @@ class Core:
                 self._enqueue(task)
                 return Response("Aprobación recibida. Continúo la misma tarea.", "accepted", task["id"])
             if method == "cancel":
+                if self.development:
+                    self.development.revoke(task["id"])
                 if task["status"] in TERMINAL:
                     return Response("La tarea ya terminó.", task_id=task["id"])
                 job = self.active.get(task["id"])
@@ -355,6 +391,8 @@ class Core:
             await self.voice.play(request["path"])
             return Response("Reproducción iniciada.")
         if method == "voice.stop":
+            if self.development:
+                self.development.offers.pop(session, None)
             if self.wake:
                 await self.wake.stop()
                 self.store.set_setting("voice.wake_enabled", False)
@@ -372,6 +410,11 @@ class Core:
             raise ArgosError("La petición está vacía.")
         if request.get("end_dialogue"):
             self.approval_dialog.challenges.pop(session, None)
+        if self.development:
+            confirmation = self.development.confirmation(
+                session, text, bool(request.get("speech_interrupted") or request.get("end_dialogue")))
+            if confirmation:
+                return await self._dispatch(confirmation)
         automatic = self.store.setting("voice.language_mode", "auto") == "auto"
         language = choose_language(text, self.language(), request.get("detected_language"),
                                    request.get("language_probability", 0.0)) if automatic else self.language()
@@ -442,6 +485,7 @@ class Core:
                                                                      and request.get("speech_interrupted"))}
                 context["applications"] = self.application_names()
                 context["projects"] = [p["name"] for p in self.store.projects()]
+                context["tasks"] = self.task_context(session)
                 context["pending_questions"] = [{"task_id": t["id"], "agent": t["agent"],
                                                   "objective": t["objective"][:200],
                                                   "question": (t["question"] or "")[:2000]}
@@ -465,6 +509,8 @@ class Core:
                         # Forward the user's actual words, never a model-invented answer.
                         response = await self._dispatch({"method": "reply", "session": session,
                                                          "task_id": target, "text": text})
+                    elif decision.kind == "task_status":
+                        response = self.task_status(session, decision.arguments["task_id"])
                     else:
                         response = self._decision(decision, text, project, session)
                     thread = (self.interpreter.conversation_thread(context)
@@ -510,7 +556,10 @@ class Core:
         if kind in ("gaming_on", "gaming_off"):
             self.store.set_setting("gaming", kind == "gaming_on")
             self.notifications.clear()
+            self.deferred_notifications.clear()
             return Response("Modo gaming activado." if kind == "gaming_on" else "Modo normal activado.")
+        if kind == "status" and self.development:
+            return self.task_status(session, "all")
         tasks = self.store.tasks(session)
         current = [t for t in tasks if t["status"] not in TERMINAL]
         if not current:
@@ -522,6 +571,8 @@ class Core:
         return Response(speech, data=current)
 
     def _decision(self, decision, text, project, session):
+        if decision.kind == "develop":
+            return self._development_task(text, decision.arguments["target"], project, session)
         if decision.kind in ("answer", "clarify"):
             # No execution can be claimed by a model-only response.
             if decision.kind == "answer":
@@ -549,6 +600,8 @@ class Core:
             return Response("Petición aceptada.", "accepted", task["id"],
                             data={"status": "QUEUED", "agent": cap.agent})
         if decision.kind == "delegate" and decision.agent in AGENTS:
+            if decision.agent == "engineering" and self.development:
+                return self._development_task(text, "project", project, session)
             if decision.agent in ("design3d", "printing3d") and not project:
                 task = self.store.create_task(session, None, decision.agent, text,
                                               status=Status.WAITING_INPUT,
@@ -566,6 +619,91 @@ class Core:
             self.queue.put_nowait(task["id"])
             return Response("Petición aceptada por el especialista.", "accepted", task["id"])
         raise ArgosError("La decisión no puede ejecutarse.")
+
+    def _development_task(self, text, target, project, session):
+        if not self.development or not hasattr(self.interpreter, "work"):
+            raise ArgosError("El desarrollo delegado no está conectado a Codex.")
+        if not text.strip() or target not in ("self", "project", "new"):
+            raise ArgosError("Indica objetivo y destino: self, project o new.")
+        if target == "project" and not project:
+            task = self.store.create_task(session, None, "engineering", text, status=Status.WAITING_INPUT,
+                                          question="¿En qué proyecto registrado?")
+            self.development.create(task["id"], None, target)
+            return Response(task["question"], "clarify", task["id"])
+        if target == "self":
+            identity = self.development.workspace.identity()
+            if not identity["self_development"]:
+                raise ArgosError("Esta instalación no contiene el código fuente de ARGOS.")
+            source = identity["source_root"]
+            project = None
+        else:
+            source = project["root"] if target == "project" else None
+        self._check_queue()
+        task = self.store.create_task(session, project["id"] if project else None, "engineering", text)
+        self.development.create(task["id"], source, target)
+        self.queue.put_nowait(task["id"])
+        return Response("Prepararé el plan para que lo revises.", "accepted", task["id"])
+
+    def task_context(self, session):
+        tasks = []
+        for task in self.store.tasks(session)[:12]:
+            events = self.store.events(task["id"])
+            started = next((e["data"]["capability"] for e in events if e["kind"] == "CAPABILITY_STARTED"), None)
+            development = self.development.state(task["id"]) if self.development else None
+            tasks.append({"id": task["id"], "objective": task["objective"][:200], "status": task["status"],
+                          "last_operation": started, "question": task["question"],
+                          "phase": development["phase"] if development else None,
+                          "verification": (task["result"] or {}).get("verification"),
+                          "candidate": (task["result"] or {}).get("candidate")})
+        return tasks
+
+    def task_status(self, session, reference):
+        tasks = self.task_context(session)
+        if reference != "all":
+            tasks = [t for t in tasks if t["id"] == reference]
+            if not tasks:
+                raise ArgosError("La tarea no pertenece al contexto de esta sesión.")
+        english = self.language() == "en"
+        phases = {"preparing": ("preparando la copia", "preparing the workspace"),
+                  "planning": ("preparando el plan", "preparing the plan"),
+                  "awaiting_plan": ("esperando tu confirmación del plan", "waiting for your plan confirmation"),
+                  "implementing": ("implementando en la copia de trabajo", "implementing in the workspace"),
+                  "testing": ("comprobando la candidata", "checking the candidate"),
+                  "candidate_ready": ("candidata lista para revisión", "candidate ready for review"),
+                  "verification_failed": ("verificación pendiente o fallida", "verification missing or failed")}
+        statuses = {"QUEUED": ("en cola", "queued"), "RUNNING": ("en curso", "running"),
+                    "WAITING_INPUT": ("esperando tu respuesta", "waiting for your answer"),
+                    "WAITING_APPROVAL": ("esperando aprobación", "waiting for approval"),
+                    "INTERRUPTED": ("interrumpida", "interrupted"), "CANCELLED": ("cancelada", "cancelled"),
+                    "BLOCKED": ("bloqueada", "blocked"), "COMPLETED": ("terminada", "completed"),
+                    "FAILED": ("fallida", "failed")}
+        parts = []
+        for task in tasks[:4]:
+            phase = phases.get(task["phase"]) if task["status"] in ("RUNNING", "COMPLETED", "WAITING_APPROVAL") else None
+            state = (phase or statuses[task["status"]])[int(english)]
+            # A spoken status is a complete sentence, not a character slice of
+            # the original request. Keep the full objective in structured data.
+            if len(tasks) == 1:
+                description = (f"Task status: {state}." if english else f"La tarea está {state}.")
+                if task["phase"] == "candidate_ready" and task["status"] == "COMPLETED":
+                    description = "The candidate is ready for review." if english else "La candidata está lista para revisión."
+            else:
+                words = task["objective"].split()
+                title = " ".join(words[:10]) + ("…" if len(words) > 10 else "")
+                description = f"{title}: {state}."
+            if task["candidate"]:
+                verification = task["verification"]
+                if verification == "command_passed":
+                    description += " The agreed checks passed." if english else " Las pruebas acordadas pasaron."
+                elif verification == "command_failed":
+                    description += " The checks failed." if english else " Las pruebas fallaron."
+                else:
+                    description += " The changes are not verified by tests." if english else " Los cambios no están verificados por pruebas."
+                description += (" It has not been applied to the original project or activated." if english else
+                                " No se ha aplicado al proyecto original ni se ha activado.")
+            parts.append(description)
+        return Response(" ".join(parts) or ("No tasks yet." if english else "Todavía no hay tareas."),
+                        data=tasks, route="evidence")
 
     async def _answer(self, task, text):
         if task["status"] != Status.WAITING_INPUT:
@@ -638,6 +776,9 @@ class Core:
             if self.environment:
                 await self.environment.refresh()
             project = self.store.project(task["project"])
+            if self.development and self.development.state(task_id):
+                await self.development.run(self, task)
+                return
             if project:
                 project["commands"] = self.store.setting("commands:" + project["id"], {})
             if not task["capability"]:
@@ -741,14 +882,25 @@ class Core:
             self.store.update(task_id, Status.FAILED, question=message)
             self._notify(task_id, message)
         finally:
+            if self.development and self.store.task(task_id)["status"] in TERMINAL | {Status.INTERRUPTED, Status.BLOCKED}:
+                self.development.revoke(task_id)
             self.reply_language.reset(language_token)
 
-    def _notify(self, task_id, speech):
+    def _notify(self, task_id, speech, on_spoken=None):
         language = self.store.setting("task.language:" + task_id, self.language())
         speech = localize(speech, language)
         if not self.store.setting("gaming", False):
             self.notifications.append({"task_id": task_id, "speech": speech})
-            if self.speech and speech:
+            if self.conversing:
+                self.deferred_notifications.append((speech, language, on_spoken))
+            else:
+                self._speak_notification(speech, language, on_spoken)
+
+    def _speak_notification(self, speech, language, on_spoken):
+        if self.speech and speech:
+            if on_spoken:
+                self.speech.enqueue(speech, language=language, on_complete=on_spoken)
+            else:
                 self.speech.enqueue(speech, language=language)
 
     @staticmethod
@@ -760,11 +912,13 @@ class Core:
     def operation(task_id, name, args, project):
         return Operation(name, {**args, "_task_id": task_id}, project, CAPABILITIES[name].effect)
 
-    async def execute_capability(self, task, project, name, args):
+    async def execute_capability(self, task, project, name, args, development_scope=False):
         cap = CAPABILITIES.get(name)
         if not cap:
             raise ArgosError("La capacidad no existe.")
         cap.validate(args)
+        if development_scope:
+            self.development.authorize(task, name, args)
         if cap.needs_project and not project:
             raise ArgosError("Falta el proyecto para ejecutar la capacidad.")
         if self.environment:
@@ -779,6 +933,10 @@ class Core:
                    for p in self.store.projects()):
                 raise ArgosError("Ese nombre o carpeta ya pertenece a un proyecto.")
         operation = self.operation(task["id"], name, args, task["project"])
+        if development_scope and cap.effect not in ("read", "routine"):
+            # The task's approved plan allows only validated candidate operations.
+            # Still consume an exact, single-use Policy grant for each effect.
+            self.policy.approve(operation, operation.fingerprint)
         if not self.policy.is_approved(operation):
             pending = {"capability": name, "arguments": args, "effect": cap.effect,
                        "fingerprint": operation.fingerprint}
@@ -804,6 +962,10 @@ class Core:
                 raise ArgosError("El comando ha cambiado desde su revisión.")
         self.policy.authorize(operation)
         self.store.event(task["id"], "CAPABILITY_STARTED", {"capability": name})
+        if development_scope and cap.effect == "write":
+            state = self.development.state(task["id"])
+            state["phase"] = "implementing"
+            self.development.save(task["id"], state)
         cancelled = False
         if cap.execute.__module__ == "argos.filesystem" and name not in ("files.open", "workspace.open", "commands.exec"):
             # Large files must not block status/voice. Keep the lock and record

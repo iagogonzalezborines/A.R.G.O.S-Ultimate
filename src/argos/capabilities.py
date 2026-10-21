@@ -197,3 +197,6 @@ CAPABILITIES.update({c.name: c for c in filesystem_capabilities(Capability) + we
 from .host import inspect_system
 CAPABILITIES["system.inspect"] = Capability(
     "system.inspect", "computer", "Inventario observado del equipo, herramientas, dispositivos y límites", (), False, inspect_system)
+
+from .development import capabilities as development_capabilities
+CAPABILITIES.update({c.name: c for c in development_capabilities(Capability)})

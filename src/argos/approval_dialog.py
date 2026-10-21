@@ -20,10 +20,17 @@ class ApprovalDialog:
         if len(tasks) != 1:
             raise ArgosError("Indica la tarea: debe haber exactamente una aprobación pendiente seleccionada.")
         task = tasks[0]
-        pending = task["result"]["pending_operation"]
+        plan = task["result"].get("pending_plan")
+        pending = plan or task["result"]["pending_operation"]
         code = " ".join(secrets.choice(WORDS) for _ in range(4))
         self.challenges[session] = {"task_id": task["id"], "fingerprint": pending["fingerprint"],
                                     "code": code, "expires": time.monotonic() + 120}
+        if plan:
+            english = core.language() == "en"
+            speech = plan["speech"] + (f" To confirm this plan, say: approve {code}." if english else
+                                       f" Para confirmar este plan, di: aprueba {code}.")
+            return Response(speech, "plan_review", task["id"],
+                            data={"fingerprint": plan["fingerprint"], "plan": plan, "expires_in_seconds": 120})
         args = pending["arguments"]
         review = pending.get("review", args)
         visible = {k: v for k, v in review.items() if k not in ("content", "expected_sha256")}
@@ -50,7 +57,7 @@ class ApprovalDialog:
             raise ArgosError("El código no coincide. No se ha aprobado nada.")
         self.challenges.pop(session, None)
         task = core.store.task(challenge["task_id"])
-        pending = (task["result"] or {}).get("pending_operation", {})
+        pending = (task["result"] or {}).get("pending_plan") or (task["result"] or {}).get("pending_operation", {})
         if (task["session"] != session or task["status"] != Status.WAITING_APPROVAL
                 or pending.get("fingerprint") != challenge["fingerprint"]):
             raise ArgosError("La operación pendiente ha cambiado. Revísala de nuevo.")

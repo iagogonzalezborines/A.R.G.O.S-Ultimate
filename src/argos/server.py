@@ -24,7 +24,11 @@ async def serve(directory, interpreter=None, voice_enabled=False):
     socket = directory / "core.sock"
     store = Store(directory)
     from .host import LinuxEnvironment
-    core = Core(store, interpreter, environment=LinuxEnvironment())
+    from pathlib import Path
+    from .development import Development
+    from .development_workspace import LinuxDevelopmentWorkspace
+    development = Development(store, LinuxDevelopmentWorkspace(directory, Path(__file__).resolve().parents[2]))
+    core = Core(store, interpreter, environment=LinuxEnvironment(), development=development)
     from .panels import Panels
     core.panels = Panels(directory)
     core.voice = VoiceOutput()

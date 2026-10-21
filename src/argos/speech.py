@@ -116,13 +116,13 @@ class Speech:
         self.paused = False
         self.first_audio_ms = None
 
-    def enqueue(self, text, language=None):
+    def enqueue(self, text, language=None, on_complete=None):
         language = language or self.language
         # Brevity belongs to the conversation contract, never a character slice.
         text = re.sub(r"https?://\S+", "link in the details" if language == "en" else "enlace en los detalles", text)
         text = re.sub(r"[`*_#]", "", text).strip()
         if text and not self.queue.full():
-            self.queue.put_nowait((text, language))
+            self.queue.put_nowait((text, language, on_complete))
             self.resume_queue()
 
     def resume_queue(self):
@@ -132,7 +132,7 @@ class Speech:
     async def _run(self):
         try:
             while not self.queue.empty() and not self.paused:
-                text, language = self.queue.get_nowait()
+                text, language, on_complete = self.queue.get_nowait()
                 try:
                     self.state = "thinking"
                     started = time.monotonic()
@@ -144,6 +144,8 @@ class Speech:
                     if self.output.job:
                         await self.output.job
                     self.last_error = None
+                    if on_complete and self.first_audio_ms is not None:
+                        on_complete()
                 except (ArgosError, OSError, ValueError, TimeoutError) as error:
                     self.last_error = str(error)
                     self.state = "error"

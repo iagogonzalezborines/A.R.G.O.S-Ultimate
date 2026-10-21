@@ -24,6 +24,22 @@ class SilentOutput:
 
 
 class SpeechTests(unittest.IsolatedAsyncioTestCase):
+    async def test_delivery_callback_requires_complete_nonempty_playback(self):
+        observed = []
+        class Worker:
+            async def chunks(self, text, language):
+                if text == "empty":
+                    return
+                yield b"\0\0"
+                if text == "failed":
+                    raise ArgosError("synthetic failure")
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
+            for text in ("empty", "failed", "complete"):
+                speech.enqueue(text, on_complete=lambda text=text: observed.append(text))
+                await speech.job
+            self.assertEqual(observed, ["complete"])
+
     async def test_long_response_reaches_synthesis_without_cutting_the_ending(self):
         observed = []
         class Worker:
@@ -96,6 +112,7 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_cancelled_synthesis_removes_audio_and_pending_speech(self):
         entered = asyncio.Event()
+        completed = []
         class Worker:
             async def chunks(self, text, language):
                 entered.set()
@@ -103,7 +120,7 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
                 yield b"\0\0"
         with tempfile.TemporaryDirectory() as temp:
             speech = Speech(Worker(), SilentOutput(), Path(temp))
-            speech.enqueue("Primero.")
+            speech.enqueue("Primero.", on_complete=lambda: completed.append(True))
             speech.enqueue("Segundo.")
             await entered.wait()
             self.assertEqual(list(Path(temp).iterdir()), [])
@@ -111,6 +128,7 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(list(Path(temp).iterdir()), [])
             self.assertTrue(speech.queue.empty())
             self.assertEqual(speech.state, "idle")
+            self.assertFalse(completed)
 
     async def test_speech_is_serial_and_leaves_no_recordings(self):
         observed = []

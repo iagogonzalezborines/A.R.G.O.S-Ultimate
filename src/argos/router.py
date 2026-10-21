@@ -140,6 +140,8 @@ class Router:
         # Obvious imperative domain requests bypass General, but never imply that
         # an unconnected operation can actually execute.
         if re.match(r"^(?:corrige|depura|implementa|programa|fix|debug|implement)\b", value):
+            if re.search(r"\b(?:en ti mismo|en tu propio (?:codigo|sistema)|en argos|in your own (?:code|system)|in argos|in yourself)\b", value):
+                return Decision("develop", arguments={"target": "self"}, reason="explicit_self_development")
             return Decision("delegate", agent="engineering", reason="clear_engineering_intent")
         if re.match(r"^(?:disena|modela|design|model)\b", value):
             return Decision("delegate", agent="design3d", reason="clear_design_intent")

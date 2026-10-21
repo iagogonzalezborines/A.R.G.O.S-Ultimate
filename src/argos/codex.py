@@ -14,7 +14,7 @@ from .security import safe_data
 DECISION_SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
-        "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability", "panel", "reply"]},
+        "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability", "panel", "reply", "develop", "task_status"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
         "capability": {"type": "string"}, "arguments_json": {"type": "string"},
     },
@@ -63,12 +63,16 @@ class Codex:
                 raise ArgosError("No se encuentra Codex.")
             disabled = ("shell_tool", "unified_exec", "multi_agent", "apps", "plugins",
                         "browser_use", "browser_use_external", "computer_use", "image_generation",
-                        "view_image", "skill_search", "hooks", "code_mode", "code_mode_host",
+                        "view_image", "skill_search", "hooks", "code_mode",
                         "memories", "shell_snapshot")
             argv = [binary, "app-server", "--listen", "stdio://"]
             for feature in disabled:
                 argv += ["--disable", feature]
-            argv += ["--enable", "skip_host_skill_discovery",
+            # Current models dispatch dynamic tools through the code-mode host.
+            # Disabling this host leaves chat working but breaks every bridge
+            # call. It orchestrates registered tools; native shell/browser/etc.
+            # remain disabled and Core still authorizes every ARGOS effect.
+            argv += ["--enable", "code_mode_host", "--enable", "skip_host_skill_discovery",
                      "-c", "project_doc_max_bytes=0", "-c", "mcp_servers={}",
                      "-c", 'web_search="disabled"', "-c", "analytics.enabled=false"]
             env = {k: v for k, v in os.environ.items() if k not in ("OPENAI_API_KEY", "CODEX_API_KEY")}

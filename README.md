@@ -211,6 +211,45 @@ no se leen con este adaptador. La búsqueda depende de la disponibilidad de Bing
 
 ## Proyectos, programación y aprobación
 
+ARGOS puede delegar en Codex mejoras de un proyecto, proyectos nuevos y cambios
+en su propio código. Primero inspecciona una copia privada, explica un plan
+concreto y pide confirmación. Después trabaja en segundo plano con una sola
+autorización para los archivos de esa candidata y las pruebas incluidas en el plan.
+Puedes seguir conversando y preguntar «¿cómo va esa mejora?» o «qué estás haciendo».
+Core aporta el estado observado; no inventa porcentajes de progreso.
+
+```bash
+./argos develop "Añade una opción para consultar las tareas fallidas" --target self
+./argos develop "Implementa la exportación CSV y sus pruebas" --project mi-proyecto
+./argos develop "Crea una biblioteca Python para convertir unidades" --target new
+./argos task ID
+./argos review ID
+./argos approve ID HUELLA_DEL_PLAN
+```
+
+También admite peticiones naturales como «implementa esta mejora en ti mismo».
+El plan y el aviso final los redacta el modelo y se reproducen sin añadir un
+«Sir» fijo. Un «sí» inmediato confirma **solo** un plan que haya terminado de
+reproducirse en esa sesión, durante dos minutos, sin otra pregunta/aprobación
+pendiente. Interrumpir la locución o cambiar de tema invalida esa respuesta corta.
+Para volver a presentarlo: «revisa aprobación ID»; también admite el código exacto
+de revisión. No se amplía este permiso a otras tareas ni a operaciones del anfitrión.
+
+Las candidatas quedan en `ESTADO/development/ID/workspace`, junto a `changes.patch`
+y un manifiesto con hashes. El origen no se modifica. Se copian hasta 128 MiB y
+10000 archivos; se excluyen Git, entornos/dependencias, cachés, enlaces y rutas
+privadas. Las pruebas acordadas usan bubblewrap instalado, sin red, escritorio,
+audio ni home del anfitrión, con runtimes del sistema y `PYTHONPATH=/workspace/src`.
+Si falta una dependencia o falla el aislamiento, se informa del fallo: no hay
+ejecución automática de esas pruebas fuera de la sandbox. No se instalan paquetes.
+
+Al terminar, ARGOS anuncia el resultado después de la respuesta en curso, sin
+una llamada adicional al modelo para redactar el aviso. Pruebas fallidas,
+omitidas o anteriores al último cambio no certifican la candidata. Reiniciar o
+cancelar revoca la autorización; reanudar exige revisar un nuevo plan y no repite
+efectos. **Preparar y probar una mejora no la instala:** aplicar al proyecto,
+publicar, activar una nueva versión y hacer rollback quedan fuera de este flujo.
+
 ```bash
 ./argos add-project ARGOS /ruta/a/argos
 ./argos say "programacion: revisa cómo se gestionan las tareas" --project ARGOS
@@ -224,7 +263,7 @@ API. Los saludos y comandos conocidos se resuelven sin consultar un modelo.
 El modelo recibe el contexto seleccionado y los archivos que solicita mediante
 las capacidades permitidas, sin acceso libre al disco.
 
-Para modificaciones y ejecución de comandos:
+Para operaciones individuales sobre el anfitrión (fuera del desarrollo aislado):
 
 ```bash
 ./argos review ID
@@ -258,15 +297,16 @@ no una cadena que ARGOS interpole en un shell.
 y carpeta antes de solicitar aprobación. Los comandos ejecutan con permisos del
 usuario y pueden tener efectos fuera de esa carpeta: la aprobación no es una sandbox.
 
-Para empezar desde cero, Engineering puede crear padres mediante `files.mkdir`
-y luego usar `projects.create` con nombre y ruta. Core registra el proyecto y
-conserva la misma tarea e hilo para continuar creando archivos. `workspace.open`
+Para crear carpetas directamente en el anfitrión están `files.mkdir` y
+`projects.create`, esta última con nombre y ruta. Core registra el proyecto.
+Para programar desde cero, `develop --target new` prepara una candidata vacía.
+`workspace.open`
 abre la carpeta en VS Code (`editor=code`) o una terminal kitty con Codex
 (`editor=codex`), previa revisión. Esa terminal Codex es una sesión independiente;
 sus acciones no se atribuyen automáticamente a la evidencia de ARGOS.
 
 ```bash
-./argos say "programacion: crea un proyecto Python en /ruta/a/mi-proyecto"
+./argos develop "Crea un proyecto Python con conversión de unidades y pruebas" --target new
 ./argos run files.read_range --args '{"file":"/ruta/a/grande.txt","offset":"32000","limit":"32000","expected_sha256":""}' --wait
 ./argos run files.mkdir --args '{"path":"/ruta/a/nueva-carpeta"}' --wait
 ./argos run web.read --args '{"url":"https://www.python.org/","offset":"0","expected_sha256":""}' --wait
@@ -372,7 +412,7 @@ Los procesos de tu mismo usuario pertenecen al perímetro de confianza.
 El filtro de secretos rechaza patrones conocidos; no es una garantía DLP completa.
 
 Pendientes: validación acústica del modo manos libres, lector web dinámico/PDF,
-Blender, impresora, instalador de autoactualizaciones y GUI Windows. «Actualiza ARGOS» informa de que falta
+Blender, impresora, aplicación/activación de candidatas con rollback y GUI Windows. «Actualiza ARGOS» informa de que falta
 el instalador y no reemplaza ningún ejecutable.
 
 ## Validar
@@ -382,7 +422,31 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 python scripts/benchmark.py
 ```
 
-Las pruebas automáticas usan temporales y audio silenciado; no cambian proyectos
+Las pruebas `unittest` usan temporales y audio silenciado; no cambian proyectos
 reales, abren aplicaciones, consultan modelos ni activan hardware.
+Por tanto, su resultado no demuestra por sí solo que Codex responda bien ni que
+el protocolo funcione con una versión/modelo reales. `benchmark.py` mide IPC,
+no latencia de conversación con IA.
+
+Evaluación explícita con **Codex real**, usando la sesión ChatGPT y el modelo ya
+configurados (consume cuota; requiere conexión):
+
+```bash
+python scripts/validate_codex_live.py --run --report /tmp/argos-codex-live.json
+python scripts/validate_codex_live.py --run --self-check --report /tmp/argos-self-live.json
+```
+
+Prueba conversación por texto, identidad/límites, una petición ambigua, un plan
+de programación, confirmación por texto, conversación durante el trabajo,
+consulta de estado, código/pruebas generados, resultado independiente y aviso
+de finalización. Solo opera sobre una candidata temporal; no activa micrófono,
+síntesis ni altavoces, no instala modelos y no altera proyectos reales. El informe
+conserva respuestas públicas, herramientas utilizadas, tiempos y evidencia;
+nunca razonamiento ni credenciales. Una pasada es evidencia de esos escenarios,
+no una garantía de fiabilidad general ni una validación acústica.
+
+Resultados y límites de la [evaluación real del 21 de octubre de 2026](docs/validation/codex-live-2026-10-21.md),
+incluyendo el fallo inicial y las ejecuciones posteriores sobre un proyecto
+temporal y sobre una copia del propio ARGOS.
 Ver [arquitectura](docs/architecture.md), [validación](docs/validation.md)
 y [contrato de ARGOS](src/argos/contracts/ARGOS.md).
