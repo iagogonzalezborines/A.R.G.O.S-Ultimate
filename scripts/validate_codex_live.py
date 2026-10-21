@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Opt-in live Codex evaluation: real inference/tools, temporary files, no audio.
+"""Opt-in local-first development evaluation with optional real Codex escalation.
 
 Uses the existing ChatGPT login/model, without changing configuration. This is
-intentionally separate from the deterministic unittest suite and consumes quota.
+intentionally separate from the deterministic unittest suite. Codex consumes
+quota only if the local task requests an authorized escalation.
 Only public replies and measured evidence are reported; no protocol dumps,
 credentials, audio or reasoning are retained.
 """
@@ -20,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from argos.codex import Codex
+from argos.providers import OllamaInterpreter
 from argos.core import Core
 from argos.development import Development
 from argos.development_workspace import LinuxDevelopmentWorkspace, tree
@@ -59,7 +61,7 @@ class TemporaryDevelopmentCore(Core):
         return await super().execute_capability(task, project, name, args, development_scope=True)
 
 
-async def evaluate(report, self_check=False):
+async def evaluate(report, model, self_check=False):
     with tempfile.TemporaryDirectory(prefix="argos-live-eval-") as temporary:
         root = Path(temporary)
         source = ROOT if self_check else root / "fixture"
@@ -71,7 +73,8 @@ async def evaluate(report, self_check=False):
         store = Store(root / "state")
         provider = LiveCodex(store.directory, report)
         adapter = LinuxDevelopmentWorkspace(store.directory, ROOT)
-        core = TemporaryDevelopmentCore(store, provider, development=Development(store, adapter))
+        core = TemporaryDevelopmentCore(store, OllamaInterpreter(model), development=Development(store, adapter),
+                                        escalation_provider=provider)
         project = store.add_project("live-fixture", str(source))
         await core.start()
 
@@ -186,7 +189,9 @@ async def main(args):
               "observations": [], "checks": {}}
     try:
         report["self_development"] = args.self_check
-        await evaluate(report, args.self_check)
+        report["conversation_model"] = args.ollama_model
+        report["policy"] = "local first; Codex only if task escalates with evidence"
+        await evaluate(report, args.ollama_model, args.self_check)
     except Exception as error:
         report["error"] = str(error) if isinstance(error, ArgosError) else type(error).__name__
     finally:
@@ -202,6 +207,7 @@ async def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true", help="Explicitly permit real model calls using the current ChatGPT session")
+    parser.add_argument("--ollama-model", required=True, help="Installed local conversation/task model")
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--self-check", action="store_true", help="Test a change to an isolated copy of ARGOS itself; never apply or activate it")
     args = parser.parse_args()

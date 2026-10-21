@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from argos.providers import OllamaInterpreter
+from argos.models import ArgosError
 from argos.transport import call
 
 
@@ -19,6 +20,31 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class HTTPProviderTests(unittest.IsolatedAsyncioTestCase):
+    async def test_remote_model_alias_is_rejected_before_sending_conversation(self):
+        requests = []
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+            def do_POST(self):
+                requests.append((self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
+                body = json.dumps({"details": {"family": "test"}, "remote_host": "https://example.invalid"}).encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            provider = OllamaInterpreter("innocent-alias", f"http://127.0.0.1:{server.server_port}")
+            with self.assertRaises(ArgosError):
+                await provider.decide("Private conversation", {})
+            self.assertEqual(requests, [("/api/show", {"model": "innocent-alias"})])
+        finally:
+            await asyncio.to_thread(server.shutdown)
+            server.server_close()
+            thread.join()
+
     async def test_real_http_contract_and_schema(self):
         requests = []
         class Handler(BaseHTTPRequestHandler):
@@ -26,9 +52,11 @@ class HTTPProviderTests(unittest.IsolatedAsyncioTestCase):
                 pass
             def do_POST(self):
                 requests.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
-                decision = {"kind": "capability", "speech": "", "agent": "computer",
-                            "capability": "system.info", "arguments": {}}
+                decision = {"kind": "capability", "speech": "", "target_agent": "computer",
+                            "tool": "system.info", "tool_arguments": {}}
                 body = json.dumps({"done": True, "message": {"content": json.dumps(decision)}}).encode()
+                if self.path == "/api/show":
+                    body = json.dumps({"details": {"family": "test"}}).encode()
                 self.send_response(200)
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
@@ -38,12 +66,19 @@ class HTTPProviderTests(unittest.IsolatedAsyncioTestCase):
         thread.start()
         try:
             provider = OllamaInterpreter("test-model", f"http://127.0.0.1:{server.server_port}")
-            decision = await provider.decide("consulta la máquina", {"project": None})
+            decision = await provider.decide("consulta la máquina", {"project": None, "recent_conversation": [
+                {"role": "user", "content": "La carpeta se llama Helios."},
+                {"role": "assistant", "content": "Entendido."}]})
             self.assertEqual(decision.capability, "system.info")
-            self.assertEqual(len(requests), 1)
-            self.assertFalse(requests[0]["stream"])
-            self.assertIn("ARGOS interaction contract", requests[0]["messages"][0]["content"])
-            self.assertEqual(requests[0]["format"]["type"], "object")
+            self.assertEqual(len(requests), 2)
+            self.assertEqual(requests[0], {"model": "test-model"})
+            self.assertFalse(requests[1]["stream"])
+            self.assertFalse(requests[1]["think"])
+            self.assertEqual(requests[1]["messages"][-1], {"role": "user", "content": "consulta la máquina"})
+            self.assertEqual(requests[1]["messages"][-2], {"role": "assistant", "content": "Entendido."})
+            self.assertNotIn("recent_conversation", requests[1]["messages"][1]["content"])
+            self.assertIn("ARGOS interaction contract", requests[1]["messages"][0]["content"])
+            self.assertEqual(requests[1]["format"]["type"], "object")
         finally:
             await asyncio.to_thread(server.shutdown)
             server.server_close()
@@ -135,11 +170,17 @@ class DaemonTests(unittest.IsolatedAsyncioTestCase):
             stdin=slave, stdout=slave, stderr=slave)
         os.close(slave)
         try:
-            await asyncio.sleep(0.2)
-            console.send_signal(signal.SIGINT)
-            await asyncio.wait_for(console.wait(), 3)
             os.set_blocking(master, False)
             chunks = []
+            deadline = time.monotonic() + 5
+            while b"\x1b[?1049h" not in b"".join(chunks) and time.monotonic() < deadline:
+                try:
+                    chunks.append(os.read(master, 65536))
+                except BlockingIOError:
+                    await asyncio.sleep(0.02)
+            self.assertIn(b"\x1b[?1049h", b"".join(chunks), "Console did not become ready")
+            console.send_signal(signal.SIGINT)
+            await asyncio.wait_for(console.wait(), 3)
             while True:
                 try:
                     chunk = os.read(master, 65536)

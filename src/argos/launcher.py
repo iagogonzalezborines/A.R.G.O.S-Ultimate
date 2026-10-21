@@ -19,10 +19,15 @@ async def start(directory, project=None):
     try:
         state = await call(directory, {"method": "voice.state"})
     except ArgosError:
+        from .inference_config import read
+        if not read(directory)["ollama_model"]:
+            raise ArgosError("Configura primero el modelo local con configure-providers --ollama-model NOMBRE.")
+        from .ollama_host import ensure
+        await ensure(directory)
         log = directory / "core.log"
         fd = os.open(log, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
         with os.fdopen(fd, "ab") as stream:
-            subprocess.Popen([*command, "serve", "--codex", "--voice"],
+            subprocess.Popen([*command, "serve", "--voice"],
                              stdin=subprocess.DEVNULL, stdout=stream, stderr=stream, start_new_session=True)
         for _ in range(50):
             await asyncio.sleep(0.1)
@@ -33,6 +38,9 @@ async def start(directory, project=None):
                 continue
         else:
             raise ArgosError("Core no arrancó. Revisa core.log en la carpeta de estado.")
+    inference = state["data"].get("inference", {})
+    if inference.get("policy") != "local_first_explicit_task_escalation":
+        raise ArgosError("El Core activo usa la configuración anterior. Detén esa instancia antes de abrir la configuración local.")
     if state["data"].get("stt") == "not_connected":
         raise ArgosError("El Core activo no tiene voz. Ciérralo antes de iniciar la configuración de voz.")
     if project:

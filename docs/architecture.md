@@ -3,9 +3,9 @@
 ```text
 Micrófono → pulsador / invocación local → Whisper ─┐
 CLI ────────────────┴→ Core → intención conocida → capacidad local
-                         └→ Codex General → respuesta / capacidad / especialista
+                         └→ modelo local → respuesta / capacidad / especialista local
                                                         ↓
-                                    hilo Codex ligado a tarea y proyecto
+                                    escalada justificada → hilo Codex ligado a tarea y proyecto
                                                         ↓
                                   argos_capability → Policy → operación
                                                         ↓
@@ -24,7 +24,8 @@ que un proyecto atasque a los demás.
 - `core.py`, `store.py`: tareas, eventos, contexto, idempotencia y recuperación.
 - `router.py`: comandos completos conocidos, sin ejecución por coincidencia parcial.
 - `codex.py`: App Server persistente, RPC, turnos y herramientas dinámicas.
-- `providers.py`: decisiones estructuradas y alternativa Ollama.
+- `providers.py`: decisiones estructuradas y bucle local de herramientas con Ollama.
+- `inference_config.py`: selección explícita de proveedores por instalación.
 - `agents.py`, `contracts/`: capacidades por rol e instrucciones en ejecución.
 - `linux_tools.py`: procesos, escritorio y búsqueda.
 - `host.py`: observaciones Linux acotadas y comprobación de requisitos por capacidad.
@@ -74,13 +75,26 @@ aclaraciones sin limitar la función a frases exactas ni añadir otra inferencia
 
 ## Codex
 
-Se comparte un App Server; cada tarea especialista conserva `thread_id`.
-General mantiene hilos efímeros por sesión/proyecto. Los turnos tienen salida
-estructurada y no se añade una segunda llamada de Persona.
-Al abrir la consola se prepara el mismo hilo de sesión/proyecto que utilizará
-la primera petición. Esto establece la conexión y el hilo sin ejecutar inferencia
-ni introducir mensajes ficticios. Preparación y primera petición comparten el
-mismo bloqueo para no crear hilos duplicados.
+General y los especialistas usan el modelo local por defecto. Codex está
+conectado a un slot separado, reservado para tareas complejas. El adaptador
+rechaza General antes de iniciar App Server; Core también rechaza inyectarlo
+como intérprete conversacional. La falta/fallo del modelo local nunca activa
+Codex como fallback. No se añade inferencia de clasificación o Persona.
+
+El agente local puede solicitar `escalate` desde Engineering/Research con un
+motivo público concreto. Core exige lectura previa registrada y ausencia de
+aprobación de plan o intento de efecto. No se escala por dependencias, errores
+o permisos. La asignación por tarea y el borrado del hilo anterior se guardan
+atómicamente con `PROVIDER_ESCALATED` antes de volver a encolar. La evidencia
+previa se entrega al nuevo proveedor, sin reproducir efectos. Los hilos previos
+a esta separación, sin asignación de proveedor, no pueden reanudarse.
+
+Un App Server se comparte entre las tareas escaladas; cada una conserva su hilo.
+La conversación permanece en Ollama, que recibe los turnos públicos recientes
+sin depender de memoria remota. Su bucle local utiliza las mismas capacidades
+y política del Core, con doce pasos máximos y sin escalada automática al agotar
+el límite. `inference.json` selecciona el modelo de cada instalación, de modo que
+la oficina y la casa no heredan necesariamente la misma configuración.
 
 El proceso se inicia con herramientas nativas, plugins, apps y descubrimiento
 de skills desactivados. Usa una carpeta vacía de ARGOS, sandbox de lectura y
@@ -143,7 +157,7 @@ La autoridad de una operación individual desaparece después de usarla o reinic
 
 El flujo `develop` crea una tarea Engineering y una copia privada, incluyendo el
 destino `self` resuelto desde la instalación por el adaptador inyectado en Core.
-Codex investiga con lecturas y propone `development.plan` (explicación hablada,
+El proveedor asignado investiga con lecturas y propone `development.plan` (explicación hablada,
 pasos y argv exactos de pruebas); se suspende en WAITING_APPROVAL sin escrituras.
 La huella vincula tarea, origen, copia, base y plan. Core comprueba de nuevo el
 hash de la candidata al confirmar y conserva la autoridad solo en memoria.
@@ -161,7 +175,7 @@ acordadas fallidas, ausentes o invalidadas por cambios quedan FAILED. Una lista
 de pruebas vacía produce `changes_not_tested`, nunca una verificación inventada.
 Los artefactos contienen la candidata, diff y manifiesto; no se aplican al origen.
 
-La respuesta final del mismo turno Codex sirve como aviso. Core espera al final
+La respuesta final del mismo proveedor de tarea sirve como aviso. Core espera al final
 de una respuesta conversacional en curso antes de encolarlo; TTS serializa audio.
 General recibe identidad observada y tareas de su sesión; `task_status` selecciona
 evidencia de Core. No existe llamada adicional para Persona o notificaciones.

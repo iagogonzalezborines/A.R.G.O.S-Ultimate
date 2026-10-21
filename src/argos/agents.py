@@ -39,6 +39,19 @@ def contract(agent: str = "general") -> str:
     return common
 
 
+def local_contract(agent: str = "general") -> str:
+    root = files("argos").joinpath("contracts")
+    common = root.joinpath("ARGOS.md").read_text(encoding="utf-8")
+    # One shared personality source; the local model does not need the full
+    # architecture manual on every spoken turn.
+    personality = common.split("## Personality\n", 1)[1].split("## Decide before acting", 1)[0]
+    result = "# ARGOS interaction contract — local\n\nYou are ARGOS.\n" + personality
+    result += "\n" + root.joinpath("LOCAL.md").read_text(encoding="utf-8")
+    if agent != "general":
+        result += "\n" + root.joinpath(AGENTS[agent].contract).read_text(encoding="utf-8")
+    return result
+
+
 def catalogue(provider: str = "none") -> list[dict]:
     return [
         {**asdict(a), "provider": provider, "execution": "local_capabilities",

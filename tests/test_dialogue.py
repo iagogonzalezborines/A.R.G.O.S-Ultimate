@@ -136,6 +136,7 @@ class DialogueTests(unittest.IsolatedAsyncioTestCase):
                 return {"kind": "result", "speech": "System inspected.", "detail": ""}
         self.core.interpreter = Provider()
         task = self.store.create_task("default", None, "computer", "Inspect setup")
+        self.core.task_provider(task)
         self.store.update(task["id"], Status.RUNNING, thread_id="existing-task-thread")
         self.store.update(task["id"], Status.WAITING_INPUT, question="Use the existing measurements?")
         response = await self.req(text="Yes, use the existing measurements")

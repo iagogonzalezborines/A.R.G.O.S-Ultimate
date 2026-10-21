@@ -32,10 +32,6 @@ def snapshot(core, request):
         counts[row["agent"]][row["status"]] = row["n"]
     for row in db.execute("SELECT status,count(*) n FROM conversations WHERE session=? GROUP BY status", (session,)):
         counts["general"][row["status"]] = counts["general"].get(row["status"], 0) + row["n"]
-    provider = core.interpreter.name if core.interpreter else "none"
-    proc = getattr(core.interpreter, "process", None)
-    connection = ("connected" if proc and proc.returncode is None and getattr(core.interpreter, "connected", False) else
-                  "configured" if core.interpreter else "not_configured")
     agents = []
     for identifier, definition in AGENTS.items():
         totals = counts[identifier]
@@ -43,16 +39,21 @@ def snapshot(core, request):
         queued = totals.get("QUEUED", 0)
         waiting = sum(totals.get(s, 0) for s in WAITING)
         current = db.execute(
-            "SELECT objective FROM tasks WHERE session=? AND agent=? AND status='RUNNING' ORDER BY updated DESC LIMIT 1",
+            "SELECT objective,id FROM tasks WHERE session=? AND agent=? AND status='RUNNING' ORDER BY updated DESC LIMIT 1",
             (session, identifier)).fetchone()
         if identifier == "general":
             current = db.execute(
-                "SELECT title FROM conversations WHERE session=? AND status='RUNNING' ORDER BY updated DESC LIMIT 1",
+                "SELECT title,id FROM conversations WHERE session=? AND status='RUNNING' ORDER BY updated DESC LIMIT 1",
                 (session,)).fetchone()
+        assignment = core.store.setting("task.provider:" + current[1]) if current and identifier != "general" else None
+        active_provider = core.escalation_provider if assignment and assignment["route"] == "escalated" else core.interpreter
+        active_name = active_provider.name if active_provider else "none"
+        active_connection = ("connected" if getattr(active_provider, "connected", False) else
+                             "configured" if active_provider else "not_configured")
         agents.append({"id": identifier, "name": NAMES[identifier], "role": definition.role,
-                       "capabilities": list(definition.capabilities), "provider": provider,
+                       "capabilities": list(definition.capabilities), "provider": active_name,
                        "capability_status": core.capability_catalogue(agent=identifier),
-                       "connection": connection, "running": running, "queued": queued, "waiting": waiting,
+                       "connection": active_connection, "running": running, "queued": queued, "waiting": waiting,
                        "activity": current[0][:240] if current else None,
                        "state": "running" if running else "queued" if queued else "waiting" if waiting else "idle"})
     table = "tasks" if kind == "tasks" else "conversations"
@@ -76,12 +77,15 @@ def snapshot(core, request):
         x.updated DESC,x.id LIMIT 24 OFFSET ?""", (*params, start))]
     for row in rows:
         row["title"] = row["title"][:240]
+        if kind == "tasks":
+            row["provider_assignment"] = core.store.setting("task.provider:" + row["id"])
         if (kind == "conversations" and row["thread_id"] is None
                 and core.conversation_ids.get((session, row["project"])) == row["id"]
                 and hasattr(core.interpreter, "conversation_thread")):
             row["thread_id"] = core.interpreter.conversation_thread(
                 {"session": session, "project": {"id": row["project"]} if row["project"] else None})
     return {"agents": agents, "rows": rows, "total": total, "offset": start, "page_size": 24,
+            "inference": core.inference_status(),
             "kind": kind, "filter": group, "agent": agent, "session": session, "updated": time.time(),
             "counts": {"running": sum(c.get("RUNNING", 0) for c in counts.values()),
                        "queued": sum(c.get("QUEUED", 0) for c in counts.values()),
@@ -92,7 +96,9 @@ def event_message(event):
     """Only public commentary, questions, answers and verified outcome summaries."""
     kind, data = event["kind"], event["data"]
     if kind == "PROGRESS":
-        return "Codex", data.get("summary", "")
+        return "ARGOS", data.get("summary", "")
+    if kind == "PROVIDER_ESCALATED":
+        return "Core", "Escalada a " + data["provider"] + ": " + data["reason"]
     if kind == "USER_ANSWER":
         return "Tú", data.get("answer", "")
     if kind == "CAPABILITY_RESULT":

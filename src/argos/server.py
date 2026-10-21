@@ -10,7 +10,7 @@ from .store import Store
 from .voice import VoiceOutput
 
 
-async def serve(directory, interpreter=None, voice_enabled=False):
+async def serve(directory, interpreter=None, voice_enabled=False, escalation_provider=None):
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     if directory.resolve() in (directory.resolve().parent, __import__("pathlib").Path.home()):
         raise ArgosError("La carpeta de estado debe ser exclusiva de ARGOS.")
@@ -28,7 +28,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
     from .development import Development
     from .development_workspace import LinuxDevelopmentWorkspace
     development = Development(store, LinuxDevelopmentWorkspace(directory, Path(__file__).resolve().parents[2]))
-    core = Core(store, interpreter, environment=LinuxEnvironment(), development=development)
+    core = Core(store, interpreter, environment=LinuxEnvironment(), development=development,
+                escalation_provider=escalation_provider)
     from .panels import Panels
     core.panels = Panels(directory)
     core.voice = VoiceOutput()

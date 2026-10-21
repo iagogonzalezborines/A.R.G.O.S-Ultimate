@@ -1,0 +1,4 @@
+# Office comparison profile: i7-4790 / GT 1030 2 GB.
+# Reuses the downloaded weights; does not select this model in ARGOS.
+FROM qwen3:4b-instruct-2507-q4_K_M
+PARAMETER num_gpu 0

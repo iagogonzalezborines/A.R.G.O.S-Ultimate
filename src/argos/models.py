@@ -43,3 +43,7 @@ class Response:
 
 class ArgosError(Exception):
     """Safe, user-facing failure. Raw provider exceptions are never persisted."""
+
+
+class EscalationNeeded(ArgosError):
+    """A local task requests deeper reasoning; Core alone chooses the provider."""

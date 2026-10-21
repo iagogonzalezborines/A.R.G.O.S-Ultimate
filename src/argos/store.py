@@ -11,7 +11,7 @@ from .security import public_text, safe_data
 
 TRANSITIONS = {
     Status.QUEUED: {Status.RUNNING, Status.CANCELLED, Status.INTERRUPTED},
-    Status.RUNNING: {Status.WAITING_INPUT, Status.WAITING_APPROVAL, Status.BLOCKED,
+    Status.RUNNING: {Status.QUEUED, Status.WAITING_INPUT, Status.WAITING_APPROVAL, Status.BLOCKED,
                      Status.COMPLETED, Status.FAILED, Status.CANCELLED, Status.INTERRUPTED},
     Status.WAITING_INPUT: {Status.QUEUED, Status.BLOCKED, Status.CANCELLED},
     Status.WAITING_APPROVAL: {Status.QUEUED, Status.CANCELLED, Status.INTERRUPTED},
@@ -167,6 +167,20 @@ class Store:
                  json.dumps(arguments) if arguments is not None else None,
                  project, thread_id, task_id))
             self._event(task_id, str(status), {"question": question, "result": result})
+        return self.task(task_id)
+
+    def handoff_provider(self, task_id, assignment):
+        """Persist assignment, clear the previous provider thread and requeue atomically."""
+        if self.task(task_id)["status"] != Status.RUNNING:
+            raise ArgosError("Solo una tarea en ejecución puede transferirse a otro proveedor.")
+        safe_data(assignment)
+        with self.db:
+            self.db.execute("INSERT OR REPLACE INTO settings VALUES (?,?)",
+                            ("task.provider:" + task_id, json.dumps(assignment)))
+            self.db.execute("UPDATE tasks SET status=?,thread_id=NULL,result=NULL,question=NULL,updated=? WHERE id=?",
+                            (str(Status.QUEUED), time.time(), task_id))
+            self._event(task_id, "PROVIDER_ESCALATED", assignment)
+            self._event(task_id, str(Status.QUEUED), {"cause": "provider_handoff"})
         return self.task(task_id)
 
     def event(self, task_id, kind, data):

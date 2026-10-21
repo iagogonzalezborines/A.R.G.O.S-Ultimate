@@ -7,7 +7,7 @@ from contextvars import ContextVar
 
 from .agents import AGENTS, catalogue, contract
 from .capabilities import CAPABILITIES
-from .models import ArgosError, Decision, Response, Status, TERMINAL
+from .models import ArgosError, Decision, Response, Status, TERMINAL, EscalationNeeded
 from .policy import Operation, Policy, ApprovalNeeded
 from .router import Router
 from .security import public_text, safe_data
@@ -16,8 +16,12 @@ from .language import choose_language, localize
 
 
 class Core:
-    def __init__(self, store: Store, interpreter=None, workers=2, environment=None, development=None):
+    def __init__(self, store: Store, interpreter=None, workers=2, environment=None, development=None,
+                 escalation_provider=None):
+        if interpreter and not getattr(interpreter, "conversation_allowed", True):
+            raise ArgosError("El proveedor de conversación no puede ser Codex.")
         self.store, self.interpreter = store, interpreter
+        self.escalation_provider = escalation_provider
         self.environment = environment
         self.development = development
         self.conversing = 0
@@ -75,8 +79,55 @@ class Core:
         if self.development:
             self.development.grants.clear()
             self.development.offers.clear()
-        if self.interpreter and hasattr(self.interpreter, "close"):
-            await self.interpreter.close()
+        for provider in (self.interpreter, self.escalation_provider):
+            if provider and hasattr(provider, "close"):
+                await provider.close()
+
+    def inference_status(self):
+        return {"policy": "local_first_explicit_task_escalation",
+                "conversation": self.interpreter.name if self.interpreter else "not_configured",
+                "conversation_model": getattr(self.interpreter, "model", None),
+                "complex_tasks": self.escalation_provider.name if self.escalation_provider else "not_configured",
+                "automatic_error_fallback": False}
+
+    def task_provider(self, task):
+        binding = self.store.setting("task.provider:" + task["id"])
+        if binding is None and task.get("thread_id"):
+            raise ArgosError("La tarea conserva un hilo de la configuración anterior; revisa y crea una tarea nueva.")
+        remote = binding and binding["route"] == "escalated"
+        provider = self.escalation_provider if remote else self.interpreter
+        if not provider:
+            raise ArgosError("Falta el proveedor asignado a esta tarea; no se cambia de proveedor automáticamente.")
+        if binding and binding["provider"] != provider.name:
+            raise ArgosError("El proveedor de la tarea ha cambiado; requiere una tarea nueva.")
+        if binding and "model" in binding and binding["model"] != getattr(provider, "model", None):
+            raise ArgosError("El modelo de esta tarea ha cambiado; requiere revisión y una tarea nueva.")
+        if not binding:
+            self.store.set_setting("task.provider:" + task["id"], {"route": "local", "provider": provider.name,
+                                                                  "model": getattr(provider, "model", None)})
+        return provider
+
+    def escalate_task(self, task, reason):
+        """Only a justified local reasoning limit before effects may use Codex."""
+        public_text(reason, 600)
+        binding = self.store.setting("task.provider:" + task["id"], {})
+        events = self.store.events(task["id"])
+        operations = [e["data"].get("capability") for e in events if e["kind"] == "CAPABILITY_STARTED"]
+        reads = [e for e in events if e["kind"] == "CAPABILITY_RESULT"]
+        approved = self.development and task["id"] in self.development.grants
+        if (task["agent"] not in ("engineering", "research") or task["capability"]
+                or binding.get("route") != "local" or len(reason.strip()) < 16 or not reads
+                or approved or any(name not in CAPABILITIES or CAPABILITIES[name].effect != "read" for name in operations)):
+            raise ArgosError("La escalada requiere investigación local y un límite de razonamiento concreto, antes de aprobar o ejecutar cambios.")
+        if not self.escalation_provider:
+            raise ArgosError("La tarea necesita razonamiento adicional, pero Codex no está habilitado para escaladas.")
+        self._check_queue()
+        route = {"route": "escalated", "provider": self.escalation_provider.name,
+                 "reason": reason, "local_provider": binding["provider"]}
+        # Threads never cross providers. The scoped evidence is handed over,
+        # not a replay of earlier effects or a global specialist mode.
+        task = self.store.handoff_provider(task["id"], route)
+        self.queue.put_nowait(task["id"])
 
     def prepare_conversation(self, project=None, session="default"):
         if not self.interpreter or not hasattr(self.interpreter, "prepare"):
@@ -106,6 +157,7 @@ class Core:
     def context(self, project, agent="general"):
         return {
             "identity": self.development.workspace.identity() if self.development else {"name": "ARGOS"},
+            "inference": self.inference_status(),
             "response_language": self.language(),
             "project": {"id": project["id"], "name": project["name"], "root": project["root"]} if project else None,
             "capabilities": self.capability_catalogue(project, agent),
@@ -249,7 +301,8 @@ class Core:
                                           self.store.project(request.get("project")), session)
         if method == "task":
             task = self.store.task(request["task_id"])
-            return Response(self.describe(task), data={**task, "events": self.store.events(task["id"])})
+            return Response(self.describe(task), data={**task, "provider_assignment": self.store.setting("task.provider:" + task["id"]),
+                                                       "events": self.store.events(task["id"])})
         if method in ("cancel", "resume", "reply", "approve"):
             task = self.store.task(request["task_id"])
             if task["session"] != session:
@@ -350,6 +403,7 @@ class Core:
             elif self.wake and self.wake.dialogue_open and data["state"] == "idle":
                 data["state"] = "listening"
             data["stt"] = "whisper-base" if self.capture else "not_connected"
+            data["inference"] = self.inference_status()
             data["tts"] = "pocket-peter-yearsley" if self.speech else "not_connected"
             data["language"] = self.speech.language if self.speech else None
             data["language_mode"] = self.store.setting("voice.language_mode", "auto")
@@ -577,10 +631,17 @@ class Core:
             # No execution can be claimed by a model-only response.
             if decision.kind == "answer":
                 import re
-                if re.search(r"\b(?:he (?:abierto|modificado|enviado|iniciado|terminado|ejecutado)|"
-                             r"estoy (?:trabajando|ejecutando)|i(?:'m| am) working|"
-                             r"i (?:opened|changed|sent|started|completed)|task (?:started|completed))\b",
-                             decision.speech, re.I):
+                claims = re.finditer(
+                    r"\b(?:he (?:abierto|modificado|enviado|iniciado|terminado|ejecutado)|"
+                    r"estoy (?:trabajando|ejecutando)|i(?:['’]m| am) working|"
+                    r"i (?:opened|changed|sent|started|completed)|task (?:started|completed))\b",
+                    decision.speech, re.I)
+                # A direct denial ("No he ejecutado...") is honest context, not
+                # evidence of execution. Check each match independently so a
+                # denial cannot hide a later affirmative claim in the same reply.
+                if any(not re.search(
+                        r"\b(?:no|nunca|jamás|tampoco)(?:[ \t]+(?:lo|la|los|las|le|les|te|se|os))*[ \t]+$",
+                        decision.speech[:match.start()], re.I) for match in claims):
                     return Response("No se ha ejecutado ninguna operación para esa petición.", "clarify")
             return Response(decision.speech, decision.kind, route="provider")
         if decision.kind == "capability":
@@ -622,7 +683,7 @@ class Core:
 
     def _development_task(self, text, target, project, session):
         if not self.development or not hasattr(self.interpreter, "work"):
-            raise ArgosError("El desarrollo delegado no está conectado a Codex.")
+            raise ArgosError("Falta un agente local con herramientas para preparar el desarrollo; Codex no sustituye al modelo local ausente.")
         if not text.strip() or target not in ("self", "project", "new"):
             raise ArgosError("Indica objetivo y destino: self, project o new.")
         if target == "project" and not project:
@@ -651,6 +712,7 @@ class Core:
             started = next((e["data"]["capability"] for e in events if e["kind"] == "CAPABILITY_STARTED"), None)
             development = self.development.state(task["id"]) if self.development else None
             tasks.append({"id": task["id"], "objective": task["objective"][:200], "status": task["status"],
+                          "provider_assignment": self.store.setting("task.provider:" + task["id"]),
                           "last_operation": started, "question": task["question"],
                           "phase": development["phase"] if development else None,
                           "verification": (task["result"] or {}).get("verification"),
@@ -716,10 +778,8 @@ class Core:
             task = self.store.update(task["id"], Status.WAITING_INPUT, project=project["id"])
         else:
             self.store.event(task["id"], "USER_ANSWER", {"answer": text})
-        if not task["capability"] and not self.interpreter:
-            self.store.update(task["id"], Status.BLOCKED,
-                              question="Falta conectar el proveedor del especialista.")
-            return Response("Falta conectar el proveedor del especialista.", "blocked", task["id"])
+        if not task["capability"]:
+            self.task_provider(task)
         self._enqueue(task)
         return Response("La misma tarea vuelve a la cola.", "accepted", task["id"])
 
@@ -776,6 +836,7 @@ class Core:
             if self.environment:
                 await self.environment.refresh()
             project = self.store.project(task["project"])
+            provider = self.task_provider(task) if not task["capability"] else None
             if self.development and self.development.state(task_id):
                 await self.development.run(self, task)
                 return
@@ -792,7 +853,9 @@ class Core:
                         {"command": name, "expected_sha256":
                          hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()}
                         for name, spec in project["commands"].items()]
-                if hasattr(self.interpreter, "work"):
+                context["escalation"] = {"allowed": provider is self.interpreter and bool(self.escalation_provider),
+                                         "assignment": self.store.setting("task.provider:" + task_id)}
+                if hasattr(provider, "work"):
                     history = [e["data"] for e in reversed(events) if e["kind"] == "CAPABILITY_RESULT"]
                     approved = next((e["data"] for e in events if e["kind"] == "APPROVED"), None)
                     if approved and self.policy.is_approved(self.operation(
@@ -823,7 +886,7 @@ class Core:
                             self.store.event(task_id, "PROGRESS", {"summary": text})
                         except ArgosError:
                             pass
-                    result = await self.interpreter.work(task, context, execute, save_thread, progress)
+                    result = await provider.work(task, context, execute, save_thread, progress)
                     if result.get("kind") == "question":
                         self.store.update(task_id, Status.WAITING_INPUT, question=result["speech"])
                     elif history:
@@ -842,10 +905,12 @@ class Core:
                     else:
                         self.store.update(task_id, Status.BLOCKED,
                                           result={"speech": result.get("speech", ""), "verification": "proposal_only"},
-                                          question="Codex respondió sin ejecutar operaciones.")
+                                          question="El proveedor respondió sin ejecutar operaciones.")
                     self._notify(task_id, result.get("speech", ""))
                     return
-                decision = await self.interpreter.decide(task["objective"], context, task["agent"])
+                decision = await provider.decide(task["objective"], context, task["agent"])
+                if decision.kind == "escalate":
+                    raise EscalationNeeded(decision.arguments["reason"])
                 if decision.kind == "clarify":
                     self.store.update(task_id, Status.WAITING_INPUT, question=decision.speech)
                     self._notify(task_id, decision.speech)
@@ -867,6 +932,12 @@ class Core:
             self.store.update(task_id, Status.FAILED if result.get("verification") == "command_failed"
                               else Status.COMPLETED, result=result)
             self._notify(task_id, result["speech"])
+        except EscalationNeeded as error:
+            try:
+                self.escalate_task(task, str(error))
+            except ArgosError as blocked:
+                self.store.update(task_id, Status.BLOCKED, question=str(blocked))
+                self._notify(task_id, str(blocked))
         except ApprovalNeeded as error:
             self.store.update(task_id, Status.WAITING_APPROVAL,
                               result={"pending_operation": error.pending},

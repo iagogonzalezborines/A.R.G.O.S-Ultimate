@@ -1,6 +1,6 @@
 # ARGOS · Linux 0.3
 
-Asistente con Core Python/SQLite, tareas en segundo plano, Codex por tarea,
+Asistente con Core Python/SQLite, tareas en segundo plano, conversación local y Codex solo para escaladas complejas,
 investigación web, operaciones del PC y voz local. La consola muestra solo una esfera
 ASCII; los detalles se consultan desde otra terminal y las aprobaciones también admiten voz. Esta es la
 reconstrucción Linux, no una recuperación del código Windows perdido.
@@ -14,7 +14,18 @@ cd /ruta/a/argos
 ./argos start
 ```
 
-Arranca Core con Codex y voz y abre una ventana kitty titulada ARGOS.
+Antes del primer arranque, instala Ollama y el modelo local elegido para ese PC,
+y guarda la selección (el nombre del modelo es propio de cada instalación):
+
+```bash
+./argos configure-providers --ollama-model NOMBRE_LOCAL --codex on
+```
+
+`start` puede arrancar el motor Ollama ya instalado en loopback; no descarga
+modelos ni configura arranque automático del sistema. Codex queda reservado a
+escaladas justificadas de tareas, no a conversación ni a fallos del modelo local.
+
+Arranca Core con el modelo local configurado y voz, y abre una ventana kitty titulada ARGOS.
 Reutiliza Core si ya está activo. No configura inicio automático al arrancar Linux.
 
 | Tecla | Acción |
@@ -169,10 +180,10 @@ El mapa de agentes distingue «sin tarea» de la disponibilidad de herramientas.
 
 | Rol | Capacidades conectadas |
 | --- | --- |
-| General | Intenciones locales y conversación/interpretación con Codex |
+| General | Intenciones conocidas y conversación/interpretación con Ollama local |
 | Engineering | Archivos del PC, proyectos nuevos, comandos revisados, workspaces y consulta web |
 | Computer | Inventario del equipo, aplicaciones, ventanas Hyprland, archivos, carpetas, workspaces y URLs |
-| Research | Buscar, leer páginas públicas, seguir enlaces y sintetizar varias fuentes con Codex |
+| Research | Buscar, leer páginas públicas y sintetizar con el modelo local; Codex solo ante una escalada justificada |
 | Design3D / Printing3D | Inspección de STL / G-code; sin actuadores conectados |
 
 Las aplicaciones se descubren mediante archivos `.desktop`. Las ventanas requieren
@@ -211,8 +222,9 @@ no se leen con este adaptador. La búsqueda depende de la disponibilidad de Bing
 
 ## Proyectos, programación y aprobación
 
-ARGOS puede delegar en Codex mejoras de un proyecto, proyectos nuevos y cambios
-en su propio código. Primero inspecciona una copia privada, explica un plan
+ARGOS puede preparar mejoras de un proyecto, proyectos nuevos y cambios
+en su propio código con el agente local. Codex solo interviene si la tarea local
+justifica que necesita razonamiento adicional después de inspeccionar evidencia. Primero inspecciona una copia privada, explica un plan
 concreto y pide confirmación. Después trabaja en segundo plano con una sola
 autorización para los archivos de esa candidata y las pruebas incluidas en el plan.
 Puedes seguir conversando y preguntar «¿cómo va esa mejora?» o «qué estás haciendo».
@@ -257,8 +269,8 @@ publicar, activar una nueva versión y hacer rollback quedan fuera de este flujo
 ./argos task ID
 ```
 
-Codex usa la sesión ChatGPT existente mediante App Server y conserva un hilo por
-tarea, también después de una pregunta o aprobación. No utiliza claves de OpenAI
+Cuando una tarea se escala, Codex usa la sesión ChatGPT existente mediante App Server
+y conserva un hilo por tarea, también después de una pregunta o aprobación. No utiliza claves de OpenAI
 API. Los saludos y comandos conocidos se resuelven sin consultar un modelo.
 El modelo recibe el contexto seleccionado y los archivos que solicita mediante
 las capacidades permitidas, sin acceso libre al disco.
@@ -353,12 +365,11 @@ absorber pausas iniciales de generación. No se recorta el texto hablado a un
 número de caracteres: la respuesta completa validada llega a la síntesis.
 La extensión depende de la pregunta y del contexto de conversación.
 
-Abrir la consola también conecta Codex y prepara el hilo de la sesión y proyecto
-seleccionados. No envía un turno ficticio ni añade mensajes al historial.
-La conversación General solicita esfuerzo `low` cuando el modelo
-configurado lo admite; los especialistas mantienen su esfuerzo configurado.
-No se cambia de modelo ni de proveedor. Las consultas remotas aún dependen
-de la latencia de Codex y de la complejidad de la petición.
+La conversación usa el modelo Ollama local seleccionado para esta instalación.
+Abrir la consola, hablar, consultar estados o reproducir respuestas no conecta
+Codex. No se añade una llamada para clasificación, personalidad o acuses.
+La latencia local depende del modelo, contexto y CPU/GPU disponibles; las pruebas
+del equipo de oficina no representan el rendimiento del equipo de casa.
 
 `./argos voice-status` muestra preparación de voz, tiempos del último
 reconocimiento/despacho y tiempo hasta enviar el primer fragmento de síntesis.
@@ -397,14 +408,36 @@ Referencias: [Codex App Server](https://learn.chatgpt.com/docs/app-server),
 ## Ejecución manual y límites
 
 ```bash
-./argos serve --codex --voice
+./argos configure-providers --ollama-model NOMBRE_LOCAL --codex on
+./argos serve --voice
 # En otra terminal:
 ./argos console --project ARGOS
 ```
 
-`serve` sin opciones mantiene capacidades locales.
-`--ollama-model NOMBRE` permite usar un intérprete Ollama local ya instalado
-en lugar de Codex. No se pueden seleccionar ambos proveedores.
+`configure-providers` guarda `inference.json` en la carpeta de estado de esta
+instalación; no descarga modelos ni modifica un Core activo. Oficina y casa
+pueden elegir modelos distintos sin cambiar el código. `start` reutiliza o abre
+Ollama instalado; para `serve` manual, arranca el motor previamente.
+`serve --ollama-model NOMBRE --codex`
+permite indicar los dos proveedores explícitamente: Ollama para conversación y
+trabajo local, Codex únicamente para escaladas. `--codex` ya no selecciona Codex
+como interlocutor. Sin modelo local, las operaciones conocidas siguen disponibles,
+pero no existe sustitución automática por Codex.
+
+La escalada solo se acepta desde una tarea Engineering/Research que haya leído
+evidencia y explicado un límite concreto de razonamiento, antes de aprobar o
+intentar efectos. No se activa por timeout, error de herramientas, falta de modelo
+o de permisos. Conserva ID, alcance y lecturas; registra `PROVIDER_ESCALATED` y
+asigna el proveedor a esa tarea. El chat sigue local. La asignación y el cambio
+de hilo se guardan de forma atómica. Los hilos antiguos sin asignación requieren
+una tarea nueva; no se reanudan como si perteneciesen al modelo local.
+
+El agente local dispone de un bucle acotado de hasta doce decisiones/herramientas
+por ejecución. Puede leer, proponer planes y solicitar operaciones del catálogo;
+Core conserva las aprobaciones y comprobaciones existentes. Alcanzar ese límite
+bloquea la tarea y no consume Codex automáticamente. El motivo de escalada es
+una decisión del agente bajo estas condiciones, no una medición objetiva de su
+inteligencia ni garantía de que todo trabajo sencillo vaya a clasificarse bien.
 
 Estado: `$XDG_STATE_HOME/argos` o `~/.local/state/argos`, socket privado y SQLite.
 El lanzador escribe errores en `core.log`, nunca sobre la esfera.
@@ -417,6 +450,11 @@ el instalador y no reemplaza ningún ejecutable.
 
 ## Validar
 
+La separación local/Codex y la calidad conversacional se validan por separado.
+La [comparación del equipo de oficina](docs/validation/local-first-2026-10-21.md)
+recoge instalación, pruebas con modelos reales, tiempos y fallos. No implica
+que la voz o la personalidad estén listas, ni mide el equipo de casa.
+
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -v
 python scripts/benchmark.py
@@ -428,12 +466,13 @@ Por tanto, su resultado no demuestra por sí solo que Codex responda bien ni que
 el protocolo funcione con una versión/modelo reales. `benchmark.py` mide IPC,
 no latencia de conversación con IA.
 
-Evaluación explícita con **Codex real**, usando la sesión ChatGPT y el modelo ya
-configurados (consume cuota; requiere conexión):
+Evaluación explícita de desarrollo **local con Codex disponible para escaladas**,
+usando la sesión ChatGPT y el modelo ya configurados (si escala, consume cuota
+y requiere conexión):
 
 ```bash
-python scripts/validate_codex_live.py --run --report /tmp/argos-codex-live.json
-python scripts/validate_codex_live.py --run --self-check --report /tmp/argos-self-live.json
+python scripts/validate_codex_live.py --run --ollama-model NOMBRE_LOCAL --report /tmp/argos-codex-live.json
+python scripts/validate_codex_live.py --run --ollama-model NOMBRE_LOCAL --self-check --report /tmp/argos-self-live.json
 ```
 
 Prueba conversación por texto, identidad/límites, una petición ambigua, un plan
@@ -445,8 +484,30 @@ conserva respuestas públicas, herramientas utilizadas, tiempos y evidencia;
 nunca razonamiento ni credenciales. Una pasada es evidencia de esos escenarios,
 no una garantía de fiabilidad general ni una validación acústica.
 
-Resultados y límites de la [evaluación real del 21 de octubre de 2026](docs/validation/codex-live-2026-10-21.md),
+Resultados históricos de la configuración anterior con Codex como interlocutor: [evaluación real del 21 de octubre de 2026](docs/validation/codex-live-2026-10-21.md),
 incluyendo el fallo inicial y las ejecuciones posteriores sobre un proyecto
 temporal y sobre una copia del propio ARGOS.
+
+Para evaluar contexto y personalidad con conversación real, sin audio:
+
+```bash
+python scripts/validate_personality_live.py --run --ollama-model NOMBRE_LOCAL --report /tmp/argos-personality.json
+python scripts/validate_local_tools_live.py --run --ollama-model NOMBRE_LOCAL --report /tmp/argos-local-tools.json
+```
+
+El primer evaluador recorre 23 turnos en diez conversaciones: presencia, ironía, frustración,
+criterio propio, referencias entre turnos, correcciones tras una interrupción,
+honestidad, idiomas, aislamiento entre sesiones y estado local. Usa Core y Ollama
+reales en un estado temporal, sin conectar Codex; bloquea acciones y no conecta voz. Los criterios
+de evaluación no se envían al modelo ni se añaden respuestas de ejemplo.
+`--repeat 2` repite con sesiones nuevas. El informe distingue las comprobaciones
+estructurales de la valoración del tono: contar palabras o «sir» no demuestra
+personalidad. Véanse las respuestas y la revisión en la
+[evaluación de personalidad](docs/validation/personality-live-2026-10-21.md).
+
+El segundo evaluador pide leer un dato y crear una carpeta en un proyecto
+temporal; comprueba la espera de aprobación, el resultado y que no haya intentos
+de invocar Codex. No toca archivos del usuario ni reproduce audio.
+
 Ver [arquitectura](docs/architecture.md), [validación](docs/validation.md)
 y [contrato de ARGOS](src/argos/contracts/ARGOS.md).

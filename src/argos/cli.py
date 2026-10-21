@@ -20,12 +20,15 @@ def parser():
     sub = p.add_subparsers(dest="command", required=True)
     s = sub.add_parser("serve", help="Ejecutar Core; no muestra registros en la consola")
     s.add_argument("--ollama-model", help="Opcional: modelo local ya instalado; no descarga nada")
-    s.add_argument("--codex", action="store_true", help="Conectar Codex con tu sesión ChatGPT")
+    s.add_argument("--codex", action="store_true", help="Habilitar Codex solo para escaladas de tareas complejas")
     s.add_argument("--voice", action="store_true", help="Whisper y Pocket TTS locales ya instalados")
     s = sub.add_parser("console", help="Espacio: hablar/enviar. Escape: silencio. Q: cerrar esfera.")
     s.add_argument("--project", help="Proyecto seleccionado para las peticiones de voz")
-    s = sub.add_parser("start", help="Abrir ARGOS con Codex y voz en una consola independiente")
+    s = sub.add_parser("start", help="Abrir ARGOS con el modelo local configurado y voz")
     s.add_argument("--project")
+    s = sub.add_parser("configure-providers", help="Elegir proveedores de esta instalación; no descarga ni reinicia")
+    s.add_argument("--ollama-model", required=True)
+    s.add_argument("--codex", choices=("on", "off"), default="off")
     s = sub.add_parser("monitor", help="Mapa de agentes o monitor de tareas y conversaciones")
     s.add_argument("view", choices=("agents", "tasks"))
     s.add_argument("--open", action="store_true", help="Abrir en otra ventana")
@@ -94,13 +97,20 @@ async def execute(args):
     if args.command == "serve":
         from .server import serve
         from .providers import OllamaInterpreter
-        if args.codex and args.ollama_model:
-            raise ArgosError("Selecciona un solo proveedor.")
-        provider = OllamaInterpreter(args.ollama_model) if args.ollama_model else None
-        if args.codex:
+        from .inference_config import read
+        settings = read(args.state_dir)
+        model = args.ollama_model or settings["ollama_model"]
+        provider = OllamaInterpreter(model) if model else None
+        escalation = None
+        if args.codex or settings["codex_escalation"]:
             from .codex import Codex
-            provider = Codex(args.state_dir)
-        await serve(args.state_dir, provider, voice_enabled=args.voice)
+            escalation = Codex(args.state_dir)
+        await serve(args.state_dir, provider, voice_enabled=args.voice, escalation_provider=escalation)
+        return
+    if args.command == "configure-providers":
+        from .inference_config import write
+        settings = write(args.state_dir, args.ollama_model, args.codex == "on")
+        print(json.dumps({**settings, "applies": "next Core startup; current process unchanged"}, ensure_ascii=False))
         return
     if args.command == "start":
         from .launcher import start
@@ -121,6 +131,8 @@ async def execute(args):
         result = {"version": __version__, "python": platform.python_version(),
                   "platform": platform.system(),
                   "audio_player": shutil.which("pw-play") or shutil.which("aplay")}
+        from .inference_config import read
+        result["configured_inference"] = read(args.state_dir)
         from .speech import VOICE_PYTHON
         result["voice_environment_installed"] = VOICE_PYTHON.exists()
         try:

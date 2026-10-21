@@ -121,29 +121,26 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
         await self.codex.close()
         self.assertIsNotNone(child.returncode)
 
-    async def test_preparation_reuses_project_thread_without_an_inference_turn(self):
+    async def test_conversation_preparation_cannot_start_codex(self):
         context = {"session": "voice", "project": {"id": "project-one"}}
         with patch.object(self.codex, "rpc", wraps=self.codex.rpc) as rpc:
-            await asyncio.gather(self.codex.prepare(context), self.codex.prepare(context))
-            methods = [call.args[0] for call in rpc.call_args_list]
-            self.assertEqual(methods.count("thread/start"), 1)
-            self.assertNotIn("turn/start", methods)
-            result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
-            with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
-                await self.codex.decide("hola", context)
-            self.assertEqual(turn.call_args.args[0], "thread-one")
-            self.assertEqual([call.args[0] for call in rpc.call_args_list].count("thread/start"), 1)
+            with self.assertRaises(ArgosError):
+                await self.codex.prepare(context)
+            rpc.assert_not_called()
+        self.assertIsNone(self.codex.process)
 
-    async def test_general_uses_supported_low_effort_without_changing_model(self):
+    async def test_general_cannot_consume_codex_inference(self):
         result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
         with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
-            await self.codex.decide("hola", {})
-        self.assertEqual(turn.call_args.kwargs["effort"], "low")
+            with self.assertRaises(ArgosError):
+                await self.codex.decide("hola", {})
+        turn.assert_not_called()
+        self.assertIsNone(self.codex.process)
 
     async def test_unknown_model_keeps_its_default_effort(self):
         await self.codex.start()
         self.codex.fast_models.clear()
         result = {"kind": "answer", "speech": "Hola.", "agent": "", "capability": "", "arguments_json": "{}"}
         with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
-            await self.codex.decide("hola", {})
+            await self.codex.decide("inspect", {}, agent="engineering")
         self.assertIsNone(turn.call_args.kwargs["effort"])

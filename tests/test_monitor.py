@@ -80,7 +80,7 @@ class MonitorTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Comprobación completa.", text)
         self.assertIn("Utiliza ese proyecto.", text)
         self.assertNotIn("PRIVATE_TOOL_BODY", text)
-        self.assertEqual(data["messages"][2]["role"], "Codex")
+        self.assertEqual(data["messages"][2]["role"], "ARGOS")
 
     async def test_record_history_has_pages_without_losing_old_messages(self):
         identifier = self.store.begin_conversation(None, "default", None, "test", "Primera pregunta")

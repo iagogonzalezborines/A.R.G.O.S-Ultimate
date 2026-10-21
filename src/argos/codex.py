@@ -39,6 +39,7 @@ TOOL = {
 
 class Codex:
     name = "codex-chatgpt"
+    conversation_allowed = False
 
     def __init__(self, directory):
         self.directory = directory / "codex-root"
@@ -185,6 +186,8 @@ class Codex:
             "code": -32601, "message": "This operation is not exposed by ARGOS."}})
 
     async def thread(self, agent, thread_id=None, tools=False, ephemeral=False):
+        if agent == "general":
+            raise ArgosError("Codex está reservado a tareas complejas escaladas, no a conversación General.")
         await self.start()
         params = {"cwd": str(self.directory), "sandbox": "read-only",
                   "approvalPolicy": "never", "developerInstructions": contract(agent),

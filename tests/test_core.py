@@ -316,6 +316,50 @@ class CoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("No se ha ejecutado", result["speech"])
         self.assertFalse(self.store.tasks())
 
+    async def test_honest_execution_denials_preserve_the_model_response(self):
+        class Honest:
+            name = "test"
+            speech = ""
+            async def decide(self, *args):
+                return Decision("answer", speech=self.speech)
+        provider = Honest()
+        self.core.interpreter = provider
+        for speech in (
+            "Todavía no. No he ejecutado ninguna comprobación del equipo ni recibido una imagen para revisarla.",
+            "No estoy trabajando en eso; aún no hay una tarea.",
+            "Tampoco lo he modificado.",
+            "Nunca he enviado ese archivo.",
+            "I'm not working on it; no task has been started.",
+        ):
+            with self.subTest(speech=speech):
+                provider.speech = speech
+                result = await self.req(text="¿Ya lo has comprobado?", conversation=True)
+                self.assertEqual(result["speech"], speech)
+                self.assertEqual(result["route"], "provider")
+        self.assertFalse(self.store.tasks())
+
+    async def test_denials_do_not_hide_another_unsupported_execution_claim(self):
+        class Claim:
+            name = "test"
+            speech = ""
+            async def decide(self, *args):
+                return Decision("answer", speech=self.speech)
+        provider = Claim()
+        self.core.interpreter = provider
+        for speech in (
+            "No he abierto Firefox, pero he ejecutado las pruebas.",
+            "No solo he abierto Firefox; también está listo.",
+            "No, he terminado la tarea.",
+            "No.\nHe modificado el archivo.",
+            "I’m working on it.",
+        ):
+            with self.subTest(speech=speech):
+                provider.speech = speech
+                result = await self.req(text="¿Ya lo has comprobado?", conversation=True)
+                self.assertIn("No se ha ejecutado", result["speech"])
+                self.assertEqual(result["route"], "local")
+        self.assertFalse(self.store.tasks())
+
     async def test_same_project_waiters_do_not_starve_other_work(self):
         entered, release = asyncio.Event(), asyncio.Event()
         class Slow:

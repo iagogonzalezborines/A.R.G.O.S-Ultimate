@@ -167,8 +167,9 @@ class Development:
     async def run(self, core, task):
         task_id = task["id"]
         state = self.state(task_id)
-        if not hasattr(core.interpreter, "work"):
-            raise ArgosError("El desarrollo delegado requiere el puente de herramientas de Codex.")
+        provider = core.task_provider(task)
+        if not hasattr(provider, "work"):
+            raise ArgosError("El desarrollo delegado requiere un proveedor con herramientas.")
         if state["target"] == "project" and not state["source"]:
             project = self.store.project(task["project"])
             if not project:
@@ -195,6 +196,8 @@ class Development:
         context = core.context(project, "engineering")
         context["capabilities"] = [c for c in context["capabilities"] if c["name"] in TOOLS]
         context["development"] = {**state, "authorized": approved}
+        context["escalation"] = {"allowed": provider is core.interpreter and bool(core.escalation_provider) and not approved,
+                                 "assignment": core.store.setting("task.provider:" + task_id)}
         context["scope"] = "Only this candidate's files and the approved isolated checks; no host mutations or activation."
         context["filesystem"] = {"root": state["workspace"], "absolute_paths": "inside candidate only"}
         context["task"] = {"id": task_id, "objective": task["objective"], "answers": [
@@ -219,7 +222,7 @@ class Development:
             public_text(text, 4000)
             self.store.event(task_id, "PROGRESS", {"summary": text})
         try:
-            result = await core.interpreter.work(task, context, execute, save_thread, progress)
+            result = await provider.work(task, context, execute, save_thread, progress)
         except PlanReady:
             state = self.state(task_id)
             plan = state["plan"]
