@@ -272,3 +272,137 @@ Después se recargó el Core real en reposo, se restauró la consola de voz y se
 envió por IPC la aclaración «The ARGOS agent diagram here.». El lanzador abrió
 el mapa y se verificó la ventana mapeada de 1180 × 780. La voz quedó preparada.
 No se repitió una prueba física de reconocimiento por micrófono.
+
+
+## Ampliación Linux 0.3: PC, investigación y manos libres
+
+21 de octubre de 2026. 146 pruebas automáticas aprobadas mediante
+`PYTHONPATH=src python -m unittest discover -s tests -v`.
+
+Se conserva la suite anterior y se añaden comprobaciones de:
+
+- Rutas absolutas sin proyecto, configuración oculta ordinaria, rechazo de
+  credenciales/enlaces y lectura completa de archivos UTF-8 mayores de 64 KB
+  mediante páginas con huella. Los cambios entre páginas se rechazan.
+- Parches por caracteres en archivos grandes, copia de árboles/binarios,
+  movimientos sin sobrescritura, borrado recuperable y restauración. Una versión
+  modificada después de aprobar no se elimina ni se sobrescribe.
+- Creación y registro de un proyecto desde cero, continuación de escritura relativa
+  en la misma tarea/hilo y recuperación sin repetir la creación.
+- Comandos nuevos sin registro previo, argv/cwd revisados y ejecución en temporal.
+  Apertura de workspace con proceso simulado: no se abren editores reales.
+- Operaciones de disco fuera del bucle del Core: el estado sigue respondiendo;
+  cancelar durante un paso de disco espera y registra el efecto ya iniciado.
+- Extracción web, enlaces relativos, paginación, cambios de versión, DNS/IP pública,
+  redirecciones a redes privadas, tipos y tamaños de respuesta, gzip y rechazo
+  de contenido que excede el límite al descomprimir. Una fuente inaccesible devuelve
+  evidencia para que Research pueda intentar otra. Un proveedor simulado combina
+  búsqueda y lectura de dos fuentes y conserva sus resultados.
+- Revisión hablada local, códigos ligados a tarea/sesión, consumo único,
+  caducidad, cancelación y selección inequívoca entre varias operaciones.
+  No se acepta un sí genérico ni una frase citada/negada. Se tolera la puntuación
+  que un reconocedor pueda introducir entre las palabras del código.
+- Endpointing de PCM sintético, filtro de invocación, ventana de ocho segundos,
+  descarte de conversación ambiental, borrado de WAV al cancelar, pausa ante
+  reproducción y rechazo de micrófono desconectado sin cambiar al predeterminado.
+
+Comprobación adicional de red real, fuera de la suite: `web.read` leyó
+`https://www.python.org/` (6502 caracteres) y
+`https://docs.python.org/3/library/pathlib.html` (58840 caracteres, primera página
+entregada de 24000). La primera fuente exigió admitir gzip pese a la preferencia
+inicial por contenido sin compresión; se añadió descompresión acotada y regresión.
+Estas muestras verifican el adaptador, no la precisión de una síntesis con un
+modelo real ni el acceso universal a sitios dinámicos/PDF.
+
+No se activaron micrófono, altavoces ni escucha manos libres, ni se instalaron
+modelos. El diagnóstico de este entorno informa Core no activo en la ubicación
+predeterminada y entorno de voz ausente. La calidad del reconocimiento de «Argos»,
+el umbral de silencio/ruido, los códigos hablados y la latencia real requieren
+una prueba acústica posterior en el equipo del usuario. Las pruebas actuales
+usan PCM sintético y dobles de STT/procesos; no demuestran precisión acústica.
+
+## Diálogo continuo y respuesta natural del modelo
+
+Se sustituye la ventana de ocho segundos de la implementación anterior por un
+estado de conversación que permanece abierto hasta una despedida explícita.
+La invocación sola, las comprobaciones de presencia y los saludos dentro del
+modo conversacional son turnos reales del modelo. No hay un «Sir» programado,
+una segunda llamada de Persona ni una locución que reemplace la respuesta.
+El contrato pide concisión proporcional a la pregunta y uso espontáneo de
+honoríficos, sin imponer frases. La reproducción recibe la respuesta pública.
+
+157 pruebas automáticas aprobadas. Las regresiones nuevas comprueban:
+
+- Invocación → respuesta del modelo → propuesta → «Yes», con una inferencia por
+  turno y el mismo contexto de conversación. Se comprueba el texto exacto enviado
+  a voz y que no se añade, recorta o sustituye por un saludo fijo.
+- Continuaciones sin reinvocar ni plazo, despedida y regreso a espera sin cancelar
+  tareas. En espera, las menciones citadas/negadas y la charla ambiental se ignoran.
+- Captura continua con un único proceso simulado, descarte de reproducción propia
+  y conservación de turnos durante reconocimiento/inferencia en una cola acotada.
+- Historial público aislado por sesión/proyecto, incluida la continuidad para
+  intérpretes sin memoria remota. La decisión `reply` devuelve las palabras reales
+  del usuario a una pregunta pendiente de una tarea, sin cambiar su hilo ni permitir
+  que el modelo invente la respuesta o apruebe una operación.
+- Un error de petición no cierra el diálogo; detenerlo borra segmentos pendientes.
+
+Son pruebas silenciosas con proveedor y reconocimiento simulados. No se ha probado
+el tono producido por un modelo real ni la acústica del micrófono. En esta etapa
+todavía se descartaba el micrófono durante TTS; la siguiente sección documenta
+la implementación posterior de interrupción.
+
+## Interrupción durante la reproducción
+
+174 pruebas aprobadas con `PYTHONPATH=src python -m unittest discover -s tests -v`.
+Compilación Python y `git diff --check` sin errores.
+
+La escucha manos libres incorpora un circuito temporal de cancelación de eco
+PipeWire/WebRTC. Con el diálogo abierto, actividad sostenida en la entrada
+filtrada corta la voz, conserva la intervención y marca el siguiente turno para
+el modelo. No hay acuse hablado fijo ni cancelación implícita de tareas.
+
+Las regresiones silenciosas comprueban:
+
+- Nodos AEC privados, selección explícita de micrófono, salida de referencia común
+  para PCM/WAV y limpieza tras fallo, cancelación o cierre. Falta de herramientas
+  deja la interrupción deshabilitada; perder AEC activo detiene la escucha.
+- Detección a los 160 ms de PCM sintético filtrado, conservación del inicio y fin
+  de la frase mientras se simula un cierre lento de TTS; silencio y clics aislados
+  no cortan la respuesta. No se simula ni valida la eficacia del filtro acústico.
+- Terminación de un reproductor silencioso antes de cerrar un generador bloqueado,
+  descarte de voz pendiente y reanudación con la respuesta al nuevo turno.
+- Cancelar reproducción no cancela el consumidor de turnos. El contexto marca
+  únicamente la intervención correspondiente; se conserva la respuesta real del
+  modelo y el estado de las tareas.
+
+No se ha abierto el micrófono, reproducido sonido ni cargado el módulo real AEC.
+La integración PipeWire usa dobles de procesos y el reproductor de prueba es
+silencioso. Quedan por medir el eco residual, falsos cortes por ruido y latencia
+real, incluida la recarga del proceso STT/TTS tras cancelar síntesis.
+
+## Inventario del equipo y disponibilidad comprobada
+
+185 pruebas aprobadas con `PYTHONPATH=src python -m unittest discover -s tests -v`.
+Las pruebas nuevas cubren:
+
+- Inventario acotado, fuente y fecha; omisión de secretos, números de serie y
+  campos ajenos al esquema. Fallos de permisos y de servicios quedan diferenciados
+  de falta de herramientas, sin copiar errores privados al contexto.
+- Caché con caducidad, renovación y agrupación concurrente. Una observación antigua
+  deja de anunciar disponibilidad positiva. Las instantáneas no permiten modificar
+  la caché desde quien las consulta.
+- Hyprland comprobado frente a ejecutable meramente instalado; disponibilidad de
+  workspaces según editor; red y permisos por ruta permanecen sin comprobar.
+- Contexto real enviado a General, renovación mediante `system.inspect`, consulta
+  IPC sin escrituras en SQLite y rechazo de una apertura imposible antes de
+  aprobación o lanzamiento. `system-status --refresh` funciona sobre un Core temporal.
+- Recorrido por texto con proveedor guionado: inspección del equipo, búsqueda y
+  lectura de dos páginas simuladas, creación de proyecto temporal, escritura y
+  ejecución de una comprobación Python. Las tres operaciones con efectos requieren
+  sus aprobaciones exactas. Se conserva el hilo y se registran siete operaciones,
+  sin repetir la investigación tras cada aprobación.
+
+También se ha ejecutado `doctor` en este entorno, solo en lectura. Ha observado
+metadatos del equipo y dispositivos de audio, y ha señalado la ausencia de
+`hyprctl`. Esto no valida acústica, navegación web real ni interpretación de un
+modelo real. No se han instalado dependencias ni activado micrófono/altavoces.

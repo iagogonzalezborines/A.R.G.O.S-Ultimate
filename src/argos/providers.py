@@ -15,7 +15,7 @@ from .security import safe_data
 SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
-        "kind": {"enum": ["answer", "clarify", "delegate", "capability", "panel"]},
+        "kind": {"enum": ["answer", "clarify", "delegate", "capability", "panel", "reply"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
         "capability": {"type": "string"}, "arguments": {"type": "object"},
     },
@@ -41,7 +41,13 @@ def validate_decision(data, agent="general"):
         raise ArgosError("El proveedor excedió los límites de respuesta.")
     if data["agent"] and data["agent"] not in AGENTS:
         raise ArgosError("El proveedor solicitó un agente inexistente.")
-    if data["kind"] == "panel":
+    if data["kind"] == "reply":
+        if (agent != "general" or data["agent"] or data["capability"]
+                or set(data["arguments"]) != {"task_id"}
+                or not isinstance(data["arguments"]["task_id"], str)
+                or len(data["arguments"]["task_id"]) != 32):
+            raise ArgosError("La respuesta debe identificar una pregunta pendiente concreta.")
+    elif data["kind"] == "panel":
         if (agent != "general" or data["agent"] or data["capability"]
                 or set(data["arguments"]) != {"view"}
                 or data["arguments"]["view"] not in ("agents", "tasks")):

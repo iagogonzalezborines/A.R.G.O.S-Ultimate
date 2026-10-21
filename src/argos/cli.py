@@ -56,10 +56,17 @@ def parser():
     s.add_argument("name")
     s.add_argument("argv", nargs=argparse.REMAINDER)
     sub.add_parser("voice-status")
+    s = sub.add_parser("system-status", help="Inventario observado y disponibilidad real de capacidades")
+    s.add_argument("--refresh", action="store_true", help="Repetir las consultas locales de solo lectura")
+    s.add_argument("--project")
     sub.add_parser("voice-inputs", help="Listar micrófonos disponibles")
     s = sub.add_parser("voice-config", help="Guardar idioma y micrófono de ARGOS")
     s.add_argument("--language", choices=("auto", "es", "en"))
+    s.add_argument("--wake-word", choices=("on", "off"), help="Escucha local de Argos; por defecto apagada")
+    s.add_argument("--project", help="Proyecto de las peticiones manos libres")
     s.add_argument("--input-device", help="ID mostrado por voice-inputs")
+    s = sub.add_parser("voice-review", help="Leer una operación pendiente y emitir código de aprobación")
+    s.add_argument("task_id", nargs="?", default="")
     s = sub.add_parser("play-wav", help="Salida PCM real y amplitud para la esfera; no es TTS")
     s.add_argument("path")
     sub.add_parser("stop-speech")
@@ -108,7 +115,7 @@ async def execute(args):
         import platform
         import shutil
         result = {"version": __version__, "python": platform.python_version(),
-                  "platform": platform.system(), "runtime_dependencies": [],
+                  "platform": platform.system(),
                   "audio_player": shutil.which("pw-play") or shutil.which("aplay")}
         from .speech import VOICE_PYTHON
         result["voice_environment_installed"] = VOICE_PYTHON.exists()
@@ -116,6 +123,16 @@ async def execute(args):
             result["running_voice"] = (await call(args.state_dir, {"method": "voice.state"}))["data"]
         except ArgosError:
             result["core"] = "not_running"
+        try:
+            result["host"] = (await call(args.state_dir, {"method": "environment.inspect", "refresh": True}))["data"]
+        except ArgosError:
+            from .host import LinuxEnvironment
+            from .capabilities import CAPABILITIES
+            environment = LinuxEnvironment()
+            await environment.refresh()
+            result["host"] = {"environment": environment.snapshot(),
+                              "capabilities": [cap.public(environment.capability_status(cap))
+                                               for cap in CAPABILITIES.values()]}
         if args.codex:
             from .codex_probe import probe
             result["codex"] = await probe()
@@ -124,7 +141,8 @@ async def execute(args):
     methods = {"projects": "projects.list", "add-project": "projects.add",
                "play-wav": "voice.play", "stop-speech": "voice.stop",
                "voice-status": "voice.state", "voice-inputs": "voice.inputs",
-               "voice-config": "voice.configure", "review": "task", "register-command": "commands.register"}
+               "system-status": "environment.inspect",
+               "voice-config": "voice.configure", "voice-review": "approval.review", "review": "task", "register-command": "commands.register"}
     message = {"method": methods.get(args.command, args.command), "session": args.session,
                "request_id": args.request_id or uuid.uuid4().hex}
     for name in ("text", "project", "task_id", "name", "path", "capability", "fingerprint", "speak", "argv",
@@ -135,6 +153,12 @@ async def execute(args):
         if not isinstance(args.args, dict):
             raise ArgosError("--args necesita un objeto JSON.")
         message["arguments"] = {**args.args, **({"file": args.file} if args.file else {})}
+    if args.command == "voice-config" and args.wake_word is not None:
+        message["wake_enabled"] = args.wake_word == "on"
+    if args.command == "system-status":
+        message["refresh"] = args.refresh
+    if args.command == "voice-review":
+        message["speak"] = True
     result = await call(args.state_dir, message)
     if args.command == "run" and args.wait and result.get("task_id"):
         for _ in range(600):
@@ -154,7 +178,7 @@ async def execute(args):
         print(result["speech"])
         if result.get("task_id"):
             print("Task:", result["task_id"])
-        if args.command in ("task", "tasks", "agents", "projects", "review", "voice-status", "voice-config",
+        if args.command in ("task", "tasks", "agents", "projects", "review", "voice-status", "voice-config", "system-status",
                             "voice-inputs", "register-command") and result.get("data") is not None:
             print(json.dumps(result["data"], ensure_ascii=False, indent=2))
     if result.get("kind") == "failed":

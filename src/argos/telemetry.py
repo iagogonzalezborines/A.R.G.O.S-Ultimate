@@ -51,6 +51,7 @@ def snapshot(core, request):
                 (session,)).fetchone()
         agents.append({"id": identifier, "name": NAMES[identifier], "role": definition.role,
                        "capabilities": list(definition.capabilities), "provider": provider,
+                       "capability_status": core.capability_catalogue(agent=identifier),
                        "connection": connection, "running": running, "queued": queued, "waiting": waiting,
                        "activity": current[0][:240] if current else None,
                        "state": "running" if running else "queued" if queued else "waiting" if waiting else "idle"})

@@ -127,7 +127,7 @@ def render_map(snapshot, width, height, selected=0, error=None):
         canvas.box(x, y, node_width, 4, agent["name"], 1 if index == selected else color)
         label = {"running": f'● OCUPADO · {agent["running"]}',
                  "queued": f'◷ EN COLA · {agent["queued"]}',
-                 "waiting": f'◷ EN ESPERA · {agent["waiting"]}', "idle": "○ DISPONIBLE"}[agent["state"]]
+                 "waiting": f'◷ EN ESPERA · {agent["waiting"]}', "idle": "○ SIN TAREA"}[agent["state"]]
         canvas.put(x + 2, y + 1, label, color, node_width - 4)
         sub = agent.get("activity") or ("Conversación" if agent["id"] == "general" else f'{len(agent["capabilities"])} capacidades')
         canvas.put(x + 2, y + 2, sub, 2, node_width - 4)
@@ -142,6 +142,10 @@ def render_map(snapshot, width, height, selected=0, error=None):
                       "not_configured": "sin proveedor de IA"}[agent["connection"]]
         caps = ", ".join(agent["capabilities"]) or "Intenciones locales y conversación"
         canvas.put(2, height - 3, f'{agent["provider"]} · {connection}  |  {caps}', 2, width - 4)
+        states = agent.get("capability_status", [])
+        blocked = [cap["name"] for cap in states if cap["status"] in ("unavailable", "permission_denied")]
+        info = ("No disponibles: " + ", ".join(blocked)) if blocked else "Disponibilidad por operación: argos system-status"
+        canvas.put(2, height - 2, info, 4 if blocked else 2, width - 4)
     canvas.put(2, height - 1, "TAB / ↑↓ agente   T abrir monitor de tareas   Q cerrar", 2, width - 4)
     return canvas
 

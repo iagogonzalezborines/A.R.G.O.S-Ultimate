@@ -131,7 +131,7 @@ class Speech:
 
     async def _run(self):
         try:
-            while not self.queue.empty():
+            while not self.queue.empty() and not self.paused:
                 text, language = self.queue.get_nowait()
                 try:
                     self.state = "thinking"
@@ -154,6 +154,7 @@ class Speech:
                 self.state = "idle"
 
     async def stop(self):
+        await self.output.stop()
         if self.job:
             self.job.cancel()
             await asyncio.gather(self.job, return_exceptions=True)
@@ -161,8 +162,12 @@ class Speech:
         while not self.queue.empty():
             self.queue.get_nowait()
             self.queue.task_done()
-        await self.output.stop()
         self.state = "idle"
+
+    async def interrupt(self):
+        """Barge-in only stops speech; the listener owns when speech resumes."""
+        self.paused = True
+        await self.stop()
 
 
 class Capture:
@@ -172,6 +177,7 @@ class Capture:
         self.job, self.timer = None, None
         self.lock = asyncio.Lock()
         self.project = None
+        self.session = "default"
         self.last_error = None
         self.input_device = None
         self.timings = {}
@@ -249,7 +255,7 @@ class Capture:
             if result["text"]:
                 dispatched = time.monotonic()
                 await self.core.request({"method": "say", "text": result["text"], "project": self.project,
-                                         "session": "default", "request_id": uuid.uuid4().hex, "speak": True,
+                                         "session": self.session, "request_id": uuid.uuid4().hex, "speak": True,
                                          "detected_language": result.get("language"),
                                          "language_probability": result.get("language_probability", 0.0)})
                 self.timings["dispatch_ms"] = round((time.monotonic() - dispatched) * 1000)

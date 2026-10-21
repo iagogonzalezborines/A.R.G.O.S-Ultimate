@@ -194,6 +194,21 @@ class Store:
             self.db.execute("UPDATE conversations SET status='INTERRUPTED',updated=? WHERE status='RUNNING'",
                             (time.time(),))
 
+    def recent_messages(self, conversation_id, session, project):
+        # Explicit public context for short follow-ups, including interpreters
+        # without provider-side threads. Never mix projects or sessions.
+        rows = self.db.execute(
+            """SELECT m.role,m.content FROM messages m JOIN conversations c ON c.id=m.conversation
+            WHERE c.id=? AND c.session=? AND c.project IS ?
+            ORDER BY m.seq DESC LIMIT 8""", (conversation_id, session, project)).fetchall()
+        selected, size = [], 0
+        for row in rows:
+            if size + len(row["content"]) > 24000:
+                break
+            selected.append(dict(row))
+            size += len(row["content"])
+        return list(reversed(selected))
+
     def begin_conversation(self, conversation_id, session, project, provider, text):
         public_text(text)
         now = time.time()

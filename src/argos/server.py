@@ -23,7 +23,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
         raise ArgosError("Ya hay un Core activo en esa carpeta.") from None
     socket = directory / "core.sock"
     store = Store(directory)
-    core = Core(store, interpreter)
+    from .host import LinuxEnvironment
+    core = Core(store, interpreter, environment=LinuxEnvironment())
     from .panels import Panels
     core.panels = Panels(directory)
     core.voice = VoiceOutput()
@@ -40,6 +41,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
         core.speech.language = store.setting("voice.language", "es")
         core.speech.automatic_language = store.setting("voice.language_mode", "auto") == "auto"
         core.capture.input_device = store.setting("voice.input_device")
+        from .wake import WakeListener
+        core.wake = WakeListener(core, voice_worker, audio_directory)
     stopped = asyncio.Event()
     clients = set()
     sessions = asyncio.Semaphore(32)
@@ -76,6 +79,9 @@ async def serve(directory, interpreter=None, voice_enabled=False):
         socket.chmod(0o600)
         if voice_worker:
             warmup = asyncio.create_task(voice_worker.warmup(core.speech.language))
+            if store.setting("voice.wake_enabled", False):
+                await core.wake.configure(True, store.setting("voice.wake_project"),
+                                          store.setting("voice.wake_session", "default"))
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, stopped.set)
@@ -85,6 +91,8 @@ async def serve(directory, interpreter=None, voice_enabled=False):
         for client_task in list(clients):
             client_task.cancel()
         await asyncio.gather(*clients, return_exceptions=True)
+        if core.wake:
+            await core.wake.stop()
         if core.capture:
             await core.capture.cancel()
         if core.speech:

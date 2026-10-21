@@ -77,7 +77,7 @@ async def console(directory, project=None):
         termios.tcsetattr(fd, termios.TCSADRAIN, settings)
         sys.stdout.write("\x1b[0m\x1b[?25h\x1b[?1049l")
         sys.stdout.flush()
-        if data.get("state") == "listening":
+        if data.get("state") == "listening" and not data.get("wake_enabled", False):
             try:
                 await call(directory, {"method": "voice.stop"})
             except ArgosError:

@@ -26,11 +26,17 @@ class VoiceOutput:
         self.generation = 0
         self.lock = asyncio.Lock()
         self.last_error = None
+        self.target = None
 
     def snapshot(self):
         return {"level": round(self.level, 4), "state": self.state, "generation": self.generation}
 
     async def _stop(self):
+        # Silence the device before closing the generator: cancelling local TTS
+        # may take seconds while its worker is reaped.
+        if self.process and self.process.returncode is None:
+            with contextlib.suppress(ProcessLookupError):
+                self.process.terminate()
         if self.job:
             self.job.cancel()
             await asyncio.gather(self.job, return_exceptions=True)
@@ -38,7 +44,8 @@ class VoiceOutput:
         # A task cancelled before its coroutine starts never enters its finally
         # block. The output owner must still reap the newly spawned player.
         if self.process and self.process.returncode is None:
-            self.process.terminate()
+            with contextlib.suppress(ProcessLookupError):
+                self.process.terminate()
             try:
                 await asyncio.wait_for(self.process.wait(), 2)
             except TimeoutError:
@@ -58,6 +65,8 @@ class VoiceOutput:
         player = shutil.which("pw-play") or shutil.which("aplay")
         if not player:
             raise ArgosError("No se ha encontrado un reproductor PCM.")
+        if self.target and Path(player).name == "aplay":
+            raise ArgosError("La cancelación de eco requiere pw-play.")
         try:
             with wave.open(str(path), "rb") as wav:
                 if wav.getsampwidth() != 2 or wav.getcomptype() != "NONE" or wav.getnchannels() > 2:
@@ -76,7 +85,7 @@ class VoiceOutput:
             self.generation += 1
             self.last_error = None
             self.process = await asyncio.create_subprocess_exec(
-                player, str(path), stdout=asyncio.subprocess.DEVNULL,
+                player, *(["--target", self.target] if self.target else []), str(path), stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL)
             self.state = "speaking"
             self.job = asyncio.create_task(self._meter(levels, chunk / rate))
@@ -86,6 +95,8 @@ class VoiceOutput:
         player = shutil.which("pw-play") or shutil.which("aplay")
         if not player:
             raise ArgosError("No se ha encontrado un reproductor PCM.")
+        if self.target and Path(player).name == "aplay":
+            raise ArgosError("La cancelación de eco requiere pw-play.")
         async with self.lock:
             await self._stop()
             self.generation += 1
@@ -104,6 +115,8 @@ class VoiceOutput:
                 args = (["--raw", "--rate=24000", "--channels=1", "--format=s16",
                          "--latency=80ms", "-"] if Path(player).name != "aplay"
                         else ["-t", "raw", "-r", "24000", "-c", "1", "-f", "S16_LE", "-"])
+                if self.target:
+                    args = ["--target", self.target, *args]
                 proc = self.process = await asyncio.create_subprocess_exec(
                     player, *args, stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)

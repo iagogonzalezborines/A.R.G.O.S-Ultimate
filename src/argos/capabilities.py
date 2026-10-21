@@ -31,10 +31,12 @@ class Capability:
             raise ArgosError("Los argumentos deben ser textos válidos.")
         safe_data(args)
 
-    def public(self):
+    def public(self, availability=None):
         return dict(name=self.name, agent=self.agent, description=self.description,
                     arguments=list(self.arguments), needs_project=self.needs_project,
-                    effect=self.effect, available=True)
+                    effect=self.effect, implemented=True,
+                    **(availability or {"available": None, "status": "not_checked",
+                                       "reason": "Entorno no comprobado.", "checked_at": None}))
 
 
 async def system_info(project, args):
@@ -187,3 +189,11 @@ CAPABILITIES = {
 
 from .linux_tools import capabilities as linux_capabilities
 CAPABILITIES.update({c.name: c for c in linux_capabilities(Capability)})
+
+from .filesystem import capabilities as filesystem_capabilities
+from .web_reader import capabilities as web_capabilities
+CAPABILITIES.update({c.name: c for c in filesystem_capabilities(Capability) + web_capabilities(Capability)})
+
+from .host import inspect_system
+CAPABILITIES["system.inspect"] = Capability(
+    "system.inspect", "computer", "Inventario observado del equipo, herramientas, dispositivos y límites", (), False, inspect_system)

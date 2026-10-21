@@ -94,6 +94,8 @@ def localize(text, language):
         "He solicitado abrir la ruta.": "I requested opening the path.",
         "El comando terminó correctamente.": "The command completed successfully.",
         "He enviado la página al navegador.": "I sent the page to the browser.",
+        "He inspeccionado el equipo. El inventario distingue observaciones y comprobaciones pendientes.":
+            "I inspected the computer. The inventory distinguishes observations from pending checks.",
         "El especialista ha devuelto una propuesta; no ha ejecutado cambios.":
             "The specialist returned a proposal; it did not make changes.",
         "La operación no pudo completarse. Comprueba el archivo, formato o herramienta requerida.":
@@ -101,6 +103,12 @@ def localize(text, language):
     }
     if text in exact:
         return exact[text]
+    if re.match(r"Hay \d+ capacidades implementadas\.", text):
+        return (re.sub(r"^Hay (\d+) capacidades implementadas\.", r"There are \1 implemented capabilities.", text)
+                .replace("Ahora no están disponibles:", "Currently unavailable:")
+                .replace("El inventario indica cuáles están comprobadas y cuáles dependen de la operación.",
+                         "The inventory shows which prerequisites are verified and which depend on the operation.")
+                .replace("Los cambios y comandos requieren aprobación.", "Changes and commands require approval."))
     patterns = (
         (r"Proyectos: (.*)", r"Projects: \1"),
         (r"(\d+) en ejecución, (\d+) en cola y (\d+) pendientes o bloqueadas\.",

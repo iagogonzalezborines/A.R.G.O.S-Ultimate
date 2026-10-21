@@ -4,13 +4,75 @@ import tempfile
 import unittest
 import wave
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
 
 from argos.voice import VoiceOutput
 from argos.models import ArgosError
 
 
 class VoiceTests(unittest.IsolatedAsyncioTestCase):
+    async def test_stop_silences_player_before_slow_generator_cleanup(self):
+        started, closing, release = asyncio.Event(), asyncio.Event(), asyncio.Event()
+        async def chunks():
+            try:
+                yield b"\0" * 11520
+                await asyncio.Event().wait()
+            finally:
+                closing.set()
+                await release.wait()
+        with tempfile.TemporaryDirectory() as temp:
+            player = Path(temp) / "silent-player"
+            player.write_text("#!/usr/bin/env python3\nimport sys\nsys.stdin.buffer.read()\n")
+            player.chmod(0o700)
+            voice = VoiceOutput()
+            with patch("argos.voice.shutil.which", return_value=str(player)):
+                await voice.play_stream(chunks(), started.set)
+                await asyncio.wait_for(started.wait(), 2)
+                child = voice.process
+                stopping = asyncio.create_task(voice.stop())
+                try:
+                    await asyncio.wait_for(closing.wait(), 2)
+                    await asyncio.wait_for(child.wait(), 2)
+                    self.assertIsNotNone(child.returncode)
+                    self.assertFalse(stopping.done())
+                finally:
+                    release.set()
+                    await stopping
+
+    async def test_aec_routes_stream_and_wav_to_same_reference_sink(self):
+        child = SimpleNamespace(returncode=0, wait=AsyncMock(return_value=0),
+                                stdin=SimpleNamespace(write=Mock(), drain=AsyncMock(), close=Mock()))
+        async def chunks():
+            yield b"\0" * 960
+        with tempfile.TemporaryDirectory() as temp:
+            audio = Path(temp) / "voice.wav"
+            with wave.open(str(audio), "wb") as wav:
+                wav.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                wav.writeframes(b"\0" * 640)
+            voice = VoiceOutput()
+            voice.target = "argos-reference"
+            with patch("argos.voice.shutil.which", return_value="/usr/bin/pw-play"), \
+                 patch("asyncio.create_subprocess_exec", AsyncMock(return_value=child)) as spawn:
+                await voice.play_stream(chunks())
+                await voice.job
+                self.assertEqual(spawn.call_args.args[:3], ("/usr/bin/pw-play", "--target", "argos-reference"))
+                await voice.play(audio)
+                await voice.job
+                self.assertEqual(spawn.call_args.args[:3], ("/usr/bin/pw-play", "--target", "argos-reference"))
+                await voice.stop()
+
+    async def test_aec_does_not_fall_back_to_unfiltered_alsa(self):
+        voice = VoiceOutput()
+        voice.target = "argos-reference"
+        async def chunks():
+            yield b"\0" * 960
+        with patch("argos.voice.shutil.which", side_effect=lambda name: "/usr/bin/aplay" if name == "aplay" else None), \
+             patch("asyncio.create_subprocess_exec", AsyncMock()) as spawn:
+            with self.assertRaises(ArgosError):
+                await voice.play_stream(chunks())
+            spawn.assert_not_called()
+
     async def test_initial_buffer_waits_for_more_audio_and_preserves_every_byte(self):
         initial, release = asyncio.Event(), asyncio.Event()
         pcm = struct.pack("<h", 1234) * 8000 + struct.pack("<h", 2345) * 137

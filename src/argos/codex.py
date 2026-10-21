@@ -14,7 +14,7 @@ from .security import safe_data
 DECISION_SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
-        "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability", "panel"]},
+        "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability", "panel", "reply"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
         "capability": {"type": "string"}, "arguments_json": {"type": "string"},
     },

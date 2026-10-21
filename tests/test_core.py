@@ -249,7 +249,8 @@ class CoreTests(unittest.IsolatedAsyncioTestCase):
         self.store.add_project("UnrelatedPrivateName", another)
         context = self.core.context(self.store.project("Alpha"), "engineering")
         self.assertNotIn("UnrelatedPrivateName", json.dumps(context))
-        self.assertNotIn(str(self.project), json.dumps(context))
+        self.assertEqual(context["project"]["root"], str(self.project))
+        self.assertNotIn(str(another), json.dumps(context))
 
     async def test_status_remains_responsive_during_provider_work(self):
         entered, release = asyncio.Event(), asyncio.Event()

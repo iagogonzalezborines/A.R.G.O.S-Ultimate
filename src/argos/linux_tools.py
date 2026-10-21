@@ -162,142 +162,8 @@ async def windows_close(project, args):
             "evidence": window, "verification": "close_requested"}
 
 
-def safe_relative(relative):
-    path = Path(relative)
-    if path.is_absolute() or ".." in path.parts or any(p.startswith(".") for p in path.parts):
-        raise ArgosError("La ruta debe estar dentro del proyecto y no puede ser oculta.")
-    if any(re.search(r"(?:credential|secret|password|token|private[_-]?key)", p, re.I)
-           for p in path.parts):
-        raise ArgosError("Ese archivo está excluido del contexto del agente.")
-    if path.suffix.lower() in (".pem", ".key", ".p12", ".pfx", ".sqlite", ".db"):
-        raise ArgosError("Ese formato está protegido.")
-    return path
-
-
-def directory_fd(project, relative="."):
-    path = safe_relative(relative)
-    fd = os.open(project["root"], os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
-        for part in path.parts:
-            nxt = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
-            os.close(fd)
-            fd = nxt
-        return fd
-    except BaseException:
-        os.close(fd)
-        raise
-
-
-def source_bytes(project, filename, missing=False):
-    path = safe_relative(filename)
-    if not path.name:
-        raise ArgosError("Falta el nombre del archivo.")
-    parent = directory_fd(project, str(path.parent))
-    try:
-        try:
-            fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
-        except FileNotFoundError:
-            if missing:
-                return None
-            raise
-        import stat
-        with os.fdopen(fd, "rb") as file:
-            if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
-                raise ArgosError("Se esperaba un archivo normal.")
-            data = file.read(64001)
-        if len(data) > 64000 or b"\x00" in data:
-            raise ArgosError("El archivo no es texto acotado (máximo 64 KB).")
-        public_text(data.decode("utf-8"), 64000)
-        return data
-    finally:
-        os.close(parent)
-
-
-async def files_list(project, args):
-    fd = directory_fd(project, args["path"])
-    try:
-        entries = []
-        for name in sorted(os.listdir(fd)):
-            try:
-                safe_relative(name)
-            except ArgosError:
-                continue
-            import stat
-            info = os.stat(name, dir_fd=fd, follow_symlinks=False)
-            if stat.S_ISLNK(info.st_mode) or name in ("node_modules", "vendor", "target"):
-                continue
-            entries.append({"name": name, "directory": stat.S_ISDIR(info.st_mode), "bytes": info.st_size})
-            if len(entries) == 150:
-                break
-    finally:
-        os.close(fd)
-    return {"speech": f"Hay {len(entries)} entradas visibles.", "evidence": entries,
-            "verification": "directory_observed"}
-
-
-async def files_read(project, args):
-    data = source_bytes(project, args["file"])
-    return {"speech": f"He leído {args['file']}.", "evidence": {
-        "file": args["file"], "sha256": hashlib.sha256(data).hexdigest(), "content": data.decode()},
-        "verification": "file_read"}
-
-
-async def files_write(project, args):
-    path = safe_relative(args["file"])
-    public_text(args["content"], 64000)
-    old = source_bytes(project, args["file"], missing=True)
-    digest = hashlib.sha256(old).hexdigest() if old is not None else ""
-    if digest != args["expected_sha256"]:
-        raise ArgosError("El archivo cambió desde su revisión. No se ha sobrescrito.")
-    parent = directory_fd(project, str(path.parent))
-    temporary = ".argos-write-" + os.urandom(12).hex()
-    try:
-        fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600, dir_fd=parent)
-        with os.fdopen(fd, "wb") as file:
-            file.write(args["content"].encode())
-            file.flush()
-            os.fsync(file.fileno())
-        if old is not None:
-            mode = os.stat(path.name, dir_fd=parent, follow_symlinks=False).st_mode & 0o777
-            os.chmod(temporary, mode, dir_fd=parent)
-        current = source_bytes(project, args["file"], missing=True)
-        if current != old:
-            raise ArgosError("El archivo cambió durante la preparación.")
-        os.rename(temporary, path.name, src_dir_fd=parent, dst_dir_fd=parent)
-        os.fsync(parent)
-    finally:
-        try:
-            os.unlink(temporary, dir_fd=parent)
-        except FileNotFoundError:
-            pass
-        os.close(parent)
-    data = source_bytes(project, args["file"])
-    expected = args["content"].encode()
-    if data != expected:
-        raise ArgosError("No se ha podido verificar el contenido escrito.")
-    return {"speech": f"He guardado {args['file']}.", "evidence": {
-        "file": args["file"], "sha256": hashlib.sha256(data).hexdigest()},
-        "verification": "content_verified"}
-
-
-async def files_open(project, args):
-    path = safe_relative(args["path"])
-    # Validate every path component; never launch code or desktop entries.
-    if path.suffix.lower() in (".desktop", ".sh", ".exe", ".appimage", ".py", ".js"):
-        raise ArgosError("No se abren ejecutables como documentos.")
-    target = Path(project["root"]) / path
-    current = Path(project["root"])
-    for part in path.parts:
-        current /= part
-        if current.is_symlink():
-            raise ArgosError("No se permiten enlaces simbólicos.")
-    if not target.exists():
-        raise ArgosError("La ruta no existe.")
-    code, _, _ = await process(["xdg-open", str(target)])
-    if code:
-        raise ArgosError("No se pudo abrir el archivo o carpeta.")
-    return {"speech": "He solicitado abrir la ruta.", "evidence": {"path": str(path)},
-            "verification": "open_dispatched"}
+# Shared host operations also accept absolute paths without a registered project.
+from .filesystem import files_list, files_read, files_write, files_open
 
 
 async def commands_run(project, args):
@@ -362,10 +228,10 @@ def capabilities(C):
         C("windows.list", "computer", "Listar ventanas Hyprland", (), False, windows_list),
         C("windows.focus", "computer", "Enfocar ventana inequívoca", ("window",), False, windows_focus, "routine"),
         C("windows.close", "computer", "Solicitar cierre de ventana revisada", ("window", "expected_sha256"), False, windows_close, "write"),
-        C("files.list", "engineering", "Listar carpeta del proyecto", ("path",), True, files_list),
-        C("files.read", "engineering", "Leer texto filtrado y su SHA-256", ("file",), True, files_read),
-        C("files.write", "engineering", "Escribir texto con huella previa; requiere aprobación", ("file", "content", "expected_sha256"), True, files_write, "write"),
-        C("files.open", "computer", "Abrir documento o carpeta del proyecto", ("path",), True, files_open, "routine"),
+        C("files.list", "engineering", "Listar carpeta absoluta o del proyecto (primera página)", ("path",), False, files_list),
+        C("files.read", "engineering", "Leer primera página UTF-8 y SHA-256; usar files.read_range para continuar", ("file",), False, files_read),
+        C("files.write", "engineering", "Escribir texto con huella previa; requiere aprobación", ("file", "content", "expected_sha256"), False, files_write, "write"),
+        C("files.open", "computer", "Abrir documento o carpeta del proyecto", ("path",), False, files_open, "routine"),
         C("commands.run", "engineering", "Ejecutar comando previamente registrado; requiere aprobación", ("command", "expected_sha256"), True, commands_run, "command"),
         C("web.search", "research", "Buscar fuentes públicas con enlaces", ("query",), False, web_search),
         C("web.open", "computer", "Abrir URL en navegador", ("url",), False, web_open, "routine"),

@@ -100,10 +100,10 @@ class LanguageCoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(result["task_id"])
         result = await self.say("qué puedes hacer")
         self.assertEqual(result["language"], "es")
-        self.assertTrue(result["speech"].startswith("Puedo"))
+        self.assertIn("capacidades implementadas", result["speech"])
         result = await self.say("what can you do")
         self.assertEqual(result["language"], "en")
-        self.assertTrue(result["speech"].startswith("I can"))
+        self.assertIn("implemented capabilities", result["speech"])
         result = await self.say("speak Spanish")
         self.assertEqual((result["speech"], result["language"]), ("Hablaré en español.", "es"))
 

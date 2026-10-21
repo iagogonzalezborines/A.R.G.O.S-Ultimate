@@ -126,6 +126,31 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(observed, ["Uno.", "Dos."])
             self.assertEqual(list(Path(temp).iterdir()), [])
 
+    async def test_interruption_drops_stale_speech_and_holds_new_response_until_input_finishes(self):
+        entered, observed = asyncio.Event(), []
+        class Worker:
+            async def chunks(self, text, language):
+                observed.append(text)
+                if text == "Old response":
+                    entered.set()
+                    await asyncio.Event().wait()
+                yield b"\0\0"
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
+            speech.enqueue("Old response")
+            speech.enqueue("Old continuation")
+            await entered.wait()
+            await speech.interrupt()
+            self.assertTrue(speech.paused)
+            self.assertTrue(speech.queue.empty())
+            speech.enqueue("Answer to the correction")
+            self.assertIsNone(speech.job)
+            speech.paused = False
+            speech.resume_queue()
+            await speech.job
+            self.assertEqual(observed, ["Old response", "Answer to the correction"])
+            await asyncio.wait_for(speech.queue.join(), 1)
+
     async def test_queued_utterances_keep_their_own_language(self):
         observed = []
         class Worker:

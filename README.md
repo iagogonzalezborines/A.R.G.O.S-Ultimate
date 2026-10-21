@@ -1,16 +1,16 @@
-# ARGOS · Linux 0.2
+# ARGOS · Linux 0.3
 
 Asistente con Core Python/SQLite, tareas en segundo plano, Codex por tarea,
-búsqueda web, operaciones Linux y voz local. La consola muestra solo una esfera
-ASCII; detalles y aprobaciones se consultan desde otra terminal. Esta es la
+investigación web, operaciones del PC y voz local. La consola muestra solo una esfera
+ASCII; los detalles se consultan desde otra terminal y las aprobaciones también admiten voz. Esta es la
 reconstrucción Linux, no una recuperación del código Windows perdido.
 
 ## Abrir
 
-En este equipo ya están instalados los modelos de voz:
+Para usar voz hace falta instalar previamente su entorno y modelos locales:
 
 ```bash
-cd /home/tyrant/Proyectos/argos
+cd /ruta/a/argos
 ./argos start
 ```
 
@@ -26,8 +26,47 @@ Reutiliza Core si ya está activo. No configura inicio automático al arrancar L
 La esfera es verde mientras escucha, amarilla durante la preparación inicial
 y mientras procesa voz, cian durante
 la reproducción y roja si falla la voz. La amplitud procede del audio PCM enviado al reproductor.
-El micrófono solo se abre al pulsar Espacio y se limita a 30 segundos.
-No hay palabra de activación todavía. El modo de idioma predeterminado es
+Por defecto el micrófono se abre al pulsar Espacio, con límite de 30 segundos.
+La escucha manos libres es opcional y está apagada inicialmente:
+
+```bash
+./argos voice-config --wake-word on
+./argos voice-config --wake-word off
+```
+
+Con ella activa, «Argos?» o «Argos, …» abre una conversación. El modelo contesta
+con su respuesta natural: una pregunta breve recibe una contestación breve, sin
+un «Sir» fijo ni una locución superpuesta. Puedes seguir hablando, responder «sí»
+o «yes» y continuar el tema sin repetir el nombre ni hacerlo dentro de un plazo.
+«Eso es todo», «hasta luego» o «that's all» devuelve la escucha a espera de «Argos»;
+no cancela las tareas en segundo plano.
+
+Whisper local reconoce la invocación y los finales de turno se detectan por
+silencio. La captura permanece abierta entre turnos; los turnos que llegan
+durante el reconocimiento o la inferencia esperan en una cola acotada en memoria.
+En espera se descartan los textos sin invocación. Con la conversación abierta,
+lo que recoge el micrófono se trata como conversación: no identifica al hablante.
+Con el diálogo abierto puedes interrumpir su respuesta hablando: detiene el audio,
+conserva el inicio de tu frase y pasa tu intervención al modelo. No añade un «Sir»
+ni otra frase fija, no reanuda automáticamente la explicación cortada y no cancela
+las tareas en segundo plano.
+
+La interrupción requiere la cancelación de eco WebRTC de PipeWire. Al activar
+manos libres, ARGOS crea una entrada y una salida virtuales temporales para su
+propia voz, sin cambiar los dispositivos predeterminados del sistema. Tras 160 ms
+de actividad sostenida en la entrada filtrada solicita el corte; la latencia real
+depende del equipo. `./argos voice-status` muestra `barge_in_available`,
+`echo_error` y `voice_interruptions`. Si el módulo no está disponible, sigue
+funcionando por turnos y descarta el micrófono durante su reproducción. Si se
+pierde el cancelador en marcha, detiene la escucha y muestra el fallo.
+Escape apaga también la escucha; Espacio vuelve a captura manual y la desactiva.
+La preferencia se conserva entre arranques. Cerrar la consola no desactiva Core
+ni una escucha manos libres previamente activada: usa Escape o `--wake-word off`.
+La interrupción está cubierta por pruebas silenciosas; queda pendiente validar
+eco, ruido y latencia con el micrófono y los altavoces del usuario. El detector
+usa energía y no identifica al hablante: otras voces o ruido sostenido pueden cortarlo.
+
+El modo de idioma predeterminado es
 automático: responde en español si hablas español y en inglés si hablas inglés.
 También reconoce «habla en inglés», «cambia a español» y «speak Spanish».
 Si después vuelves a hablar en el otro idioma, la respuesta vuelve a seguirte.
@@ -87,31 +126,93 @@ Core está disponible.
 
 ## Qué ejecuta
 
+ARGOS incorpora un inventario local de solo lectura. General y los especialistas
+reciben observaciones del equipo con origen, fecha y estado de comprobación:
+distribución/kernel, CPU, RAM, identificadores PCI/controlador de GPU, espacio
+de `/` y de la carpeta personal, sesión gráfica, herramientas y dispositivos de
+audio. Consultar dispositivos no abre el micrófono ni reproduce sonido.
+
+```bash
+./argos doctor                         # También funciona con Core apagado
+./argos system-status                  # Inventario del Core y capacidades
+./argos system-status --refresh        # Repetir las observaciones locales
+./argos system-status --project ARGOS  # Incluir el contexto de un proyecto
+./argos run system.inspect --wait      # Inspección registrada como tarea
+./argos say "inspecciona el equipo"
+```
+
+El inventario se conserva en memoria durante 30 segundos y se renueva cuando se
+necesita. Las consultas `system-status` no crean tareas ni escriben SQLite;
+`system.inspect` sí registra evidencia como cualquier otra capacidad. No explora
+documentos personales, credenciales, argumentos de procesos ni todo el entorno.
+No comprueba la conexión a Internet, el inicio de sesión de Codex ni los modelos
+de voz; indica esas limitaciones en lugar de deducirlas de un ejecutable instalado.
+Los identificadores de GPU no equivalen a un diagnóstico completo del hardware y
+la información de discos no enumera todos los montajes.
+
+Cada capacidad distingue `implemented` de su disponibilidad:
+
+| Estado | Significado |
+| --- | --- |
+| `available` | Los requisitos comprobados están presentes; el resultado de una operación aún debe verificarse. |
+| `unavailable` | Falta una dependencia o sesión requerida. |
+| `permission_denied` | Una comprobación ha recibido una denegación de permisos. |
+| `needs_context` | Hace falta seleccionar un proyecto. |
+| `not_checked` | Falta comprobar algo o depende de ruta, argumentos, fuente web o permisos concretos. |
+
+`available` vale `true`, `false` o `null` (sin comprobar), acompañado de `reason`
+y `checked_at`. Por ejemplo, `windows.list` no se anuncia disponible sin Hyprland;
+`workspace.open` comprueba por separado VS Code y la combinación kitty/Codex.
+Un bloqueo conocido impide solicitar aprobación o lanzar la operación. La
+disponibilidad no sustituye las aprobaciones ni amplía permisos del usuario.
+El mapa de agentes distingue «sin tarea» de la disponibilidad de herramientas.
+
 | Rol | Capacidades conectadas |
 | --- | --- |
 | General | Intenciones locales y conversación/interpretación con Codex |
-| Engineering | Inspeccionar repositorio, listar/leer/escribir texto, comandos registrados |
-| Computer | Sistema, aplicaciones, ventanas Hyprland, abrir documentos y URLs |
-| Research | Búsqueda pública con enlaces; síntesis con Codex al delegar investigación |
+| Engineering | Archivos del PC, proyectos nuevos, comandos revisados, workspaces y consulta web |
+| Computer | Inventario del equipo, aplicaciones, ventanas Hyprland, archivos, carpetas, workspaces y URLs |
+| Research | Buscar, leer páginas públicas, seguir enlaces y sintetizar varias fuentes con Codex |
 | Design3D / Printing3D | Inspección de STL / G-code; sin actuadores conectados |
 
 Las aplicaciones se descubren mediante archivos `.desktop`. Las ventanas requieren
 Hyprland. Abrir una aplicación informa de la solicitud de lanzamiento, no garantiza
 que una aplicación externa haya terminado de arrancar. Cerrar requiere aprobación.
 
-Los archivos se limitan a proyectos registrados: texto UTF-8 hasta 64 KB,
-sin rutas ocultas, enlaces simbólicos ni credenciales evidentes. Las escrituras
-comparan el SHA-256 anterior y verifican el contenido final. Todavía no se expone
-borrar, mover ni crear carpetas.
+Las operaciones de archivo aceptan rutas absolutas en el PC con los permisos
+normales del usuario Linux. No necesitan proyecto registrado. Las rutas relativas
+usan el proyecto seleccionado. No elevan privilegios ni sortean permisos de Linux.
+Se admiten archivos ocultos de configuración normales; se excluyen credenciales,
+enlaces simbólicos, dispositivos y ciertos formatos privados del contexto del modelo.
 
-La búsqueda usa Bing RSS, sin clave. Guarda títulos, fragmentos y enlaces;
-no descarga ni verifica páginas completas. El servicio externo puede limitarla.
-«research: investiga …» inicia un especialista que puede realizar varias búsquedas.
+`files.list` / `files.list_page` listan carpetas paginadas. `files.read` devuelve
+la primera página UTF-8, el SHA-256 y `next_offset`; `files.read_range` continúa
+por desplazamientos de caracteres. El archivo puede superar 64 KB. `files.write`
+reemplaza el contenido completo; `files.patch` inserta, sustituye o añade tramos
+a archivos grandes con SHA previo. Cada inserción admite hasta 64000 caracteres:
+es un límite por operación, no de tamaño total del archivo.
+
+También están conectadas `files.stat`, `files.mkdir`, `files.copy`, `files.move`
+y `files.delete`. Copiar/mover admite archivos binarios y árboles de directorios;
+no sobrescribe un destino existente. Borrar traslada a una carpeta `.argos-trash`
+en el mismo directorio padre. La tarea registra origen, destino y SHA para poder
+restaurar con `files.move`. Los movimientos entre sistemas de archivos requieren
+copiar, verificar y después borrar. Las modificaciones se revisan y aprueban.
+
+La búsqueda usa Bing RSS sin clave y puede encadenarse con `web.read` para leer
+HTML/texto públicos, extraer enlaces y consultar páginas largas por tramos.
+«Investiga …» delega en Research: el especialista elige consultas, puede seguir
+fuentes, comparar varias páginas y citar sus URLs en el resultado. `web.read`
+verifica el SHA entre páginas y registra URL final y fecha de consulta. Los
+resultados externos no autorizan operaciones sobre el equipo.
+El lector descarga hasta 4 MiB por página, sin ejecutar JavaScript ni usar sesiones
+privadas; PDF, sitios que exigen inicio de sesión y páginas exclusivamente dinámicas
+no se leen con este adaptador. La búsqueda depende de la disponibilidad de Bing.
 
 ## Proyectos, programación y aprobación
 
 ```bash
-./argos add-project ARGOS /home/tyrant/Proyectos/argos
+./argos add-project ARGOS /ruta/a/argos
 ./argos say "programacion: revisa cómo se gestionan las tareas" --project ARGOS
 ./argos tasks
 ./argos task ID
@@ -134,7 +235,13 @@ Para modificaciones y ejecución de comandos:
 del comando y su carpeta. La aprobación es de un uso, ligada a tarea y argumentos.
 Core ejecuta esa operación preparada antes de devolver el control al modelo.
 Cambiar el archivo o la definición del comando invalida la operación.
-La aprobación detallada se hace por CLI en esta versión.
+También puedes decir «Argos, revisa aprobación», o «revisa aprobación ID» si hay
+varias tareas. Core describe la operación, rutas/argumentos y emite cuatro palabras.
+«Argos, aprueba PALABRAS» autoriza esa operación exacta una sola vez, en la misma
+sesión, durante dos minutos. Un «sí» no basta. Reiniciar invalida los códigos.
+Para escrituras, la revisión hablada indica ruta, longitud y huella del contenido;
+el contenido completo sigue en `review`. Es posible usar el mismo flujo por texto
+con `./argos say`, o pedir la lectura con `./argos voice-review ID`.
 
 Registra comandos concretos para un proyecto:
 
@@ -145,6 +252,26 @@ Registra comandos concretos para un proyecto:
 Registrar no ejecuta. Los comandos corren con los permisos del usuario después
 de aprobarlos; no constituyen un contenedor de seguridad. El registro acepta argv,
 no una cadena que ARGOS interpole en un shell.
+
+`commands.exec` permite proponer comandos nuevos sin registro previo, indicando
+`cwd` y `argv_json` (lista JSON codificada como texto). Core muestra los argumentos
+y carpeta antes de solicitar aprobación. Los comandos ejecutan con permisos del
+usuario y pueden tener efectos fuera de esa carpeta: la aprobación no es una sandbox.
+
+Para empezar desde cero, Engineering puede crear padres mediante `files.mkdir`
+y luego usar `projects.create` con nombre y ruta. Core registra el proyecto y
+conserva la misma tarea e hilo para continuar creando archivos. `workspace.open`
+abre la carpeta en VS Code (`editor=code`) o una terminal kitty con Codex
+(`editor=codex`), previa revisión. Esa terminal Codex es una sesión independiente;
+sus acciones no se atribuyen automáticamente a la evidencia de ARGOS.
+
+```bash
+./argos say "programacion: crea un proyecto Python en /ruta/a/mi-proyecto"
+./argos run files.read_range --args '{"file":"/ruta/a/grande.txt","offset":"32000","limit":"32000","expected_sha256":""}' --wait
+./argos run files.mkdir --args '{"path":"/ruta/a/nueva-carpeta"}' --wait
+./argos run web.read --args '{"url":"https://www.python.org/","offset":"0","expected_sha256":""}' --wait
+./argos say "investiga las alternativas y resume varias fuentes con sus enlaces"
+```
 
 Otras operaciones:
 
@@ -218,7 +345,7 @@ El runtime usa los modelos descargados en modo offline. Necesita también
 
 STT y TTS comparten un proceso separado. Las notificaciones esperan mientras
 se graba o transcribe, para evitar que el micrófono recoja la propia voz.
-Los WAV de captura son temporales, privados y se borran al terminar, cancelar
+Los WAV de captura manual y manos libres son temporales, privados y se borran al terminar, cancelar
 o reiniciar. La síntesis normal transmite PCM sin escribir audio en disco.
 Los textos de las peticiones sí pueden quedar en el historial de tareas.
 GAMING descarta avisos de tareas; no los acumula para reproducirlos después.
@@ -244,9 +371,8 @@ El lanzador escribe errores en `core.log`, nunca sobre la esfera.
 Los procesos de tu mismo usuario pertenecen al perímetro de confianza.
 El filtro de secretos rechaza patrones conocidos; no es una garantía DLP completa.
 
-Pendientes: activación por palabra, aprobación por voz, lectura de páginas web
-completas, operaciones de archivo adicionales, Blender, impresora, instalador
-de autoactualizaciones y GUI Windows. «Actualiza ARGOS» informa de que falta
+Pendientes: validación acústica del modo manos libres, lector web dinámico/PDF,
+Blender, impresora, instalador de autoactualizaciones y GUI Windows. «Actualiza ARGOS» informa de que falta
 el instalador y no reemplaza ningún ejecutable.
 
 ## Validar

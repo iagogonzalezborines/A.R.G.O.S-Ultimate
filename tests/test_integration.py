@@ -113,6 +113,19 @@ class DaemonTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(proc.returncode, 0, stderr.decode())
         self.assertEqual(json.loads(stdout)["data"]["status"], "COMPLETED")
 
+    async def test_inventory_cli_queries_daemon_without_enqueuing_work(self):
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, str(ROOT / "argos"), "--state-dir", str(self.state),
+            "--json", "system-status", "--refresh",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), 5)
+        self.assertEqual(proc.returncode, 0, stderr.decode())
+        report = json.loads(stdout)["data"]
+        self.assertEqual(report["environment"]["status"], "observed")
+        self.assertFalse(report["environment"]["stale"])
+        self.assertTrue(all("status" in cap and "reason" in cap for cap in report["capabilities"]))
+        self.assertEqual((await call(self.state, {"method": "tasks"}))["data"], [])
+
     async def test_console_draws_and_restores_terminal_without_stopping_core(self):
         import pty
         import signal

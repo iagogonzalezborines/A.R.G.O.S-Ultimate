@@ -1,7 +1,7 @@
 # Arquitectura
 
 ```text
-Micrófono → Whisper ─┐
+Micrófono → pulsador / invocación local → Whisper ─┐
 CLI ────────────────┴→ Core → intención conocida → capacidad local
                          └→ Codex General → respuesta / capacidad / especialista
                                                         ↓
@@ -26,7 +26,13 @@ que un proyecto atasque a los demás.
 - `codex.py`: App Server persistente, RPC, turnos y herramientas dinámicas.
 - `providers.py`: decisiones estructuradas y alternativa Ollama.
 - `agents.py`, `contracts/`: capacidades por rol e instrucciones en ejecución.
-- `linux_tools.py`: operaciones de archivos, procesos, escritorio y búsqueda.
+- `linux_tools.py`: procesos, escritorio y búsqueda.
+- `host.py`: observaciones Linux acotadas y comprobación de requisitos por capacidad.
+- `filesystem.py`: rutas absolutas, páginas/tramos, árboles, papelera y workspaces.
+- `web_reader.py`: HTTP público, extracción de texto/enlaces y paginación.
+- `wake.py`: endpointing PCM y filtro local de invocación.
+- `echo.py`: cancelación de eco PipeWire temporal y supervisada para interrupción.
+- `approval_dialog.py`: revisión hablada y códigos de una operación.
 - `policy.py`: autorización por huella, tarea, proyecto y argumentos.
 - `speech.py`, `voice_worker.py`: cola de voz, captura y proceso local de modelos.
 - `voice.py`, `console.py`: reproducción, RMS y esfera sin transcript.
@@ -90,6 +96,38 @@ instalada. Se comprobó con Codex 0.154.0-alpha.6.2.
 
 ## Evidencia y autorización
 
+El servidor inyecta `LinuxEnvironment` en Core; Core consume su interfaz de
+inventario y disponibilidad sin implementar sondeos Linux. Al arrancar y antes
+de construir contexto o ejecutar capacidades se renueva la caché si han pasado
+30 segundos. Un bloqueo asíncrono agrupa consultas concurrentes. La lectura de
+metadatos se ejecuta fuera del bucle de eventos; los sondeos `pactl`/`hyprctl`
+corren en paralelo, con un segundo de plazo y 64 KiB máximos cada uno.
+
+Las fuentes están prefijadas: platform/os-release, campos concretos de cpuinfo y
+meminfo, identificadores PCI/controlador en DRM, statvfs de raíz/home, indicadores
+de sesión permitidos, presencia de una lista de ejecutables, UID efectivo y
+metadatos de fuentes/salidas de audio. No se invoca captura, reproducción,
+instalación, autenticación ni consultas externas. Se filtran los datos públicos;
+los fallos parciales producen estados sin incluir stderr ni valores privados.
+La GPU se identifica por IDs, no mediante un catálogo remoto; no se inventan
+dispositivos si el sondeo no los observa.
+
+`context.environment` contiene observaciones fechadas con fuente, estado y
+caducidad. `context.capabilities` añade `implemented`, disponibilidad ternaria,
+estado, motivo y fecha. Un adaptador no comprobado nunca publica disponibilidad
+positiva por defecto. Ficheros, comandos y web mantienen comprobaciones por
+operación: la presencia del adaptador no demuestra permisos sobre una ruta ni
+conectividad a una fuente. Core rechaza bloqueos conocidos antes de aprobación
+o ejecución; la política de autorización y la verificación de resultados siguen
+siendo independientes del inventario.
+
+`environment.inspect` es una consulta IPC sin escrituras ni tareas, usada por
+`system-status`; permite renovación explícita y contexto de proyecto. `doctor`
+usa el mismo informe y puede obtenerlo sin Core. `system.inspect` es una capacidad
+de lectura de Computer y Engineering: renueva el inventario compartido y guarda
+la evidencia de esa operación en la tarea. El sondeo automático no se persiste.
+El monitor reutiliza el inventario en memoria; no lanza sondeos por cada fotograma.
+
 QUEUED significa encolado; RUNNING, que un trabajador posee la tarea.
 WAITING_INPUT y WAITING_APPROVAL liberan el trabajador conservando identidad.
 Una aprobación contiene la operación preparada y su huella. Al continuar,
@@ -115,10 +153,105 @@ Las rutas de texto se recorren con descriptores y O_NOFOLLOW. La escritura
 prepara un temporal, compara la versión anterior, reemplaza y verifica.
 Procesos ajenos de la misma cuenta no se consideran adversarios aislados.
 
+## Acceso al PC y proyectos nuevos
+
+Las capacidades de archivo aceptan rutas absolutas sin proyecto. Solo las relativas
+requieren una base seleccionada. Se conserva el filtro de credenciales y el recorrido
+O_NOFOLLOW. Los archivos UTF-8 se inspeccionan por streaming, incluyendo el filtrado
+de secretos entre fragmentos. Las páginas y parches usan desplazamientos de caracteres,
+no bytes; SHA-256 identifica el archivo completo. Los parches escriben un temporal,
+comprueban de nuevo la versión y verifican el resultado. Los archivos grandes no
+se entregan enteros al modelo. El trabajo de disco se ejecuta en un hilo y las
+operaciones de archivo del Core se serializan. Si llega una cancelación durante
+ese paso, se espera su resultado y se registra evidencia antes de marcar cancelada
+la tarea; no se repite al recuperar.
+
+Copias y movimientos no reemplazan destinos. La huella de árbol incluye nombres
+ordenados y huellas del contenido, y rechaza enlaces/archivos especiales. Borrar
+es renombrar a una papelera hermana recuperable; su ruta aparece en la evidencia.
+No hay borrado irreversible automático. Los procesos del mismo usuario siguen
+en el perímetro de confianza; esto no aísla frente a modificaciones externas hostiles.
+
+`projects.create` crea el directorio tras aprobación; Core registra y vincula
+el proyecto a la tarea, sin cambiar de hilo. `commands.exec` prepara argv/cwd
+revisables sin registro previo, y compara la definición con el evento aprobado
+antes de ejecutarla. `workspace.open` solicita una ventana de VS Code o terminal
+Codex tras revisión; el trabajo posterior de esa sesión externa no es evidencia
+de la tarea. No se cambian modelos ni configuración de autenticación.
+
+## Investigación y revisión hablada
+
+`web.read` resuelve DNS público, conecta a la IP validada y verifica TLS con el
+hostname original. Cada redirección vuelve a comprobarse; no usa cookies, perfiles
+privados ni proxies del entorno. Limita descarga, tiempo y redirecciones. Extrae
+HTML/texto y enlaces; no ejecuta scripts. Las páginas se entregan por fragmentos
+con huella del texto, URL final y fecha de consulta. Research combina estas
+operaciones con búsquedas y conserva la síntesis pública con fuentes. Texto
+externo y enlaces son evidencia no confiable, nunca autorización.
+
+La revisión hablada es local, sin inferencia. Selecciona una tarea pendiente
+inequívoca de la sesión y emite un código de cuatro palabras con dos minutos de
+vigencia, vinculado a tarea y fingerprint. Solo la orden completa `aprueba CODE`
+(o `approve CODE`) consume el código y llama al mismo flujo de aprobación exacta
+que la CLI. El código no sobrevive al proceso; cambiar la operación, cancelar o
+consumirlo invalida su autoridad. Un sí aislado y una decisión del modelo no pueden
+aprobar. El contenido de una escritura permanece revisable por CLI; la locución
+indica ruta, longitud y huella, sin leer todo un archivo de código en voz alta.
+
 ## Audio
 
 Espacio inicia captura PipeWire; la segunda pulsación envía a Whisper; límite
-de 30 segundos. No hay wake word. Se pausa TTS durante captura/transcripción.
+de 30 segundos. La escucha opcional de «Argos» usa PCM PipeWire, endpointing
+por energía y Whisper local; está apagada por defecto. La invocación abre un diálogo
+persistente, sin vencimiento por silencio ni reinvocación entre turnos. La invocación
+sola y las comprobaciones de presencia se envían como turnos reales al modelo:
+su respuesta pública se sintetiza una vez, sin saludo fijo ni llamada adicional
+de Persona. El contexto pide concisión proporcional a la pregunta, no una frase
+predefinida ni un honorífico obligatorio.
+
+La captura PCM permanece abierta y drena continuamente, separada del consumidor
+de reconocimiento/inferencia por una cola de cuatro segmentos en memoria.
+`EchoCancellation` mantiene un proceso `pw-cli --monitor load-module` con
+`libpipewire-module-echo-cancel` y WebRTC. Publica nodos privados con nombres únicos;
+fija el micrófono seleccionado y la salida predeterminada antes de crearlos. No
+cambia los dispositivos predeterminados ni escribe configuración persistente.
+`pw-record` recibe la fuente filtrada y toda reproducción propia (TTS o WAV) pasa
+por el sumidero de referencia. La presencia de los nodos se comprueba antes de
+habilitar interrupciones. Terminar el proceso elimina sus nodos. Véanse las
+referencias de [cancelación de eco](https://docs.pipewire.org/page_module_echo_cancel.html)
+y [módulos locales de pw-cli](https://docs.pipewire.org/page_man_pw-cli_1.html).
+
+En diálogo abierto, ocho tramas consecutivas de actividad tras AEC (160 ms)
+interrumpen la voz sin esperar al final del turno. El reproductor se termina antes
+de esperar a que cierre el generador de síntesis. Se descarta la locución pendiente,
+se pausa la cola de voz y la captura conserva el preámbulo y el resto de la frase
+mientras se cierra TTS. No cancela tareas ni modifica aprobaciones. El siguiente
+turno recibe `interaction.speech_interrupted`; el contrato pide atender la nueva
+intervención sin repetir automáticamente la explicación ni un acuse prefijado.
+Solo se envía ese indicador y el texto reconocido: no audio al modelo ni a SQLite.
+La cancelación de síntesis puede cerrar el proceso local compartido; el siguiente
+reconocimiento lo reinicia y puede pagar el coste de recargar modelos.
+
+Si AEC no está disponible al arrancar, continúa por turnos y descarta PCM durante
+TTS. `voice.state` expone `barge_in_available`, `echo_error` y `voice_interruptions`.
+Perder el proceso AEC activo detiene la escucha y libera la ruta de reproducción;
+no vuelve silenciosamente a un micrófono sin filtrar. La detección es por energía,
+no identifica voces ni garantiza distinguirlas de ruido sostenido. La eficacia
+acústica y la latencia real requieren validación en el equipo del usuario.
+En espera se ignora lo que no invoque ARGOS; en diálogo abierto los turnos se
+procesan sin identificar al hablante.
+Una despedida explícita cierra el diálogo y descarta sus segmentos pendientes;
+la respuesta a esa despedida también pertenece al modelo. No cancela tareas.
+
+General recibe hasta ocho mensajes públicos recientes de la misma sesión/proyecto,
+acotados en tamaño, además del hilo del proveedor cuando exista. Así, un intérprete
+sin memoria remota también puede interpretar «yes» según la propuesta anterior.
+Las preguntas de tareas pendientes se exponen con su ID; la decisión `reply`
+selecciona una de ellas y Core devuelve a esa tarea el texto original del usuario.
+Se revalida sesión, proyecto y WAITING_INPUT; nunca se usa esta vía para aprobar.
+No se crea un modo global de especialista ni se ejecuta una inferencia extra.
+Escape y la transición al pulsador desactivan manos libres y guardan la preferencia.
+Se pausa TTS durante captura/transcripción.
 El modo predeterminado de idioma es automático español/inglés. Whisper aporta
 idioma y confianza; las expresiones inequívocas y las órdenes explícitas tienen
 prioridad. Palabras compartidas o ambiguas conservan el idioma anterior.
@@ -152,6 +285,6 @@ se expresa en el contrato de conversación y nunca con un recorte del texto.
 
 ## Siguientes integraciones
 
-Activación por palabra, aprobaciones por voz, lectura web, Blender, impresión,
+Lectura web dinámica/PDF, validación acústica de manos libres, Blender, impresión,
 actualización mediante candidato/pruebas/activación/rollback y GUI Windows.
 No se anuncian como capacidades conectadas.

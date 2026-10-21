@@ -22,6 +22,15 @@ class Router:
         text = re.sub(r"^argos[, :]+\s*", "", text.strip(), flags=re.I)
         text = re.sub(r"^(?:por favor|please)[, ]+", "", text, flags=re.I)
         value = normalize(text)
+        review = re.fullmatch(r"(?:revisa (?:la )?aprobacion|review approval)(?: ([a-f0-9]{8,32}))?", value)
+        if review:
+            return Decision("approval_review", arguments={"task_id": review[1] or ""})
+        confirm = re.fullmatch(r"(?:aprueba|approve)[:, ]+([a-z ,;]+)", value)
+        if confirm:
+            code = " ".join(re.split(r"[ ,;]+", confirm[1].strip(" ,;")))
+            return Decision("approval_confirm", arguments={"code": code})
+        if re.match(r"^(?:investiga|investigar|research|investigate)\b", value):
+            return Decision("delegate", agent="research", reason="research_request")
         panel = re.sub(r"[, ]+(?:por favor|please)$", "", value)
         panel = re.sub(r"^(?:(?:puedes|podrias)(?: por favor)? |(?:can|could|would) you(?: please)? )", "", panel)
         if re.fullmatch(
@@ -83,6 +92,9 @@ class Router:
             return Decision(kind, speech, reason="known_complete_intent")
         if value in ("informacion del sistema", "estado del pc", "system info", "inspect computer"):
             return Decision("capability", agent="computer", capability="system.info")
+        if value in ("inspecciona el equipo", "inventario del equipo", "inspecciona el sistema",
+                     "inspect system", "system inventory"):
+            return Decision("capability", agent="computer", capability="system.inspect")
         if value in ("inspecciona el proyecto", "analiza el repositorio", "inspect repository", "inspect project"):
             return Decision("capability", agent="engineering", capability="repo.inspect")
         for names, capability, agent, arguments in (
