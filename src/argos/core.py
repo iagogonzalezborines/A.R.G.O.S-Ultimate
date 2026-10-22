@@ -17,9 +17,12 @@ from .language import choose_language, localize
 
 class Core:
     def __init__(self, store: Store, interpreter=None, workers=2, environment=None, development=None,
-                 escalation_provider=None):
+                 escalation_provider=None, conversation_provider=None):
         if interpreter and not getattr(interpreter, "conversation_allowed", True):
             raise ArgosError("El proveedor de conversación no puede ser Codex.")
+        if conversation_provider and not getattr(conversation_provider, "conversation_allowed", True):
+            raise ArgosError("El proveedor de conversación no puede ser Codex.")
+        self.conversation_provider = conversation_provider
         self.store, self.interpreter = store, interpreter
         self.escalation_provider = escalation_provider
         self.environment = environment
@@ -79,14 +82,29 @@ class Core:
         if self.development:
             self.development.grants.clear()
             self.development.offers.clear()
-        for provider in (self.interpreter, self.escalation_provider):
-            if provider and hasattr(provider, "close"):
+        closed = set()
+        for provider in (self.interpreter, self.conversation_provider, self.escalation_provider):
+            if provider and id(provider) not in closed and hasattr(provider, "close"):
+                closed.add(id(provider))
                 await provider.close()
 
+    @property
+    def conversation_interpreter(self):
+        return self.conversation_provider or self.interpreter
+
+    def agent_catalogue(self):
+        agents = catalogue(self.interpreter.name if self.interpreter else "none")
+        if self.conversation_provider:
+            agents[0]["provider"] = self.conversation_provider.name
+            agents[0]["intelligence"] = "configured_unverified"
+        return agents
+
     def inference_status(self):
-        return {"policy": "local_first_explicit_task_escalation",
-                "conversation": self.interpreter.name if self.interpreter else "not_configured",
-                "conversation_model": getattr(self.interpreter, "model", None),
+        return {"policy": ("explicit_remote_conversation_local_tasks" if self.conversation_provider
+                           else "local_first_explicit_task_escalation"),
+                "conversation": self.conversation_interpreter.name if self.conversation_interpreter else "not_configured",
+                "conversation_model": getattr(self.conversation_interpreter, "model", None),
+                "routine_tasks": self.interpreter.name if self.interpreter else "not_configured",
                 "complex_tasks": self.escalation_provider.name if self.escalation_provider else "not_configured",
                 "automatic_error_fallback": False}
 
@@ -130,7 +148,7 @@ class Core:
         self.queue.put_nowait(task["id"])
 
     def prepare_conversation(self, project=None, session="default"):
-        if not self.interpreter or not hasattr(self.interpreter, "prepare"):
+        if not self.conversation_interpreter or not hasattr(self.conversation_interpreter, "prepare"):
             return
         project = self.store.project(project)
         key = (session, project["id"] if project else None)
@@ -144,7 +162,7 @@ class Core:
                 if self.environment:
                     await self.environment.refresh()
                 context = {**self.context(project), "session": session}
-                await self.interpreter.prepare(context)
+                await self.conversation_interpreter.prepare(context)
             except (ArgosError, OSError, ValueError, TimeoutError):
                 self.preparation_errors[key] = "No se pudo preparar la conexión de conversación."
         self.preparations[key] = asyncio.create_task(prepare())
@@ -162,7 +180,7 @@ class Core:
             "project": {"id": project["id"], "name": project["name"], "root": project["root"]} if project else None,
             "capabilities": self.capability_catalogue(project, agent),
             "environment": self.environment.snapshot() if self.environment else {"status": "not_checked", "facts": {}},
-            "agents": catalogue(self.interpreter.name if self.interpreter else "none"),
+            "agents": self.agent_catalogue(),
             "panels": ["agents", "tasks"] if self.panels is not None and agent == "general" else [],
             "filesystem": {"absolute_paths": True, "home": str(__import__("pathlib").Path.home()),
                            "permissions": "current Linux user; explicit paths; no credential files"},
@@ -524,7 +542,7 @@ class Core:
                     if len(pending) != 1:
                         return Response("Hay varias preguntas pendientes. Indica la tarea al responder.", "clarify")
                     return await self._answer(pending[0], text.split(":", 1)[-1].strip() if explicit_reply else text)
-            if not self.interpreter:
+            if not self.conversation_interpreter:
                 return Response(
                     "No he podido resolver esa petición localmente. La interpretación por IA aún no está configurada.",
                     "clarify", data={"available": self.capability_catalogue(project)})
@@ -546,17 +564,17 @@ class Core:
                                                  for t in pending[:8]]
                 conversation_key = (session, project["id"] if project else None)
                 if conversation_key not in self.conversation_ids:
-                    previous = self.store.resumable_conversation(session, conversation_key[1], self.interpreter.name)
+                    previous = self.store.resumable_conversation(session, conversation_key[1], self.conversation_interpreter.name)
                     if previous:
                         self.conversation_ids[conversation_key] = previous
                 context["recent_conversation"] = self.store.recent_messages(
                     self.conversation_ids.get(conversation_key), session, conversation_key[1])
                 conversation_id = self.store.begin_conversation(
                     self.conversation_ids.get(conversation_key), session, conversation_key[1],
-                    self.interpreter.name, text)
+                    self.conversation_interpreter.name, text)
                 self.conversation_ids[conversation_key] = conversation_id
                 try:
-                    decision = await self.interpreter.decide(text, context)
+                    decision = await self.conversation_interpreter.decide(text, context)
                     self.preparation_errors.pop(conversation_key, None)
                     if decision.kind == "panel":
                         response = await self.open_panel(decision.arguments.get("view"), session)
@@ -571,8 +589,8 @@ class Core:
                         response = self.task_status(session, decision.arguments["task_id"])
                     else:
                         response = self._decision(decision, text, project, session)
-                    thread = (self.interpreter.conversation_thread(context)
-                              if hasattr(self.interpreter, "conversation_thread") else None)
+                    thread = (self.conversation_interpreter.conversation_thread(context)
+                              if hasattr(self.conversation_interpreter, "conversation_thread") else None)
                     self.store.finish_conversation(conversation_id, response.speech, thread_id=thread,
                                                    task_id=response.task_id)
                     return response
@@ -598,7 +616,7 @@ class Core:
         if kind == "greeting":
             return Response(decision.speech)
         if kind in ("agents", "capabilities"):
-            agents = catalogue(self.interpreter.name if self.interpreter else "none")
+            agents = self.agent_catalogue()
             capabilities = self.capability_catalogue()
             blocked = [cap["name"] for cap in capabilities if cap["status"] in ("unavailable", "permission_denied")]
             return Response(

@@ -39,7 +39,7 @@ async def start(directory, project=None):
         else:
             raise ArgosError("Core no arrancó. Revisa core.log en la carpeta de estado.")
     inference = state["data"].get("inference", {})
-    if inference.get("policy") != "local_first_explicit_task_escalation":
+    if inference.get("policy") not in ("local_first_explicit_task_escalation", "explicit_remote_conversation_local_tasks"):
         raise ArgosError("El Core activo usa la configuración anterior. Detén esa instancia antes de abrir la configuración local.")
     if state["data"].get("stt") == "not_connected":
         raise ArgosError("El Core activo no tiene voz. Ciérralo antes de iniciar la configuración de voz.")

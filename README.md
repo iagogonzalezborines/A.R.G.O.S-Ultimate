@@ -21,6 +21,24 @@ y guarda la selección (el nombre del modelo es propio de cada instalación):
 ./argos configure-providers --ollama-model NOMBRE_LOCAL --codex on
 ```
 
+Para probar **Nemotron con voz**, manteniendo Ollama para tareas y Codex solo
+para escaladas, guarda primero la clave NVIDIA en
+`~/.local/state/argos/credentials/nvidia.key` con permisos `0600` y configura:
+
+```bash
+./argos configure-providers --ollama-model NOMBRE_LOCAL --codex on --conversation-provider nvidia
+./argos start
+```
+
+Esta opción es experimental: envía texto, historial público reciente y contexto
+de capacidades a NVIDIA; reconocimiento y síntesis de voz siguen siendo locales.
+Usa Nemotron 3.5 Super con esquema completo y una sola petición por turno, sin
+reintentos ni sustitución automática. La espera de red usa un timeout de 20 s;
+un fallo no impide que el siguiente turno del usuario vuelva a intentarlo.
+No activa los experimentos de formato de las evaluaciones. El monitor distingue
+General/NVIDIA de los especialistas locales. La configuración se aplica al
+arranque; para volver a conversación local usa `--conversation-provider ollama`.
+
 `start` puede arrancar el motor Ollama ya instalado en loopback; no descarga
 modelos ni configura arranque automático del sistema. Codex queda reservado a
 escaladas justificadas de tareas, no a conversación ni a fallos del modelo local.

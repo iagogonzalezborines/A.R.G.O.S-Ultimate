@@ -19,15 +19,18 @@ def read(directory):
 
 
 def validate(settings):
-    if (not isinstance(settings, dict) or set(settings) != {"ollama_model", "codex_escalation"}
+    if (not isinstance(settings, dict) or set(settings) not in ({"ollama_model", "codex_escalation"}, {"ollama_model", "codex_escalation", "conversation_provider"})
             or not isinstance(settings["ollama_model"], str) or not settings["ollama_model"].strip()
             or len(settings["ollama_model"]) > 100 or "cloud" in settings["ollama_model"].casefold()
-            or not isinstance(settings["codex_escalation"], bool)):
+            or not isinstance(settings["codex_escalation"], bool)
+            or settings.get("conversation_provider", "ollama") not in ("ollama", "nvidia")):
         raise ArgosError("Selecciona un modelo Ollama local y si permites escaladas a Codex.")
 
 
-def write(directory, model, codex):
+def write(directory, model, codex, conversation_provider="ollama"):
     settings = {"ollama_model": model, "codex_escalation": codex}
+    if conversation_provider != "ollama":
+        settings["conversation_provider"] = conversation_provider
     validate(settings)
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     descriptor, temporary = tempfile.mkstemp(prefix="inference-", dir=directory)

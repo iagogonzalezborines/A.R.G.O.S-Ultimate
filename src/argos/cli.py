@@ -29,6 +29,7 @@ def parser():
     s = sub.add_parser("configure-providers", help="Elegir proveedores de esta instalación; no descarga ni reinicia")
     s.add_argument("--ollama-model", required=True)
     s.add_argument("--codex", choices=("on", "off"), default="off")
+    s.add_argument("--conversation-provider", choices=("ollama", "nvidia"), default="ollama")
     s = sub.add_parser("monitor", help="Mapa de agentes o monitor de tareas y conversaciones")
     s.add_argument("view", choices=("agents", "tasks"))
     s.add_argument("--open", action="store_true", help="Abrir en otra ventana")
@@ -105,11 +106,19 @@ async def execute(args):
         if args.codex or settings["codex_escalation"]:
             from .codex import Codex
             escalation = Codex(args.state_dir)
-        await serve(args.state_dir, provider, voice_enabled=args.voice, escalation_provider=escalation)
+        conversation = None
+        if settings.get("conversation_provider") == "nvidia":
+            from .nvidia import NvidiaConversation
+            conversation = NvidiaConversation(args.state_dir / "credentials" / "nvidia.key")
+        await serve(args.state_dir, provider, voice_enabled=args.voice, escalation_provider=escalation,
+                    conversation_provider=conversation)
         return
     if args.command == "configure-providers":
         from .inference_config import write
-        settings = write(args.state_dir, args.ollama_model, args.codex == "on")
+        if args.conversation_provider == "nvidia":
+            from .nvidia import read_private_key
+            read_private_key(args.state_dir / "credentials" / "nvidia.key")
+        settings = write(args.state_dir, args.ollama_model, args.codex == "on", args.conversation_provider)
         print(json.dumps({**settings, "applies": "next Core startup; current process unchanged"}, ensure_ascii=False))
         return
     if args.command == "start":

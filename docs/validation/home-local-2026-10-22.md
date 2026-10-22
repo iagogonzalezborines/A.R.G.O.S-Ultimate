@@ -342,3 +342,26 @@ Tras el último ajuste de las comprobaciones del informe, se repitieron las prue
 específicas de evaluadores y volvieron a pasar. Las pruebas de memoria con respuestas
 simuladas validan el transporte y la persistencia del contexto, no la comprensión
 lingüística de Nemotron. `git diff --check` pasó.
+
+## Prueba interactiva con Nemotron activada a petición del usuario
+
+Después de la auditoría, el usuario eligió explícitamente conectar Nemotron y
+probarlo con voz. Se añadió un proveedor de conversación independiente del
+intérprete de tareas: General usa NVIDIA; las tareas usan el Qwen 3.5 9B ya
+instalado, y Codex conserva únicamente las escaladas justificadas. La clave
+permanece en el archivo privado de credenciales. No se importan scripts de
+validación al runtime ni se cambia de proveedor ante fallos.
+
+El adaptador usa el esquema completo, una petición por turno, timeout de red de
+20 segundos y rechaza texto truncado, decisiones fuera del catálogo y llamadas
+nativas a herramientas. Los errores no bloquean permanentemente el siguiente
+turno del usuario. Se conserva el micrófono SteelSeries Arctis Nova 5X, idioma
+automático y pulsar Espacio para hablar; manos libres sigue desactivado.
+
+Suite completa: **272 pruebas pasadas** en 6,371 s. Arranque verificado con ventana
+ARGOS visible, `voice_ready=true`, `preparing=false` y ningún error de voz. Una
+petición textual real en la sesión separada `comprobacion-arranque` devolvió de
+NVIDIA «Sí, estoy aquí. ¿En qué puedo ayudarte?». No se reprodujo audio de prueba;
+queda al usuario comprobar el micrófono y la salida hablada en la consola abierta.
+La activación experimental no invalida los problemas de estabilidad y tono
+registrados anteriormente.

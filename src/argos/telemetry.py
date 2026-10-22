@@ -47,6 +47,8 @@ def snapshot(core, request):
                 (session,)).fetchone()
         assignment = core.store.setting("task.provider:" + current[1]) if current and identifier != "general" else None
         active_provider = core.escalation_provider if assignment and assignment["route"] == "escalated" else core.interpreter
+        if identifier == "general":
+            active_provider = core.conversation_interpreter
         active_name = active_provider.name if active_provider else "none"
         active_connection = ("connected" if getattr(active_provider, "connected", False) else
                              "configured" if active_provider else "not_configured")
@@ -81,8 +83,8 @@ def snapshot(core, request):
             row["provider_assignment"] = core.store.setting("task.provider:" + row["id"])
         if (kind == "conversations" and row["thread_id"] is None
                 and core.conversation_ids.get((session, row["project"])) == row["id"]
-                and hasattr(core.interpreter, "conversation_thread")):
-            row["thread_id"] = core.interpreter.conversation_thread(
+                and hasattr(core.conversation_interpreter, "conversation_thread")):
+            row["thread_id"] = core.conversation_interpreter.conversation_thread(
                 {"session": session, "project": {"id": row["project"]} if row["project"] else None})
     return {"agents": agents, "rows": rows, "total": total, "offset": start, "page_size": 24,
             "inference": core.inference_status(),
@@ -136,8 +138,8 @@ def detail(core, request):
             "SELECT role,content,task_id,created FROM messages WHERE conversation=? ORDER BY seq DESC LIMIT 12 OFFSET ?",
             (identifier, start))]
         if (thread is None and core.conversation_ids.get((session, row["project"])) == identifier
-                and hasattr(core.interpreter, "conversation_thread")):
-            thread = core.interpreter.conversation_thread(
+                and hasattr(core.conversation_interpreter, "conversation_thread")):
+            thread = core.conversation_interpreter.conversation_thread(
                 {"session": session, "project": {"id": row["project"]} if row["project"] else None})
     return {"id": identifier, "kind": kind, "title": title, "status": row["status"], "thread_id": thread,
             "messages": list(reversed(messages)), "offset": start, "total": total, "page_size": 12}

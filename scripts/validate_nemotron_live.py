@@ -19,6 +19,7 @@ from argos.agents import local_contract
 from argos.models import ArgosError
 from argos.providers import decision_messages, local_schema, validate_decision
 from argos.security import safe_data
+from argos.nvidia import matches_branch
 
 
 MODEL = "nvidia/nemotron-3.5-super-vl-120b-a12b"
@@ -38,21 +39,6 @@ def compact_schema(schema):
     return {"type": "object", "additionalProperties": False, "properties": properties,
             "required": ["kind", "speech", "target_agent", "tool", "tool_arguments"]}
 
-
-def matches_branch(wire, schema):
-    # local_schema uses only constants, string arguments and finite enums here.
-    for branch in schema["oneOf"]:
-        props = branch["properties"]
-        if any(wire.get(k) != props[k]["const"] for k in ("kind", "target_agent", "tool")):
-            continue
-        args = wire.get("tool_arguments")
-        expected = props["tool_arguments"].get("properties", {})
-        if not isinstance(args, dict) or set(args) != set(expected):
-            continue
-        if all(isinstance(value, str) and ("enum" not in expected[k] or value in expected[k]["enum"])
-               for k, value in args.items()):
-            return True
-    return False
 
 
 def validate_api_key(api_key):

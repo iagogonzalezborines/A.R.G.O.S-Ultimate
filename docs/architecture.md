@@ -75,6 +75,18 @@ aclaraciones sin limitar la función a frases exactas ni añadir otra inferencia
 
 ## Codex
 
+La opción explícita `conversation_provider=nvidia` conecta `nvidia.py` solo a
+General mediante `Core.conversation_provider`. El intérprete local original
+conserva las tareas y sus asignaciones; Codex mantiene las condiciones de escalada.
+Preparación, historial, identidad de proveedor y monitor de General siguen al
+proveedor conversacional seleccionado. No se importan conversaciones de otro
+proveedor. Los errores de NVIDIA no llaman al modelo local ni a Codex.
+El adaptador usa una credencial privada fuera del repositorio, endpoint fijo sin
+proxies/redirecciones, salida pública completa y validación contra el catálogo
+del turno. No acepta razonamiento privado ni llamadas nativas a herramientas.
+La política se identifica como `explicit_remote_conversation_local_tasks`; sin
+esa opción se conserva la política local que se describe a continuación.
+
 General y los especialistas usan el modelo local por defecto. Codex está
 conectado a un slot separado, reservado para tareas complejas. El adaptador
 rechaza General antes de iniciar App Server; Core también rechaza inyectarlo
