@@ -432,7 +432,7 @@ class Core:
                                  or bool(self.wake and self.wake.state == "preparing")
                                  or any(not job.done() for job in self.preparations.values()))
             data["tts_first_audio_ms"] = getattr(self.speech, "first_audio_ms", None)
-            data["last_input_timings"] = getattr(self.capture, "timings", {})
+            data["last_input_timings"] = getattr(self.wake if self.wake and self.wake.enabled else self.capture, "timings", {})
             data["error"] = ((self.capture.last_error if self.capture else None)
                              or (self.speech.last_error if self.speech else None)
                              or getattr(worker, "last_error", None)

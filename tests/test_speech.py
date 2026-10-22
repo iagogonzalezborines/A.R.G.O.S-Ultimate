@@ -24,6 +24,23 @@ class SilentOutput:
 
 
 class SpeechTests(unittest.IsolatedAsyncioTestCase):
+    async def test_push_to_talk_separates_invocation_and_marks_voice_context(self):
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(None, None, Path(temp))
+            core = SimpleNamespace(speech=speech, request=AsyncMock())
+            worker = SimpleNamespace(request=AsyncMock(return_value={
+                'text': 'ARGOS is the sky blue.', 'language': 'en', 'language_probability': .98}))
+            capture = Capture(core, worker, Path(temp))
+            await capture._transcribe()
+            message = core.request.call_args.args[0]
+            self.assertEqual(message['text'], 'is the sky blue.')
+            self.assertTrue(message['conversation'])
+            self.assertEqual(message['detected_language'], 'en')
+            self.assertEqual(message['language_probability'], .98)
+            worker.request.return_value['text'] = 'Argos?'
+            await capture._transcribe()
+            self.assertEqual(core.request.call_args.args[0]['text'], 'Argos?')
+
     async def test_delivery_callback_requires_complete_nonempty_playback(self):
         observed = []
         class Worker:

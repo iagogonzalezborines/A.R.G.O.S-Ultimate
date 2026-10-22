@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from argos.core import Core
-from argos.language import choose_language, language_command
+from argos.language import choose_language, language_command, voice_invocation
 from argos.models import Decision
 from argos.speech import Speech, Capture
 from argos.store import Store
@@ -16,6 +16,34 @@ from argos.router import Router
 
 
 class LanguageSelectionTests(unittest.TestCase):
+    def test_voice_invocation_does_not_depend_on_transcribed_punctuation(self):
+        self.assertEqual(voice_invocation('ARGOS is the sky blue.'), 'is the sky blue.')
+        self.assertEqual(voice_invocation('Argos, is the sky blue?'), 'is the sky blue?')
+        self.assertEqual(voice_invocation('¿Argos?'), '')
+        for text in ('What is Argos?', 'No Argos, no lo hagas', '"Argos is blue"', 'Argosian'):
+            self.assertIsNone(voice_invocation(text))
+
+    def test_ambiguous_short_greeting_can_recover_previous_language(self):
+        calls = []
+        def decode(path, language, **kwargs):
+            calls.append(language)
+            return ([SimpleNamespace(text='¡Halo!' if language is None else 'Hello!',
+                                     no_speech_prob=.01, avg_logprob=-.2)],
+                    SimpleNamespace(language='es' if language is None else 'en', language_probability=.97))
+        result = transcribe(SimpleNamespace(transcribe=decode), 'unused.wav', previous='en')
+        self.assertEqual(calls, [None, 'en'])
+        self.assertEqual(result['text'], 'Hello!')
+        self.assertEqual(choose_language(result['text'], 'es'), 'en')
+
+    def test_clear_spanish_greeting_still_switches_from_english(self):
+        calls = []
+        def decode(path, language, **kwargs):
+            calls.append(language)
+            return ([SimpleNamespace(text='Hola!', no_speech_prob=.01, avg_logprob=-.2)],
+                    SimpleNamespace(language='es', language_probability=.97))
+        self.assertEqual(transcribe(SimpleNamespace(transcribe=decode), 'unused.wav', previous='en')['text'], 'Hola!')
+        self.assertEqual(calls, [None])
+
     def test_invocation_prefixes_keep_app_commands_local_and_preserve_names(self):
         for text in ("Argos, abre Firefox", "Argos por favor abre Firefox", "Please open Firefox"):
             with patch("argos.linux_tools.find_app", return_value={"id": "firefox.desktop"}) as find:

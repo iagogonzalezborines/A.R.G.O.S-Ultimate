@@ -365,3 +365,40 @@ NVIDIA «Sí, estoy aquí. ¿En qué puedo ayudarte?». No se reprodujo audio de
 queda al usuario comprobar el micrófono y la salida hablada en la consola abierta.
 La activación experimental no invalida los problemas de estabilidad y tono
 registrados anteriormente.
+
+## Corrección del recorrido de voz y activación de manos libres
+
+La prueba del usuario descubrió un fallo que la auditoría textual no ejercitaba:
+Whisper transcribió «ARGOS is sky blue.» y «ARGOS is the sky blue.» sin coma.
+El pulsador reenviaba el prefijo íntegro y no enviaba `conversation=true`;
+Nemotron respondió sobre la identidad de ARGOS. La entrada manos libres ya
+separaba la invocación, pero estaba desactivada. Ahora ambos recorridos comparten
+la separación de la invocación inicial, conservan una invocación sola y no
+transforman menciones citadas, negadas o internas. El pulsador también identifica
+el turno como voz. No se reescribe la pregunta ni se inserta una respuesta fija.
+
+También constaba un saludo transcrito como «¡Halo!». Un saludo breve sin evidencia
+léxica clara que contradiga el idioma anterior puede volver a reconocerse en el
+otro idioma, aun si la detección acústica inicial fue confiada. Se comparan las
+hipótesis, sin traducir ni sustituir texto a mano. Los saludos claros siguen
+cambiando de idioma y no añaden esa segunda pasada. Esto se verificó con fixtures;
+no se conservaba audio del usuario para repetir su reconocimiento exacto.
+
+Se reinició únicamente el Core identificado, comprobando que no había tareas
+activas. El usuario solicitaba conversación sin pulsador: manos libres quedó
+activado y persistido, idioma automático, micrófono SteelSeries, `voice_ready=true`,
+`barge_in_available=true` y sin errores de eco. La espera indica
+`listening_for_argos`; tras invocar se mantiene el diálogo. Escape desactiva la
+escucha; «eso es todo» vuelve a esperar la invocación.
+
+Validación: **276 pruebas automáticas pasadas** en 6,286 s. En una sesión separada,
+el texto corregido «is the sky blue.» produjo una respuesta sobre el cielo en
+inglés en **2,56 s**; «¿Y por qué se ve azul?» produjo una explicación en español
+en **4,65 s**. Son tiempos de petición textual al Core, no latencia de voz completa.
+No se reprodujo audio de prueba. Se añadió medición de reconocimiento y despacho
+al recorrido manos libres, visible en `voice-status`, como en el pulsador.
+
+El último turno manual observado había tardado 1596 ms en reconocimiento y 2503 ms
+en despacho; un turno anterior registrado tardó unos 14,6 s entre entrada y
+respuesta. La integración y el idioma se corrigen en sus recorridos, pero no se
+da por resuelta la variabilidad de latencia de NVIDIA ni la calidad acústica real.

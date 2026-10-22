@@ -8,6 +8,16 @@ def normalized(text):
                            if not unicodedata.combining(c)).split()).strip(" .?!¿¡")
 
 
+def voice_invocation(text):
+    """Return the spoken request after a leading invocation, or None if absent.
+
+    Whisper punctuation is not reliable. Restrict this to voice entry points;
+    embedded, quoted and negated mentions remain untouched.
+    """
+    match = re.match(r"^[¿¡]?(?:hey[, ]+|oye[, ]+)?argos\b[\s,.:;!?¿¡-]*(.*)$", text.strip(), re.I)
+    return match[1].strip() if match else None
+
+
 def language_command(text):
     value = normalized(text)
     value = re.sub(r"^argos[, :] *", "", value)

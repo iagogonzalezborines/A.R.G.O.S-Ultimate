@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 
 from .models import ArgosError
-from .language import localize
+from .language import localize, voice_invocation
 
 
 VOICE_PYTHON = Path.home() / ".local/share/argos/voice-env/bin/python"
@@ -255,9 +255,12 @@ class Capture:
                                                "previous_language": self.core.speech.language})
             self.timings["stt_ms"] = round((time.monotonic() - started) * 1000)
             if result["text"]:
+                content = voice_invocation(result["text"])
+                text = content if content else result["text"]
                 dispatched = time.monotonic()
-                await self.core.request({"method": "say", "text": result["text"], "project": self.project,
+                await self.core.request({"method": "say", "text": text, "project": self.project,
                                          "session": self.session, "request_id": uuid.uuid4().hex, "speak": True,
+                                         "conversation": True,
                                          "detected_language": result.get("language"),
                                          "language_probability": result.get("language_probability", 0.0)})
                 self.timings["dispatch_ms"] = round((time.monotonic() - dispatched) * 1000)

@@ -9,6 +9,7 @@ import os
 import re
 import struct
 import tempfile
+import time
 import uuid
 import wave
 from collections import deque
@@ -228,6 +229,8 @@ class WakeListener:
             self.core.speech.resume_queue()
 
     async def process_audio(self, pcm, interrupted=False):
+        started = time.monotonic()
+        self.timings = {}
         fd, path = tempfile.mkstemp(prefix="wake-", suffix=".wav", dir=self.directory)
         os.close(fd)
         self.busy = True
@@ -239,7 +242,10 @@ class WakeListener:
             result = await self.worker.request({"op": "transcribe", "path": path,
                                                "language": "auto" if self.core.speech.automatic_language else self.core.speech.language,
                                                "previous_language": self.core.speech.language})
+            self.timings["stt_ms"] = round((time.monotonic() - started) * 1000)
+            dispatched = time.monotonic()
             await self.handle_transcript(result, interrupted=interrupted)
+            self.timings["dispatch_ms"] = round((time.monotonic() - dispatched) * 1000)
         finally:
             Path(path).unlink(missing_ok=True)
             self.busy = False
@@ -247,13 +253,13 @@ class WakeListener:
             self.core.speech.resume_queue()
 
     async def handle_transcript(self, result, interrupted=False):
-        from .language import normalized
+        from .language import normalized, voice_invocation
         text = result.get("text", "").strip()
         # A quoted, negated or embedded mention does not open a conversation.
-        match = re.match(r"^[¿¡]?(?:hey[, ]+|oye[, ]+)?argos\b[\s,.:;!?¿¡-]*(.*)$", text, re.I)
-        if match:
+        content = voice_invocation(text)
+        if content is not None:
             self.dialogue_open = True
-            text = match[1].strip()
+            text = content
             if not text:
                 text = result["text"].strip()  # The invocation is a real conversational turn.
         elif not self.dialogue_open:

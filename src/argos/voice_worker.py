@@ -31,11 +31,16 @@ def transcribe(whisper, path, language="auto", previous="es"):
 
     best = decode(None if language == "auto" else language)
     original_language, confidence = best[1].language, best[1].language_probability
-    if language == "auto" and (original_language not in ("es", "en") or confidence < .9):
+    ambiguous_short = (bool(best[0]) and len(best[0].split()) <= 3
+                       and choose_language(best[0], "es") != choose_language(best[0], "en")
+                       and original_language != previous and previous in ("es", "en"))
+    if language == "auto" and (original_language not in ("es", "en") or confidence < .9 or ambiguous_short):
         # Only uncertain clips get a second local decode. No second model or network call.
         alternate = ("es" if original_language == "en" else "en") if original_language in ("es", "en") else previous
         candidate = decode(alternate)
-        if original_language not in ("es", "en") or candidate[2] > best[2]:
+        candidate_clear = (choose_language(candidate[0], "es") == choose_language(candidate[0], "en") == alternate)
+        if (original_language not in ("es", "en") or candidate[2] > best[2]
+                or (ambiguous_short and candidate_clear and candidate[2] >= best[2] - .25)):
             best = candidate
             confidence = 0.0  # A forced decode is not an acoustic language confidence.
     return {"ok": True, "text": best[0], "language": best[1].language,
