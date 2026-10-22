@@ -550,7 +550,9 @@ python scripts/validate_nemotron_live.py --run --report /tmp/argos-nemotron.json
 ```
 
 Pide la clave de NVIDIA con entrada oculta, sin guardarla; también acepta
-`NVIDIA_API_KEY` si ya está definida. Reutiliza los mismos 23 turnos, personalidad,
+`NVIDIA_API_KEY` si ya está definida. Admite tokens largos; ante una entrada vacía
+o con caracteres no válidos para la cabecera, explica el problema sin mostrar la
+clave y permite hasta tres entradas en la terminal. Reutiliza los mismos 23 turnos, personalidad,
 memoria y bloqueos de acciones que la comparación Gemini, con contexto sintético.
 Usa `nvidia/nemotron-3.5-super-vl-120b-a12b` en el endpoint oficial fijo de NVIDIA,
 sin razonamiento (`reasoning_effort=none`) y con salida JSON validada por Core.

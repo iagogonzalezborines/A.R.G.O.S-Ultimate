@@ -24,6 +24,33 @@ MODEL = "nvidia/nemotron-3.5-super-vl-120b-a12b"
 ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions"
 
 
+def validate_api_key(api_key):
+    # Treat provider credentials as opaque header values, not fixed-length keys.
+    if not isinstance(api_key, str) or not api_key:
+        raise ArgosError("No se recibió ninguna clave. Pégala en la terminal y pulsa Enter.")
+    if len(api_key) > 8192:
+        raise ArgosError("La entrada supera el límite de la cabecera; copia solo la clave API.")
+    if any(not 33 <= ord(c) <= 126 for c in api_key):
+        raise ArgosError("La entrada contiene espacios o caracteres no admitidos; copia solo la clave API, sin comillas ni comandos.")
+
+
+def read_api_key():
+    api_key = os.environ.get("NVIDIA_API_KEY")
+    if api_key:
+        validate_api_key(api_key)
+        return api_key
+    if not sys.stdin.isatty():
+        raise ArgosError("Ejecuta desde una terminal para introducir la clave de forma oculta.")
+    for _ in range(3):
+        api_key = getpass.getpass("Clave API de NVIDIA (entrada oculta, no se guarda): ").strip()
+        try:
+            validate_api_key(api_key)
+            return api_key
+        except ArgosError as error:
+            print(str(error), file=sys.stderr)
+    raise ArgosError("No se pudo leer la clave tras tres entradas; no se ha contactado con NVIDIA.")
+
+
 def evaluation_contract():
     # Preserve the same personality/decisions, but accurately identify remote inference.
     return local_contract().replace("interaction contract — local", "interaction contract — Nemotron evaluation").replace(
@@ -47,8 +74,7 @@ class NemotronEvaluation:
     model = MODEL
 
     def __init__(self, api_key, report):
-        if not api_key or len(api_key) > 512 or not api_key.isascii() or any(c.isspace() for c in api_key):
-            raise ArgosError("Falta una clave válida de Nemotron.")
+        validate_api_key(api_key)
         self._api_key = api_key
         self.report, self.decisions, self.metrics = report, [], {}
         self.last_public_decision = None
@@ -183,7 +209,7 @@ async def run(args, api_key):
     save_report(args.report, report)
     print(json.dumps({"report": str(args.report), "structural_checks_passed": report["structural_checks_passed"],
                       "attempted_turns": len(report["turns"]), "skipped_turns": report["skipped_turns"],
-                      "http_attempts": report["http_attempts"]}))
+                      "http_attempts": report["http_attempts"], "error": report.get("error")}))
     return 0 if report["structural_checks_passed"] else 1
 
 
@@ -195,12 +221,15 @@ def main():
     args = parser.parse_args()
     if not args.run:
         parser.error("Requiere --run para enviar escenarios de prueba al endpoint de NVIDIA.")
-    api_key = os.environ.get("NVIDIA_API_KEY")
-    if not api_key:
-        if not sys.stdin.isatty():
-            parser.error("Ejecuta desde una terminal para introducir la clave de forma oculta.")
-        api_key = getpass.getpass("Clave API de NVIDIA (entrada oculta, no se guarda): ").strip()
-    return asyncio.run(run(args, api_key))
+    try:
+        api_key = read_api_key()
+        return asyncio.run(run(args, api_key))
+    except (EOFError, KeyboardInterrupt):
+        print("Entrada cancelada.", file=sys.stderr)
+        return 2
+    except ArgosError as error:
+        print(str(error), file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

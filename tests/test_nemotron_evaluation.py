@@ -1,7 +1,7 @@
 import io
 import json
 from argparse import Namespace
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 import sys
 import tempfile
@@ -13,7 +13,7 @@ from argos.models import ArgosError
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
-from validate_nemotron_live import ENDPOINT, NemotronEvaluation, run
+from validate_nemotron_live import ENDPOINT, NemotronEvaluation, read_api_key, run, validate_api_key
 sys.path.pop(0)
 
 
@@ -31,6 +31,34 @@ def response(finish="stop", **wire_changes):
 
 
 class NemotronEvaluationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_long_opaque_token_is_accepted_only_in_authorization_header(self):
+        key = "nvapi-" + "a" * 1500
+        provider = NemotronEvaluation(key, {"models": []})
+        opener = Mock()
+        opener.open.return_value = response()
+        with patch.object(provider, "_opener", return_value=opener):
+            await provider.decide("Hola", {})
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.get_header("Authorization"), "Bearer " + key)
+        self.assertNotIn(key.encode(), request.data)
+        self.assertNotIn(key, json.dumps(provider.decisions))
+
+    def test_empty_and_invalid_header_input_can_be_corrected_without_echo(self):
+        diagnostics = io.StringIO()
+        with patch.dict("os.environ", {}, clear=True), patch("sys.stdin.isatty", return_value=True), patch(
+                "validate_nemotron_live.getpass.getpass", side_effect=["", "private invalid token", "fixture-key"]) as prompt, redirect_stderr(diagnostics):
+            self.assertEqual(read_api_key(), "fixture-key")
+        self.assertEqual(prompt.call_count, 3)
+        self.assertIn("No se recibió", diagnostics.getvalue())
+        self.assertNotIn("private invalid token", diagnostics.getvalue())
+        self.assertNotIn("fixture-key", diagnostics.getvalue())
+
+    def test_header_controls_and_excessive_input_are_rejected_without_echo(self):
+        for key in ("private\x00key", "private\r\nkey", "private key", "privateé", "a" * 8193):
+            with self.subTest(length=len(key)), self.assertRaises(ArgosError) as caught:
+                validate_api_key(key)
+            self.assertNotIn(key, str(caught.exception))
+
     async def test_pending_and_native_tool_responses_are_not_accepted_as_answers(self):
         for pending in (True, False):
             with self.subTest(pending=pending):
