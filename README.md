@@ -542,5 +542,29 @@ daemon ni habilita Gemini en la consola: su calidad conversacional y su integrac
 completa siguen pendientes de una prueba real. Estado de las comparaciones en
 [validación del equipo de casa](docs/validation/home-local-2026-10-22.md).
 
+Para comparar **Nemotron 3.5 Super** mediante el endpoint gratuito de prototipado
+de NVIDIA:
+
+```bash
+python scripts/validate_nemotron_live.py --run --report /tmp/argos-nemotron.json
+```
+
+Pide la clave de NVIDIA con entrada oculta, sin guardarla; también acepta
+`NVIDIA_API_KEY` si ya está definida. Reutiliza los mismos 23 turnos, personalidad,
+memoria y bloqueos de acciones que la comparación Gemini, con contexto sintético.
+Usa `nvidia/nemotron-3.5-super-vl-120b-a12b` en el endpoint oficial fijo de NVIDIA,
+sin razonamiento (`reasoning_effort=none`) y con salida JSON validada por Core.
+Las respuestas incompletas se rechazan. Los informes conservan solo texto público,
+conteos de tokens, tiempos completos e intentos HTTP; nunca claves o razonamiento.
+Solo HTTP 503 se reintenta dos veces; los límites de uso y demás fallos detienen
+las peticiones. No cambia el proveedor del daemon ni utiliza Codex.
+
+El [catálogo de NVIDIA](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b)
+publica este endpoint como gratuito para prototipado; disponibilidad y cuotas
+dependen del servicio. La configuración de inferencia sigue su
+[referencia API](https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3_5-super-vl-120b-a12b-infer).
+Las pruebas simuladas verifican el adaptador, pero la aceptación del modelo exige
+revisar las respuestas reales y su latencia.
+
 Ver [arquitectura](docs/architecture.md), [validación](docs/validation.md)
 y [contrato de ARGOS](src/argos/contracts/ARGOS.md).
