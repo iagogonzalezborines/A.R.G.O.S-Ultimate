@@ -136,6 +136,8 @@ async def evaluate(args, report, provider_factory=None, core_class=ConversationO
                     session = f"personality-{repetition}-{name}"
                     for index, turn in enumerate(turns, 1):
                         before = len(provider.decisions)
+                        if hasattr(provider, "http_attempts"):
+                            provider.http_attempts = 0
                         started = time.monotonic()
                         record = {"scenario": name, "repetition": repetition, "turn": index,
                                   "input": turn["text"], "review_criterion": criterion}
@@ -163,10 +165,16 @@ async def evaluate(args, report, provider_factory=None, core_class=ConversationO
                             record["public_decision"] = provider.last_public_decision
                             record["metrics"] = dict(provider.metrics)
                         record["seconds"] = round(time.monotonic() - started, 3)
+                        if hasattr(provider, "http_attempts"):
+                            record["http_attempts"] = provider.http_attempts
                         safe_data(record)
                         report["turns"].append(record)
                         save_report(args.report, report)
                         print(json.dumps(record, ensure_ascii=False), flush=True)
+                        if getattr(provider, "stopped", False):
+                            report["stopped_after"] = {"scenario": name, "repetition": repetition, "turn": index}
+                            report["no_tasks_created"] = not store.tasks()
+                            return
             report["no_tasks_created"] = not store.tasks()
         finally:
             await core.close()

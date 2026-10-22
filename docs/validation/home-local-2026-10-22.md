@@ -131,9 +131,33 @@ salida JSON y validación de decisiones del Core. La clave solo está en memoria
 en la cabecera HTTPS; los informes no guardan cuerpos de errores ni razonamiento.
 La prueba requiere `--run --confirm-free-tier`: la segunda opción es la declaración
 del operador de que el proyecto no tiene facturación, no una garantía verificable
-por el cliente. Un fallo de API impide nuevas peticiones durante esa prueba.
+por el cliente. La primera versión detenía las peticiones ante cualquier fallo de API.
 
-Pendiente: introducir una clave del proyecto gratuito en la terminal, ejecutar
-la comparación y revisar naturalidad, continuidad, exactitud y latencia. No se ha
-realizado ninguna llamada autenticada a Gemini, ni se ha cambiado el proveedor
-del ARGOS que utiliza el usuario.
+Al cerrar esa primera implementación quedaba pendiente introducir una clave del
+proyecto gratuito y ejecutar la comparación. No se cambió el proveedor del ARGOS
+que utiliza el usuario.
+
+### Primera prueba de Gemini aportada por el usuario
+
+El usuario ejecutó la prueba con su clave: la primera respuesta fue «I am here.»,
+en 3,203 segundos, con 2.303 tokens de entrada y 43 de salida. Esto confirma una
+petición autenticada válida y compatibilidad básica del esquema; no permite
+valorar todavía naturalidad o continuidad. La segunda petición devolvió HTTP 503
+en 1,445 segundos. Los errores posteriores del informe no eran nuevas llamadas:
+el adaptador había bloqueado la red, pero el evaluador seguía recorriendo escenarios.
+
+Se corrigió el diagnóstico: según la
+[guía de Google](https://ai.google.dev/gemini-api/docs/troubleshooting), HTTP 503
+indica indisponibilidad temporal, no demuestra una clave incorrecta. El evaluador
+admite ahora dos reintentos de ese código tras uno y dos segundos, con el mismo
+modelo y petición. No reintenta HTTP 429, errores de autenticación, formato ni
+fallos de conexión. No hay cambio automático de proveedor. El tiempo del turno
+incluye los reintentos y se registra además el número de intentos HTTP.
+
+Si el proveedor queda detenido, el evaluador finaliza y contabiliza los turnos
+restantes como no ejecutados, sin generar fallos repetidos ni tiempos de respuesta
+artificialmente bajos. Se comprueban recuperación tras 503, agotamiento del límite
+de tres intentos y parada del evaluador usando Core real con HTTP simulado.
+La suite completa tras esta corrección pasa 238 pruebas en 5,696 segundos.
+La comparación real completa sigue pendiente; la clave introducida por el usuario
+no se conservó en disco ni está disponible para repetirla automáticamente.

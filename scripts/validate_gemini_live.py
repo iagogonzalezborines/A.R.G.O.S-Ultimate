@@ -64,7 +64,12 @@ class GeminiEvaluation:
         self.last_public_decision = None
         self.connected = False
         self._failed = False
+        self.http_attempts = 0
         self._slot = asyncio.Semaphore(1)
+
+    @property
+    def stopped(self):
+        return self._failed
 
     def _opener(self):
         class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -77,6 +82,7 @@ class GeminiEvaluation:
             raise ArgosError("Esta prueba solo compara conversación; no ejecuta especialistas.")
         safe_data(context)
         self.last_public_decision, self.metrics = None, {}
+        self.http_attempts = 0
         messages = decision_messages(text, context)
         payload = {
             "systemInstruction": {"parts": [{"text": evaluation_contract()}]},
@@ -116,15 +122,28 @@ class GeminiEvaluation:
 
         async with self._slot:
             if self._failed:
-                raise ArgosError("Prueba detenida tras un error del proveedor; sin reintentos ni fallback.")
+                raise ArgosError("Prueba detenida tras un error del proveedor; sin más peticiones ni fallback.")
             try:
-                decision = await asyncio.to_thread(request)
+                # Only retry explicit service-unavailable responses. No tools are
+                # executed here; quota/auth/schema/network failures stop immediately.
+                for attempt in range(3):
+                    self.http_attempts += 1
+                    try:
+                        decision = await asyncio.to_thread(request)
+                        break
+                    except urllib.error.HTTPError as error:
+                        error.close()
+                        if error.code != 503 or attempt == 2:
+                            raise
+                        await asyncio.sleep(2 ** attempt)
             except Exception as error:
                 self.connected, self._failed = False, True
                 if isinstance(error, urllib.error.HTTPError):
                     error.close()
                     if error.code == 429:
-                        raise ArgosError("Cuota gratuita de Gemini agotada; prueba detenida sin reintentos.") from None
+                        raise ArgosError("Cuota gratuita de Gemini: límite de uso alcanzado; prueba detenida sin reintentos.") from None
+                    if error.code == 503:
+                        raise ArgosError("Gemini sigue temporalmente no disponible (HTTP 503) tras tres intentos; prueba detenida.") from None
                     raise ArgosError(f"Gemini rechazó la prueba (HTTP {error.code}); revisa clave, modelo y configuración.") from None
                 if isinstance(error, ArgosError):
                     raise
@@ -153,6 +172,7 @@ async def run(args, api_key):
                          "Contract identifies Gemini; environment is not_checked, unlike local hardware evaluations.",
                          "API key remains in memory, outside prompts, reports and SQLite.",
                          "Free tier is an operator declaration, not a billing check by the API client.",
+                         "Only HTTP 503 is retried: at most twice, after 1 and 2 seconds. Latency includes retries.",
                          "Structural success does not certify conversational quality."]}
     args.ollama_model, args.repeat = MODEL, 1  # Shared scenario runner's provider factory interface.
     try:
@@ -160,12 +180,16 @@ async def run(args, api_key):
     except Exception as error:
         report["error"] = str(error) if isinstance(error, ArgosError) else type(error).__name__
     expected = sum(len(turns) for name, _, turns in SCENARIOS if not args.scenario or name in args.scenario)
+    report["skipped_turns"] = expected - len(report["turns"])
+    report["http_attempts"] = sum(t.get("http_attempts", 0) for t in report["turns"])
     report["structural_checks_passed"] = (
         "error" not in report and report.get("no_tasks_created", False)
         and len(report["turns"]) == expected
         and all("error" not in t and all(t["checks"].values()) for t in report["turns"]))
     save_report(args.report, report)
-    print(json.dumps({"report": str(args.report), "structural_checks_passed": report["structural_checks_passed"]}))
+    print(json.dumps({"report": str(args.report), "structural_checks_passed": report["structural_checks_passed"],
+                      "attempted_turns": len(report["turns"]), "skipped_turns": report["skipped_turns"],
+                      "http_attempts": report["http_attempts"]}))
     return 0 if report["structural_checks_passed"] else 1
 
 

@@ -529,6 +529,10 @@ estado de facturación con la clave. La pide con entrada oculta y solo la conser
 en memoria; también admite `GEMINI_API_KEY` si ya está definida. No la pegues en
 el chat ni la incluyas como argumento. El nivel gratuito tiene cuotas de uso;
 un error de cuota detiene las peticiones, sin reintentos ni cambio de proveedor.
+Solo un HTTP 503 (servicio temporalmente no disponible) admite dos reintentos,
+tras esperas de uno y dos segundos. El tiempo medido incluye esas esperas y el
+informe registra los intentos HTTP. Si persiste el fallo, termina la prueba y
+cuenta los turnos restantes como no ejecutados.
 
 Reutiliza los 23 turnos y Core temporal, con inventario marcado como no comprobado
 y rutas de ejemplo. Envía escenarios sintéticos y contratos a Google, sin historial
