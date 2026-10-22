@@ -1,9 +1,11 @@
 import asyncio
+import io
+import json
 import tempfile
 import unittest
 import uuid
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from argos.codex import Codex
 from argos.core import Core
@@ -46,6 +48,30 @@ class InferenceRoutingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.local.decide.await_count, 2)
         self.remote.work.assert_not_called()
         self.assertFalse(self.store.tasks())
+
+    async def test_local_preload_verifies_model_and_generates_no_conversation(self):
+        opener = Mock()
+        opener.open.side_effect = [io.BytesIO(b'{"details":{"family":"fixture"}}'),
+                                  io.BytesIO(b'{"done":true,"done_reason":"load"}')]
+        with patch.object(self.local, "_opener", return_value=opener):
+            await self.local.prepare({})
+        self.assertTrue(self.local.connected)
+        self.assertEqual([c.args[0].full_url for c in opener.open.call_args_list],
+                         ["http://127.0.0.1:11434/api/show", "http://127.0.0.1:11434/api/generate"])
+        payload = json.loads(opener.open.call_args.args[0].data)
+        self.assertNotIn("prompt", payload)
+        self.assertNotIn("messages", payload)
+        self.assertEqual(payload["options"]["num_ctx"], 16384)
+        self.assertEqual(self.store.db.execute("SELECT count(*) FROM messages").fetchone()[0], 0)
+        self.remote.work.assert_not_called()
+
+    async def test_local_preload_rejects_cloud_metadata_before_loading(self):
+        opener = Mock()
+        opener.open.return_value = io.BytesIO(b'{"remote_host":"example.invalid","details":{"family":"fixture"}}')
+        with patch.object(self.local, "_opener", return_value=opener), self.assertRaises(ArgosError):
+            await self.local.prepare({})
+        self.assertEqual(opener.open.call_count, 1)
+        self.assertFalse(self.local.connected)
 
     async def test_missing_local_or_local_failure_has_no_remote_fallback(self):
         self.local.decide.side_effect = ArgosError("Local engine unavailable")

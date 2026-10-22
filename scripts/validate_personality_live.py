@@ -120,12 +120,13 @@ def save_report(path, report):
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
 
 
-async def evaluate(args, report):
+async def evaluate(args, report, provider_factory=None, core_class=ConversationOnlyCore, host_environment=True):
     with tempfile.TemporaryDirectory(prefix="argos-personality-") as temporary:
         store = Store(Path(temporary) / "state")
-        provider = ObservedOllama(args.ollama_model, report)
+        provider = (provider_factory or ObservedOllama)(args.ollama_model, report)
         development = Development(store, LinuxDevelopmentWorkspace(store.directory, ROOT))
-        core = ConversationOnlyCore(store, provider, development=development, environment=LinuxEnvironment())
+        core = core_class(store, provider, development=development,
+                          environment=LinuxEnvironment() if host_environment else None)
         await core.start()
         try:
             for repetition in range(1, args.repeat + 1):

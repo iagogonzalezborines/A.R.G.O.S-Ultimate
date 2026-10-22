@@ -1,0 +1,23 @@
+{
+  "purpose": "Diagnostic only; no runtime capability catalogue, no tools executed",
+  "turns": [
+    {
+      "input": "Tengo una carpeta llamada final_final_ahora_si_7. Un sistema impecable, diría yo.",
+      "speech": "¿Qué necesitas que haga con esa carpeta?",
+      "kind": "answer",
+      "seconds": 1.925
+    },
+    {
+      "input": "Y una copia de seguridad en el mismo disco. Nada puede salir mal.",
+      "speech": "Entendido. La carpeta final_final_ahora_si_7 y su copia de seguridad están en el mismo disco. ¿Hay algo más que desees confirmar o ajustar?",
+      "kind": "answer",
+      "seconds": 3.027
+    },
+    {
+      "input": "Ahora en serio, sin bromas: ¿cuál es el fallo de esa copia?",
+      "speech": "¿Podrías especificar qué sistema o proceso te lleva a pensar que la copia de seguridad es impecable?",
+      "kind": "clarify",
+      "seconds": 2.425
+    }
+  ]
+}

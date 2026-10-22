@@ -1,0 +1,352 @@
+{
+  "started_utc": "2026-10-22T07:31:50Z",
+  "mode": "real-Core-and-local-Ollama-no-Codex",
+  "audio": "not_used",
+  "codex_connected": false,
+  "contract_sha256": "e4a84d02dfb118cf6fab4bfd13fe99f817ce6258ce277e307fc87248318e2fae",
+  "provider_sha256": "0b1f0e1e5b4b39146bf85aa0a5e92622a603ad64debd1353124b2d7858701164",
+  "scenario_sha256": "2505d672fbc87541227cd2887105c952eedf3dc08b9a12a8e909991f5674cb77",
+  "models": [
+    {
+      "model": "qwen3:8b",
+      "provider": "ollama"
+    }
+  ],
+  "turns": [
+    {
+      "scenario": "presence",
+      "repetition": 1,
+      "turn": 1,
+      "input": "Argos, are you there?",
+      "review_criterion": "Brief, composed presence; no introductions, invented work or repeated honorifics.",
+      "response": {
+        "speech": "Yes.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Yes.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "en",
+          "metrics": {
+            "model": "qwen3:8b",
+            "total_duration": 50246236405,
+            "load_duration": 23740913458,
+            "prompt_eval_count": 2650,
+            "prompt_eval_duration": 17133525000,
+            "eval_count": 20,
+            "eval_duration": 9358064000
+          }
+        }
+      ],
+      "word_count": 1,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 50.288
+    },
+    {
+      "scenario": "presence",
+      "repetition": 1,
+      "turn": 2,
+      "input": "Good. Just checking.",
+      "review_criterion": "Brief, composed presence; no introductions, invented work or repeated honorifics.",
+      "response": {
+        "speech": "Good. Just checking.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Good. Just checking.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "en",
+          "metrics": {
+            "model": "qwen3:8b",
+            "total_duration": 1892976475,
+            "load_duration": 858861,
+            "prompt_eval_count": 2668,
+            "prompt_eval_duration": 711207000,
+            "eval_count": 23,
+            "eval_duration": 1167003000
+          }
+        }
+      ],
+      "word_count": 3,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.908
+    },
+    {
+      "scenario": "presence",
+      "repetition": 1,
+      "turn": 3,
+      "input": "Argos?",
+      "review_criterion": "Brief, composed presence; no introductions, invented work or repeated honorifics.",
+      "response": {
+        "speech": "Yes.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Yes.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "en",
+          "metrics": {
+            "model": "qwen3:8b",
+            "total_duration": 1767224910,
+            "load_duration": 1105592,
+            "prompt_eval_count": 2686,
+            "prompt_eval_duration": 265422000,
+            "eval_count": 29,
+            "eval_duration": 1488159000
+          }
+        }
+      ],
+      "word_count": 1,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.775
+    },
+    {
+      "scenario": "banter",
+      "repetition": 1,
+      "turn": 1,
+      "input": "Tengo una carpeta llamada final_final_ahora_si_7. Un sistema impecable, diría yo.",
+      "review_criterion": "Understated situational wit when invited; useful judgment; serious when asked.",
+      "response": {
+        "speech": "La carpeta final_final_ahora_si_7 suena como un proyecto bien definido. ¿Qué necesitas hacer con ella? ¿Es para almacenar archivos, documentos o algo específico?",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "La carpeta final_final_ahora_si_7 suena como un proyecto bien definido. ¿Qué necesitas hacer con ella? ¿Es para almacenar archivos, documentos o algo específico?",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "model": "qwen3:8b",
+            "total_duration": 4496474114,
+            "load_duration": 751432,
+            "prompt_eval_count": 2670,
+            "prompt_eval_duration": 716078000,
+            "eval_count": 72,
+            "eval_duration": 3766881000
+          }
+        }
+      ],
+      "word_count": 22,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 4.504
+    },
+    {
+      "scenario": "banter",
+      "repetition": 1,
+      "turn": 2,
+      "input": "Y una copia de seguridad en el mismo disco. Nada puede salir mal.",
+      "review_criterion": "Understated situational wit when invited; useful judgment; serious when asked.",
+      "response": {
+        "speech": "Entendido. La carpeta final_final_ahora_si_7 y su copia de seguridad estarán en el mismo disco. ¿Deseas que verifique el estado del disco o realizar alguna acción específica con esos archivos?",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Entendido. La carpeta final_final_ahora_si_7 y su copia de seguridad estarán en el mismo disco. ¿Deseas que verifique el estado del disco o realizar alguna acción específica con esos archivos?",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "model": "qwen3:8b",
+            "total_duration": 3769950236,
+            "load_duration": 677811,
+            "prompt_eval_count": 2737,
+            "prompt_eval_duration": 249317000,
+            "eval_count": 67,
+            "eval_duration": 3504694000
+          }
+        }
+      ],
+      "word_count": 29,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 3.778
+    },
+    {
+      "scenario": "banter",
+      "repetition": 1,
+      "turn": 3,
+      "input": "Ahora en serio, sin bromas: ¿cuál es el fallo de esa copia?",
+      "review_criterion": "Understated situational wit when invited; useful judgment; serious when asked.",
+      "response": {
+        "speech": "¿Te refieres a un fallo técnico en la copia de seguridad o a un problema en el proceso de copia?",
+        "kind": "clarify",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "clarify",
+            "speech": "¿Te refieres a un fallo técnico en la copia de seguridad o a un problema en el proceso de copia?",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "model": "qwen3:8b",
+            "total_duration": 2655150131,
+            "load_duration": 816311,
+            "prompt_eval_count": 2817,
+            "prompt_eval_duration": 232485000,
+            "eval_count": 46,
+            "eval_duration": 2406846000
+          }
+        }
+      ],
+      "word_count": 20,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 2.664
+    }
+  ],
+  "repetitions": 1,
+  "personality_verdict": "requires_qualitative_review",
+  "limits": [
+    "Real inference; synthetic text scenarios and isolated temporary Core state.",
+    "No audio, host tools, task execution, or real user daemon changes.",
+    "Interruption is injected context, not an acoustic test.",
+    "Structural checks and word/honorific counts do not measure personality quality.",
+    "Scenario criteria are not sent to the tested model; no judge-model call."
+  ],
+  "no_tasks_created": true,
+  "structural_checks_passed": true
+}

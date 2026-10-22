@@ -545,6 +545,10 @@ class Core:
                                                   "question": (t["question"] or "")[:2000]}
                                                  for t in pending[:8]]
                 conversation_key = (session, project["id"] if project else None)
+                if conversation_key not in self.conversation_ids:
+                    previous = self.store.resumable_conversation(session, conversation_key[1], self.interpreter.name)
+                    if previous:
+                        self.conversation_ids[conversation_key] = previous
                 context["recent_conversation"] = self.store.recent_messages(
                     self.conversation_ids.get(conversation_key), session, conversation_key[1])
                 conversation_id = self.store.begin_conversation(

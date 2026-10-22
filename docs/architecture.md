@@ -294,9 +294,13 @@ procesan sin identificar al hablante.
 Una despedida explícita cierra el diálogo y descarta sus segmentos pendientes;
 la respuesta a esa despedida también pertenece al modelo. No cancela tareas.
 
-General recibe hasta ocho mensajes públicos recientes de la misma sesión/proyecto,
-acotados en tamaño, además del hilo del proveedor cuando exista. Así, un intérprete
-sin memoria remota también puede interpretar «yes» según la propuesta anterior.
+General recibe hasta 16 intercambios completos de la misma sesión/proyecto,
+con un máximo de 24.000 caracteres de historial. Al reiniciar recupera la última
+conversación pública del mismo proveedor local; no importa hilos remotos ni
+mezcla proyectos o sesiones. Los turnos fallidos/interrumpidos permanecen en el
+journal, pero quedan fuera del contexto conversacional para evitar reintroducir
+órdenes sin respuesta. El recorte conserva pares completos y no resume ni
+reescribe lo dicho. Sigue siendo una ventana acotada, no memoria ilimitada.
 Las preguntas de tareas pendientes se exponen con su ID; la decisión `reply`
 selecciona una de ellas y Core devuelve a esa tarea el texto original del usuario.
 Se revalida sesión, proyecto y WAITING_INPUT; nunca se usa esta vía para aprobar.

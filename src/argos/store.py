@@ -208,20 +208,40 @@ class Store:
             self.db.execute("UPDATE conversations SET status='INTERRUPTED',updated=? WHERE status='RUNNING'",
                             (time.time(),))
 
+    def resumable_conversation(self, session, project, provider):
+        # Resume public local history, never a remote provider's opaque thread.
+        row = self.db.execute(
+            """SELECT id FROM conversations WHERE session=? AND project IS ?
+            AND provider=? AND thread_id IS NULL ORDER BY updated DESC,id DESC LIMIT 1""",
+            (session, project, provider)).fetchone()
+        return row[0] if row else None
+
     def recent_messages(self, conversation_id, session, project):
         # Explicit public context for short follow-ups, including interpreters
         # without provider-side threads. Never mix projects or sessions.
         rows = self.db.execute(
             """SELECT m.role,m.content FROM messages m JOIN conversations c ON c.id=m.conversation
             WHERE c.id=? AND c.session=? AND c.project IS ?
-            ORDER BY m.seq DESC LIMIT 8""", (conversation_id, session, project)).fetchall()
+            ORDER BY m.seq DESC LIMIT 128""", (conversation_id, session, project)).fetchall()
+        # Failed/interrupted turns are retained in the journal but do not become
+        # unanswered commands in a later prompt. Keep complete public turn pairs.
+        pairs, pending = [], None
+        for row in reversed(rows):
+            if row["role"] == "user":
+                pending = dict(row)
+            elif row["role"] == "assistant" and pending:
+                pairs.append([pending, dict(row)])
+                pending = None
+            else:
+                pending = None
         selected, size = [], 0
-        for row in rows:
-            if size + len(row["content"]) > 24000:
+        for pair in reversed(pairs[-16:]):
+            length = sum(len(message["content"]) for message in pair)
+            if size + length > 24000:
                 break
-            selected.append(dict(row))
-            size += len(row["content"])
-        return list(reversed(selected))
+            selected.append(pair)
+            size += length
+        return [message for pair in reversed(selected) for message in pair]
 
     def begin_conversation(self, conversation_id, session, project, provider, text):
         public_text(text)

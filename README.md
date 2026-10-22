@@ -27,6 +27,13 @@ escaladas justificadas de tareas, no a conversación ni a fallos del modelo loca
 
 Arranca Core con el modelo local configurado y voz, y abre una ventana kitty titulada ARGOS.
 Reutiliza Core si ya está activo. No configura inicio automático al arrancar Linux.
+La consola prepara los pesos del modelo local sin generar una conversación ficticia.
+Conviene esperar a que termine la preparación inicial antes de hablar.
+
+La conversación local se recupera tras reiniciar dentro de la misma sesión y
+proyecto. El contexto mantiene hasta 16 intercambios completos y 24.000 caracteres;
+el historial completo sigue en SQLite. No recupera hilos remotos ni ejecuta de
+nuevo peticiones interrumpidas, y todavía no resume conversaciones antiguas.
 
 | Tecla | Acción |
 | --- | --- |
@@ -508,6 +515,28 @@ personalidad. Véanse las respuestas y la revisión en la
 El segundo evaluador pide leer un dato y crear una carpeta en un proyecto
 temporal; comprueba la espera de aprobación, el resultado y que no haya intentos
 de invocar Codex. No toca archivos del usuario ni reproduce audio.
+
+Comparación experimental con el proveedor histórico Gemini 3.1 Flash-Lite:
+
+```bash
+python scripts/validate_gemini_live.py --run --confirm-free-tier --report /tmp/argos-gemini.json
+```
+
+Antes de ejecutarla, comprueba en [Google AI Studio](https://aistudio.google.com/api-keys)
+que la clave pertenece a un proyecto del nivel gratuito con facturación desactivada.
+`--confirm-free-tier` declara esa comprobación; el programa no puede verificar el
+estado de facturación con la clave. La pide con entrada oculta y solo la conserva
+en memoria; también admite `GEMINI_API_KEY` si ya está definida. No la pegues en
+el chat ni la incluyas como argumento. El nivel gratuito tiene cuotas de uso;
+un error de cuota detiene las peticiones, sin reintentos ni cambio de proveedor.
+
+Reutiliza los 23 turnos y Core temporal, con inventario marcado como no comprobado
+y rutas de ejemplo. Envía escenarios sintéticos y contratos a Google, sin historial
+privado, inventario del PC ni audio. Conserva la personalidad compartida y corrige
+la identificación del proveedor en el contrato de evaluación. No configura el
+daemon ni habilita Gemini en la consola: su calidad conversacional y su integración
+completa siguen pendientes de una prueba real. Estado de las comparaciones en
+[validación del equipo de casa](docs/validation/home-local-2026-10-22.md).
 
 Ver [arquitectura](docs/architecture.md), [validación](docs/validation.md)
 y [contrato de ARGOS](src/argos/contracts/ARGOS.md).

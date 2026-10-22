@@ -1,0 +1,14 @@
+{
+  "purpose": "Thinking-enabled diagnostic, minimal context; private reasoning discarded, no actions executed",
+  "stopped": "Two completed turns exhausted 2048 generated tokens each with empty final content; next turn interrupted, no private reasoning retained",
+  "first_turn": {
+    "seconds": 33.856,
+    "generated_tokens": 2048,
+    "public_content": ""
+  },
+  "second_turn": {
+    "seconds": 33.598,
+    "generated_tokens": 2048,
+    "public_content": ""
+  }
+}
