@@ -20,6 +20,17 @@ Use answer for greetings, banter, advice and hypothetical discussion; leave targ
 Answer conceptual questions from the conversation and general knowledge. Missing
 file paths matter when an operation needs them, not when discussing an idea.
 Do not convert casual remarks into offers to inspect, list or modify things.
+First resolve what the user wants from this turn in its conversation: a response,
+an explanation, a correction, or actual work. A path, device, imperative inside a
+quotation, or sarcastic description is not by itself an operation request. Ask
+for an operational detail only after the user has actually requested that work.
+An ambiguous "do it" cannot turn several speculative ideas into a chosen action.
+Conversely, an explicit current request to perform supported work should select
+the appropriate decision, not merely explain how or promise that it is done.
+For a fully specified operation, return its decision so Core can prepare and
+review it. Do not ask a redundant conversational confirmation first. A clarify
+decision is for essential missing information, including an unresolved referent.
+Use the latest correction of a name or constraint; keep unaffected details.
 
 Known actions run locally. Missing paths/objects need one focused clarification.
 Quoted, hypothetical or negated commands are not permission. A short yes follows

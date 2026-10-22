@@ -25,6 +25,36 @@ MODEL = "nvidia/nemotron-3.5-super-vl-120b-a12b"
 ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions"
 
 
+def compact_schema(schema):
+    """Evaluation-only grammar experiment; exact branch validation stays local."""
+    branches = schema["oneOf"]
+    properties = {"kind": {"enum": sorted({b["properties"]["kind"]["const"] for b in branches})},
+                  "speech": {"type": "string", "maxLength": 4000}}
+    for key in ("target_agent", "tool"):
+        properties[key] = {"enum": sorted({b["properties"][key]["const"] for b in branches})}
+    names = {name for b in branches for name in b["properties"]["tool_arguments"].get("properties", {})}
+    properties["tool_arguments"] = {"type": "object", "additionalProperties": False,
+                                     "properties": {name: {"type": "string"} for name in sorted(names)}}
+    return {"type": "object", "additionalProperties": False, "properties": properties,
+            "required": ["kind", "speech", "target_agent", "tool", "tool_arguments"]}
+
+
+def matches_branch(wire, schema):
+    # local_schema uses only constants, string arguments and finite enums here.
+    for branch in schema["oneOf"]:
+        props = branch["properties"]
+        if any(wire.get(k) != props[k]["const"] for k in ("kind", "target_agent", "tool")):
+            continue
+        args = wire.get("tool_arguments")
+        expected = props["tool_arguments"].get("properties", {})
+        if not isinstance(args, dict) or set(args) != set(expected):
+            continue
+        if all(isinstance(value, str) and ("enum" not in expected[k] or value in expected[k]["enum"])
+               for k, value in args.items()):
+            return True
+    return False
+
+
 def validate_api_key(api_key):
     # Treat provider credentials as opaque header values, not fixed-length keys.
     if not isinstance(api_key, str) or not api_key:
@@ -114,24 +144,42 @@ class NemotronEvaluation:
         self.last_public_decision, self.metrics = None, {}
         self.http_attempts = 0
         messages = decision_messages(text, context)
-        messages[0]["content"] = evaluation_contract()
+        messages[0]["content"] = getattr(self, "contract_override", None) or evaluation_contract()
+        schema = local_schema(context)
+        wire_schema = compact_schema(schema) if getattr(self, "compact", False) else schema
         payload = {
             "model": MODEL, "messages": messages, "stream": False,
             "temperature": 1.0, "top_p": 0.95, "max_tokens": 4096,
             "reasoning_effort": "none",
             "response_format": {"type": "json_schema", "json_schema": {
-                "name": "argos_decision", "strict": True, "schema": local_schema(context)}},
+                "name": "argos_decision", "strict": True, "schema": wire_schema}},
         }
+        if getattr(self, "json_object", False):
+            payload["response_format"] = {"type": "json_object"}
+        request_body = json.dumps(payload).encode()
+        self.request_trace = {"sha256": hashlib.sha256(request_body).hexdigest(),
+                              "bytes": len(request_body), "messages": len(messages), "attempts": []}
 
         def request():
-            req = urllib.request.Request(ENDPOINT, json.dumps(payload).encode(),
+            req = urllib.request.Request(ENDPOINT, request_body,
                                          {"Content-Type": "application/json", "Accept": "application/json",
                                           "Authorization": "Bearer " + self._api_key},
                                          method="POST")
-            with self._opener().open(req, timeout=60) as reply:
-                if reply.status != 200:
-                    raise ArgosError("NVIDIA no devolvió una respuesta completa; prueba detenida.")
-                body = reply.read(128001)
+            started = time.monotonic()
+            attempt = {"status": None}
+            try:
+                with self._opener().open(req, timeout=60) as reply:
+                    attempt["status"] = reply.status
+                    attempt["headers_seconds"] = round(time.monotonic() - started, 3)
+                    if reply.status != 200:
+                        raise ArgosError("NVIDIA no devolvió una respuesta completa; prueba detenida.")
+                    body = reply.read(128001)
+            except urllib.error.HTTPError as error:
+                attempt["status"] = error.code
+                raise
+            finally:
+                attempt["seconds"] = round(time.monotonic() - started, 3)
+                self.request_trace["attempts"].append(attempt)
             if len(body) > 128000:
                 raise ArgosError("Nemotron excedió el límite de respuesta.")
             envelope = json.loads(body)
@@ -145,6 +193,8 @@ class NemotronEvaluation:
             wire = json.loads(message["content"])
             if not isinstance(wire, dict) or set(wire) != {"kind", "speech", "target_agent", "tool", "tool_arguments"}:
                 raise ArgosError("Nemotron devolvió una decisión inválida.")
+            if not matches_branch(wire, schema):
+                raise ArgosError("Nemotron devolvió una decisión incompatible con el catálogo de este turno.")
             data = {"kind": wire["kind"], "speech": wire["speech"], "agent": wire["target_agent"],
                     "capability": wire["tool"], "arguments": wire["tool_arguments"]}
             decision = validate_decision(data)

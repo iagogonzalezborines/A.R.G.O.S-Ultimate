@@ -301,6 +301,9 @@ mezcla proyectos o sesiones. Los turnos fallidos/interrumpidos permanecen en el
 journal, pero quedan fuera del contexto conversacional para evitar reintroducir
 órdenes sin respuesta. El recorte conserva pares completos y no resume ni
 reescribe lo dicho. Sigue siendo una ventana acotada, no memoria ilimitada.
+El contexto compacto del modelo conserva también la descripción, el efecto y
+la necesidad de proyecto de las herramientas: sus nombres y argumentos no
+bastan para explicar su comportamiento ni distinguir lectura de modificación.
 Las preguntas de tareas pendientes se exponen con su ID; la decisión `reply`
 selecciona una de ellas y Core devuelve a esa tarea el texto original del usuario.
 Se revalida sesión, proyecto y WAITING_INPUT; nunca se usa esta vía para aprobar.

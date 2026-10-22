@@ -1,0 +1,7 @@
+{
+  "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "mode": "minimal availability probe without ARGOS or schema",
+  "http_status": 200,
+  "expected_reply": true,
+  "seconds": 0.679
+}

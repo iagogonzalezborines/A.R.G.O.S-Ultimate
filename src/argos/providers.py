@@ -133,7 +133,8 @@ def decision_messages(text, context, agent="general"):
     # the prompt prefix. This is the same context, not another routing call.
     ordered = {key: context[key] for key in ("capabilities", "agents", "identity", "inference", "scope") if key in context}
     if "capabilities" in ordered:
-        ordered["capabilities"] = [{key: cap[key] for key in ("name", "agent", "arguments", "status") if key in cap}
+        ordered["capabilities"] = [{key: cap[key] for key in
+                                   ("name", "agent", "description", "arguments", "effect", "needs_project", "status") if key in cap}
                                    for cap in ordered["capabilities"]]
     if "agents" in ordered:
         ordered["agents"] = [{"id": item["id"], "role": item["role"]} for item in ordered["agents"]]

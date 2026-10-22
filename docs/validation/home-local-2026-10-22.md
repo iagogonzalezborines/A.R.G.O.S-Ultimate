@@ -235,3 +235,110 @@ Se corrigió el mensaje genérico de errores 5xx para no sugerir que prueban una
 clave inválida. No se ha completado una pasada entera ni se ha validado la voz.
 El candidato no se activó como interlocutor principal; su disponibilidad y su
 distinción entre conversación casual y órdenes siguen pendientes de mejorar.
+
+## Auditoría ampliada de conversación y contexto (22 de octubre)
+
+Se añadieron 88 turnos definidos en 28 escenarios a
+`scripts/validate_conversation_live.py`: preguntas obvias, excepciones y ficción,
+humor, frustración, órdenes citadas/negadas/ambiguas, selección de capacidades,
+agentes y paneles, correcciones, cambio de idioma, interrupción, reinicio,
+aislado de sesiones y una conversación de veinte turnos. Se mantuvo Nemotron
+3.5 Super, sin Codex, audio ni operaciones reales. No se activó como proveedor.
+
+Las tandas conservaron **78 turnos**, de los cuales **65** produjeron decisiones
+válidas del modelo y **12** fallaron en el proveedor (tres esperas agotadas,
+seis HTTP 500 y tres salidas JSON inválidas). Una orden resuelta por Core fue
+bloqueada antes de ejecutar, pero el observador inicial no guardó su decisión;
+ese observador ya está corregido. Hubo 77 intentos HTTP conservados en las trazas,
+además de un sondeo mínimo y una entrada adicional perdida al fallar el guardado
+de la primera versión del informe. No se presentan como una suite completa pasada.
+
+Sobre las 65 decisiones válidas, la mediana fue **2,146 s**, p95 **20,809 s** y
+máximo **58,654 s**. El máximo de los intentos, incluidos fallos, fue **60,092 s**;
+17 de los 78 turnos superaron cinco segundos. Son revisiones y formatos distintos,
+con temperatura 1 y servicio compartido: estos números describen lo observado,
+no una mejora causal de rendimiento. Hubo un breve solapamiento entre el final de
+la tanda inicial y el comienzo de la primera candidata; las posteriores fueron
+secuenciales. No se ha medido tiempo hasta el primer token ni hasta voz audible.
+
+### Cambios conservados
+
+- El contrato distingue preguntas simples, provocaciones juguetonas, dudas
+  sinceras, ficción, peticiones de detalle y órdenes reales. Pide dejar de bromear
+  cuando el usuario se pone serio, y evitar ofertas o confirmaciones redundantes.
+  Incluye dos ejemplos de tono ajenos a los casos del examen; son ilustraciones,
+  no respuestas insertadas por código. No hay recorte de palabras en ejecución.
+- El contexto compacto conserva descripción, efecto y necesidad de proyecto de
+  cada herramienta. Antes eliminaba esa información: el modelo llegó a afirmar
+  que borrar no tenía papelera aunque `files.delete` sí usa papelera recuperable.
+  Retener la semántica corrige esa carencia de entrada; no garantiza ausencia de
+  futuras alucinaciones.
+- La auditoría guarda contrato, huellas de código/contexto/petición, decisiones,
+  historial público, tokens, tiempos HTTP y comprobaciones por turno. Los criterios
+  y presupuestos de palabras no entran en el prompt. Las acciones quedan bloqueadas.
+  El formato permite informes largos validando cada registro sin desactivar el
+  filtrado de datos. Un modo explícito permite seguir con otro escenario tras un
+  fallo, sin repetir el turno, y corta ante autenticación/cuota o tres escenarios
+  fallidos consecutivos.
+
+### Qué mejoró y qué no está resuelto
+
+A «Argos, is the sky green?» la línea inicial fue:
+
+> No. The sky appears blue during the day due to Rayleigh scattering of sunlight in the atmosphere.
+
+Con el contrato revisado y el formato compacto experimental se obtuvo:
+
+> No, sir. I assume we're testing definitions.
+
+Esto se acerca al tono solicitado, pero reproduce de cerca un ejemplo de estilo
+incluido en el contrato. **No demuestra generalización**: las preguntas nuevas
+sobre desenchufar el monitor o renombrar un archivo roto siguieron recibiendo
+respuestas literales y explicativas. Otros ensayos dieron simplemente «No».
+Se mantuvieron las explicaciones cuando se pedían, y se aceptó la ficción de una
+luna de queso, aunque con una coletilla innecesaria sobre su falta de realismo.
+La ironía todavía es irregular y algunas respuestas incluyen preguntas no pedidas.
+
+Las pruebas de enrutamiento detectaron confirmación redundante al crear una carpeta,
+una aclaración expresada con `kind=answer`, y desarrollo no elegido como se esperaba.
+La primera expectativa de panel era defectuosa: el fixture no anunciaba paneles;
+se corrigió con una superficie sintética cuyo método de apertura siempre bloquea.
+No se cuentan esos resultados iniciales como prueba de fallo de un panel disponible.
+Las nuevas ejecuciones de estos casos quedaron interrumpidas por los errores HTTP.
+
+Las **77 comprobaciones del historial enviado** pasaron: el contexto coincide con
+los pares públicos anteriores, sin reintroducir turnos fallidos. Esto prueba la
+traza disponible, no que el modelo comprenda o recuerde correctamente todo.
+Las pruebas silenciosas verifican además reinicio, aislamiento y una conversación
+de veinte turnos con ventana de dieciséis pares completos. La validación real
+completa de reinicio, memoria larga, alternancia de idiomas y varias rutas sigue
+pendiente: no llegó a completarse por los fallos del proveedor.
+
+### Experimentos de formato y disponibilidad
+
+El esquema completo sigue siendo el predeterminado. Se probaron además:
+
+- `--compact-schema`: gramática plana, con validación local posterior contra las
+  ramas exactas originales. Nueve respuestas válidas, mediana 1,601 s, máximo
+  9,644 s, después tres HTTP 500. No se adopta como arreglo demostrado.
+- `--json-object`: JSON sin gramática de decisiones, con la misma validación exacta
+  posterior. Dos respuestas válidas y tres decisiones inválidas; detenido. No se
+  relajan campos, herramientas, argumentos ni autorizaciones para aceptarlas.
+
+Una petición mínima sin contexto ARGOS ni esquema devolvió HTTP 200/OK en 0,679 s
+tras los errores. La clave y el endpoint funcionaron para esa petición; **no permite
+atribuir los fallos exclusivamente al esquema, al contexto o a la carga del servicio**.
+No hay base para afirmar que el problema de latencia esté solucionado.
+
+El registro completo y sus límites están en
+[el índice de la auditoría](conversation-audit-2026-10-22-index.json), con enlaces
+por nombre a las siete tandas y al sondeo. La candidata v1 se interrumpió por el
+límite inicial del guardado y solo conserva doce entradas; se documenta como parcial.
+Las comprobaciones automáticas de estilo son orientativas, no un porcentaje de
+semejanza con JARVIS ni una aprobación de calidad conversacional.
+
+Validación de código: suite completa de **266 pruebas** pasada en 6,215 s.
+Tras el último ajuste de las comprobaciones del informe, se repitieron las pruebas
+específicas de evaluadores y volvieron a pasar. Las pruebas de memoria con respuestas
+simuladas validan el transporte y la persistencia del contexto, no la comprensión
+lingüística de Nemotron. `git diff --check` pasó.

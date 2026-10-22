@@ -555,6 +555,37 @@ Si ya guardaste la clave en un archivo privado, puedes reutilizarlo sin pegarla:
 python scripts/validate_nemotron_live.py --run --key-file ~/.local/state/argos/credentials/nvidia.key --report /tmp/argos-nemotron.json
 ```
 
+La auditoría ampliada añade preguntas obvias, humor y excepciones, órdenes
+citadas/negadas, selección de agentes, correcciones, reinicio de Core, aislamiento
+de sesiones y cambio de idioma:
+
+```bash
+python scripts/validate_conversation_live.py --run --key-file ~/.local/state/argos/credentials/nvidia.key --report /tmp/argos-conversation.json
+# Comparación acotada, con tres repeticiones independientes:
+python scripts/validate_conversation_live.py --run --key-file ~/.local/state/argos/credentials/nvidia.key --scenario obvious --scenario heldout --repeat 3 --report /tmp/argos-style.json
+```
+
+`--contract ARCHIVO` compara una instantánea explícita del contrato solo durante
+la evaluación. El informe guarda contrato/huellas, contexto sintético por turno,
+historial, decisión pública, comprobaciones y tiempos completos, incluidos fallos.
+Las decisiones de acción se observan y se bloquean antes de crear tareas: un
+acierto de enrutamiento no demuestra que la operación funcione. Las expectativas
+y los presupuestos de palabras nunca se envían al modelo ni recortan respuestas.
+La evaluación se detiene si falla el proveedor; distingue turnos omitidos de
+intentados. Mediana y p95 corresponden a decisiones válidas; los fallos y las
+esperas superiores a cinco segundos también se contabilizan por separado.
+Para recorrer casos independientes a pesar de fallos transitorios, se puede
+añadir `--independent-scenarios`: omite el resto del escenario fallido y empieza
+el siguiente, sin repetir el turno ni cambiar modelo. Detiene todo el lote ante
+autenticación/cuota o tres escenarios fallidos consecutivos. La traza HTTP guarda
+huella del cuerpo, tamaño y tiempo/estado de cada intento, sin cabeceras privadas.
+`--compact-schema` y `--json-object` son dos experimentos excluyentes de formato
+de salida. Ambos conservan la validación exacta de decisiones contra el catálogo
+del turno tras generar; nunca habilitan operaciones por aceptar JSON. El formato
+normal sigue siendo el esquema completo. No son cambios del proveedor de producción.
+El tono y la exactitud necesitan revisión humana. No prueba audio ni activa
+Nemotron como proveedor de la instalación.
+
 El archivo indicado explícitamente tiene prioridad sobre la variable de entorno.
 Debe pertenecer a tu usuario y tener permisos `0600`; no se admiten enlaces simbólicos.
 

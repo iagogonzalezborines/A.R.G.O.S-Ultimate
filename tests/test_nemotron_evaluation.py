@@ -31,6 +31,31 @@ def response(finish="stop", **wire_changes):
 
 
 class NemotronEvaluationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_compact_grammar_still_rejects_mismatched_decision_fields(self):
+        for wire in ({'target_agent': 'computer'},
+                     {'kind': 'capability', 'target_agent': 'computer', 'tool': 'windows.list'}):
+            provider = NemotronEvaluation('fixture-key', {'models': []})
+            provider.compact = True
+            opener = Mock()
+            opener.open.return_value = response(**wire)
+            with patch.object(provider, '_opener', return_value=opener), self.assertRaisesRegex(ArgosError, 'catálogo'):
+                await provider.decide('Hola', {})
+            self.assertEqual(provider.decisions, [])
+            self.assertTrue(provider.stopped)
+
+    async def test_compact_request_is_flat_but_valid_public_answer_is_preserved(self):
+        provider = NemotronEvaluation('fixture-key', {'models': []})
+        provider.compact = True
+        opener = Mock()
+        opener.open.return_value = response()
+        with patch.object(provider, '_opener', return_value=opener):
+            decision = await provider.decide('Hola', {})
+        payload = json.loads(opener.open.call_args.args[0].data)
+        self.assertNotIn('oneOf', payload['response_format']['json_schema']['schema'])
+        self.assertEqual(decision.speech, 'Lo llamamos Helios.')
+        self.assertEqual(provider.request_trace['attempts'][0]['status'], 200)
+        self.assertEqual(provider.request_trace['bytes'], len(opener.open.call_args.args[0].data))
+
     def test_explicit_private_key_file_can_be_used_without_prompt_or_environment(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "nvidia.key"

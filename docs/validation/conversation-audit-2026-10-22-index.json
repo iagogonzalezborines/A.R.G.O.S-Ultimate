@@ -1,0 +1,145 @@
+{
+  "summary": {
+    "recorded_turns": 78,
+    "valid_model_decisions": 65,
+    "provider_failures": 12,
+    "recorded_http_attempts": 77,
+    "median_valid_seconds": 2.146,
+    "p95_valid_seconds": 20.809,
+    "max_valid_seconds": 58.654,
+    "max_attempt_seconds": 60.092,
+    "over_5_seconds_including_failures": 17,
+    "history_checks": 77,
+    "history_check_failures": 0
+  },
+  "runs": [
+    {
+      "report": "conversation-audit-2026-10-22-baseline.json",
+      "revision": "baseline",
+      "summary": {
+        "attempted_turns": 12,
+        "valid_decisions": 11,
+        "provider_failures": 1,
+        "all_checks_passed_turns": 11,
+        "median_seconds": 2.082,
+        "p95_nearest_rank_seconds": 10.686,
+        "max_seconds": 10.686,
+        "over_5_seconds_including_failures": 2,
+        "http_attempts": 12
+      },
+      "skipped_turns": 2,
+      "note": null
+    },
+    {
+      "report": "conversation-audit-2026-10-22-v1-partial.json",
+      "revision": "v1-partial",
+      "summary": {
+        "attempted_turns": 12,
+        "valid_decisions": 12,
+        "provider_failures": 0,
+        "all_checks_passed_turns": 11,
+        "median_seconds": 2.569,
+        "p95_nearest_rank_seconds": 12.377,
+        "max_seconds": 12.377,
+        "over_5_seconds_including_failures": 2,
+        "http_attempts": 12
+      },
+      "skipped_turns": null,
+      "note": "Aborted by the old report-size limit after 12 saved records; at least one additional turn not preserved. Fixed and regression-tested."
+    },
+    {
+      "report": "conversation-audit-2026-10-22-v2.json",
+      "revision": "v2",
+      "summary": {
+        "attempted_turns": 27,
+        "valid_decisions": 25,
+        "provider_failures": 1,
+        "all_checks_passed_turns": 21,
+        "median_seconds": 2.543,
+        "p95_nearest_rank_seconds": 22.957,
+        "max_seconds": 29.591,
+        "over_5_seconds_including_failures": 9,
+        "http_attempts": 26
+      },
+      "skipped_turns": 41,
+      "note": null
+    },
+    {
+      "report": "conversation-audit-2026-10-22-v3.json",
+      "revision": "v3",
+      "summary": {
+        "attempted_turns": 5,
+        "valid_decisions": 4,
+        "provider_failures": 1,
+        "all_checks_passed_turns": 4,
+        "median_seconds": 2.147,
+        "p95_nearest_rank_seconds": 2.902,
+        "max_seconds": 2.902,
+        "over_5_seconds_including_failures": 1,
+        "http_attempts": 5
+      },
+      "skipped_turns": 30,
+      "note": null
+    },
+    {
+      "report": "conversation-audit-2026-10-22-v4-full.json",
+      "revision": "v4-full",
+      "summary": {
+        "attempted_turns": 5,
+        "valid_decisions": 2,
+        "provider_failures": 3,
+        "all_checks_passed_turns": 2,
+        "median_seconds": 30.188,
+        "p95_nearest_rank_seconds": 58.654,
+        "max_seconds": 58.654,
+        "over_5_seconds_including_failures": 1,
+        "http_attempts": 5
+      },
+      "skipped_turns": 62,
+      "note": null
+    },
+    {
+      "report": "conversation-audit-2026-10-22-v4-compact.json",
+      "revision": "v4-compact",
+      "summary": {
+        "attempted_turns": 12,
+        "valid_decisions": 9,
+        "provider_failures": 3,
+        "all_checks_passed_turns": 9,
+        "median_seconds": 1.601,
+        "p95_nearest_rank_seconds": 9.644,
+        "max_seconds": 9.644,
+        "over_5_seconds_including_failures": 1,
+        "http_attempts": 12
+      },
+      "skipped_turns": 52,
+      "note": null
+    },
+    {
+      "report": "conversation-audit-2026-10-22-v4-json-object.json",
+      "revision": "v4-json-object",
+      "summary": {
+        "attempted_turns": 5,
+        "valid_decisions": 2,
+        "provider_failures": 3,
+        "all_checks_passed_turns": 2,
+        "median_seconds": 1.172,
+        "p95_nearest_rank_seconds": 1.316,
+        "max_seconds": 1.316,
+        "over_5_seconds_including_failures": 1,
+        "http_attempts": 5
+      },
+      "skipped_turns": 54,
+      "note": null
+    }
+  ],
+  "limits": [
+    "Mixed revisions and diagnostic formats, not a controlled latency benchmark.",
+    "One Core-routed action was blocked but not recorded as a decision by the initial observer; corrected and tested.",
+    "Initial panel scenario did not advertise a panel surface; its expected panel decision was invalid as a test. Corrected with a blocked synthetic surface.",
+    "Live restart, long-memory, full language-switch and remaining routing checks were not completed because provider failures stopped batches.",
+    "Offline tests verify Core history, restart, session isolation and twenty-turn truncation, not real model quality.",
+    "Every real capability and panel remained blocked; no audio or production provider change.",
+    "Few-shot tone examples can influence wording; the desired dry wit did not generalize reliably to held-out cases."
+  ]
+}
