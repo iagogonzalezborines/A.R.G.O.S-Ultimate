@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import stat
 import sys
 import time
 import urllib.error
@@ -34,7 +35,20 @@ def validate_api_key(api_key):
         raise ArgosError("La entrada contiene espacios o caracteres no admitidos; copia solo la clave API, sin comillas ni comandos.")
 
 
-def read_api_key():
+def read_api_key(key_file=None):
+    if key_file is not None:
+        try:
+            descriptor = os.open(key_file, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(descriptor, "r", encoding="ascii") as stream:
+                metadata = os.fstat(stream.fileno())
+                if (not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != os.getuid()
+                        or metadata.st_mode & 0o077):
+                    raise ArgosError("El archivo de clave debe pertenecer a tu usuario y tener permisos 0600.")
+                api_key = stream.read(8194).strip()
+            validate_api_key(api_key)
+            return api_key
+        except (OSError, UnicodeError):
+            raise ArgosError("No se pudo leer el archivo privado de clave.") from None
     api_key = os.environ.get("NVIDIA_API_KEY")
     if api_key:
         validate_api_key(api_key)
@@ -164,6 +178,8 @@ class NemotronEvaluation:
                         raise ArgosError("NVIDIA: límite de uso del endpoint gratuito alcanzado; prueba detenida sin reintentos.") from None
                     if error.code == 503:
                         raise ArgosError("Nemotron sigue temporalmente no disponible (HTTP 503) tras tres intentos; prueba detenida.") from None
+                    if error.code >= 500:
+                        raise ArgosError(f"NVIDIA no pudo procesar la petición (HTTP {error.code}); no se ha determinado la causa.") from None
                     raise ArgosError(f"Nemotron rechazó la prueba (HTTP {error.code}); revisa clave, modelo y configuración.") from None
                 if isinstance(error, ArgosError):
                     raise
@@ -190,7 +206,7 @@ async def run(args, api_key):
               "limits": ["Synthetic scenarios; no host inventory, audio or user conversation history.",
                          "No capabilities executed, no Codex, no daemon configuration changes.",
                          "Contract identifies Nemotron; environment is not_checked, unlike local hardware evaluations.",
-                         "API key remains in memory, outside prompts, reports and SQLite.",
+                         "API key is excluded from prompts, reports and SQLite; an explicit private key file may supply it.",
                          "NVIDIA hosted prototype endpoint; no paid provider or endpoint fallback.",
                          "Only HTTP 503 is retried: at most twice, after 1 and 2 seconds. Latency includes retries.",
                          "Structural success does not certify conversational quality."]}
@@ -216,13 +232,14 @@ async def run(args, api_key):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true")
+    parser.add_argument("--key-file", type=Path, help="Private credential file owned by this user, with mode 0600")
     parser.add_argument("--scenario", action="append", choices=[name for name, _, _ in SCENARIOS])
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()
     if not args.run:
         parser.error("Requiere --run para enviar escenarios de prueba al endpoint de NVIDIA.")
     try:
-        api_key = read_api_key()
+        api_key = read_api_key(args.key_file)
         return asyncio.run(run(args, api_key))
     except (EOFError, KeyboardInterrupt):
         print("Entrada cancelada.", file=sys.stderr)

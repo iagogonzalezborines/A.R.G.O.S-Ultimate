@@ -31,6 +31,24 @@ def response(finish="stop", **wire_changes):
 
 
 class NemotronEvaluationTests(unittest.IsolatedAsyncioTestCase):
+    def test_explicit_private_key_file_can_be_used_without_prompt_or_environment(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "nvidia.key"
+            path.write_text("fixture-file-key\n")
+            path.chmod(0o600)
+            with patch.dict("os.environ", {"NVIDIA_API_KEY": "different-key"}), patch(
+                    "validate_nemotron_live.getpass.getpass") as prompt:
+                self.assertEqual(read_api_key(path), "fixture-file-key")
+            prompt.assert_not_called()
+            path.chmod(0o644)
+            with self.assertRaisesRegex(ArgosError, "0600"):
+                read_api_key(path)
+            path.chmod(0o600)
+            link = Path(temp) / "link"
+            link.symlink_to(path)
+            with self.assertRaises(ArgosError):
+                read_api_key(link)
+
     async def test_long_opaque_token_is_accepted_only_in_authorization_header(self):
         key = "nvapi-" + "a" * 1500
         provider = NemotronEvaluation(key, {"models": []})

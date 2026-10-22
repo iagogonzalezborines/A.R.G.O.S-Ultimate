@@ -1,0 +1,8 @@
+{
+  "purpose": "Minimal API availability diagnostic after two HTTP 500 errors; no ARGOS context or tools",
+  "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "http_status": 200,
+  "completed": true,
+  "expected_reply": true,
+  "seconds": 0.506
+}

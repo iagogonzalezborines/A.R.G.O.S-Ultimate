@@ -1,0 +1,512 @@
+{
+  "started_utc": "2026-10-22T09:48:36Z",
+  "mode": "real-Core-and-Nemotron-evaluation-no-Codex",
+  "audio": "not_used",
+  "codex_connected": false,
+  "endpoint": "https://integrate.api.nvidia.com/v1/chat/completions",
+  "reasoning_effort": "none",
+  "contract_sha256": "92f4014c9e13cebe98a18c98fd542d13aada02f4c9c6f97cc74e817d26941ba9",
+  "provider_sha256": "203f38c13800be3e700b03ff0b0bd54c2647428d1f7c7d119aeeca1ba1e50ea0",
+  "shared_provider_sha256": "8cac89ddf71d46672c332f1737b20b204ed97e0e2a8115610a2e884638240a88",
+  "scenario_sha256": "2505d672fbc87541227cd2887105c952eedf3dc08b9a12a8e909991f5674cb77",
+  "models": [
+    {
+      "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "provider": "nemotron-evaluation"
+    }
+  ],
+  "turns": [
+    {
+      "scenario": "presence",
+      "repetition": 1,
+      "turn": 1,
+      "input": "Argos, are you there?",
+      "review_criterion": "Brief, composed presence; no introductions, invented work or repeated honorifics.",
+      "response": {
+        "speech": "I'm here.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "I'm here.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "en",
+          "metrics": {
+            "prompt_tokens": 2438,
+            "completion_tokens": 32,
+            "total_tokens": 2470
+          }
+        }
+      ],
+      "word_count": 2,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 5.279,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "presence",
+      "repetition": 1,
+      "turn": 2,
+      "input": "Good. Just checking.",
+      "review_criterion": "Brief, composed presence; no introductions, invented work or repeated honorifics.",
+      "response": {
+        "speech": "Understood.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Understood.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "en",
+          "metrics": {
+            "prompt_tokens": 2460,
+            "completion_tokens": 32,
+            "total_tokens": 2492
+          }
+        }
+      ],
+      "word_count": 1,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 3.46,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "presence",
+      "repetition": 1,
+      "turn": 3,
+      "input": "Argos?",
+      "review_criterion": "Brief, composed presence; no introductions, invented work or repeated honorifics.",
+      "response": {
+        "speech": "I'm here.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "I'm here.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "en",
+          "metrics": {
+            "prompt_tokens": 2479,
+            "completion_tokens": 33,
+            "total_tokens": 2512
+          }
+        }
+      ],
+      "word_count": 2,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.476,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "banter",
+      "repetition": 1,
+      "turn": 1,
+      "input": "Tengo una carpeta llamada final_final_ahora_si_7. Un sistema impecable, diría yo.",
+      "review_criterion": "Understated situational wit when invited; useful judgment; serious when asked.",
+      "response": {
+        "speech": "Un nombre que transmite serenidad y certeza. ¿Qué necesitas hacer con esa carpeta, o solo estás comentándola?",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Un nombre que transmite serenidad y certeza. ¿Qué necesitas hacer con esa carpeta, o solo estás comentándola?",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "prompt_tokens": 2456,
+            "completion_tokens": 55,
+            "total_tokens": 2511
+          }
+        }
+      ],
+      "word_count": 17,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.596,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "banter",
+      "repetition": 1,
+      "turn": 2,
+      "input": "Y una copia de seguridad en el mismo disco. Nada puede salir mal.",
+      "review_criterion": "Understated situational wit when invited; useful judgment; serious when asked.",
+      "response": {
+        "speech": "¿Dónde está exactamente esa carpeta y dónde debería crear la copia de seguridad? Necesito las rutas para operar con seguridad.",
+        "kind": "clarify",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "clarify",
+            "speech": "¿Dónde está exactamente esa carpeta y dónde debería crear la copia de seguridad? Necesito las rutas para operar con seguridad.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "prompt_tokens": 2510,
+            "completion_tokens": 58,
+            "total_tokens": 2568
+          }
+        }
+      ],
+      "word_count": 20,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.985,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "banter",
+      "repetition": 1,
+      "turn": 3,
+      "input": "Ahora en serio, sin bromas: ¿cuál es el fallo de esa copia?",
+      "review_criterion": "Understated situational wit when invited; useful judgment; serious when asked.",
+      "response": {
+        "speech": "Si la copia de seguridad está en el mismo disco que la original, una falla del disco, un borrado accidental o un daño en el sistema de archivos afectaría ambas al mismo tiempo. No es una protección real contra la pérdida de datos.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Si la copia de seguridad está en el mismo disco que la original, una falla del disco, un borrado accidental o un daño en el sistema de archivos afectaría ambas al mismo tiempo. No es una protección real contra la pérdida de datos.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "prompt_tokens": 2571,
+            "completion_tokens": 79,
+            "total_tokens": 2650
+          }
+        }
+      ],
+      "word_count": 43,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.985,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "frustration",
+      "repetition": 1,
+      "turn": 1,
+      "input": "Llevo dos horas con este fallo y estoy harto. Me siento bastante inútil.",
+      "review_criterion": "Respect frustration; one useful next step, no ridicule, lecture or fake diagnosis.",
+      "response": {
+        "speech": "Tómate un respiro. Dos horas con un fallo cualquiera ya es suficiente para cansar a cualquiera; no te hace inútil. ¿Qué está pasando exactamente? Dime qué intentas hacer y qué mensaje o comportamiento estás viendo, y lo revisamos con calma.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Tómate un respiro. Dos horas con un fallo cualquiera ya es suficiente para cansar a cualquiera; no te hace inútil. ¿Qué está pasando exactamente? Dime qué intentas hacer y qué mensaje o comportamiento estás viendo, y lo revisamos con calma.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "prompt_tokens": 2451,
+            "completion_tokens": 86,
+            "total_tokens": 2537
+          }
+        }
+      ],
+      "word_count": 40,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 2.261,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "frustration",
+      "repetition": 1,
+      "turn": 2,
+      "input": "No tengo el error a mano. Solo dime por dónde empezar, muy breve.",
+      "review_criterion": "Respect frustration; one useful next step, no ridicule, lecture or fake diagnosis.",
+      "response": {
+        "speech": "Describe qué intenta hacer el programa, qué esperas que ocurra y qué ocurre en su lugar. Eso suele apuntar a donde buscar.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "Describe qué intenta hacer el programa, qué esperas que ocurra y qué ocurre en su lugar. Eso suele apuntar a donde buscar.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "prompt_tokens": 2538,
+            "completion_tokens": 58,
+            "total_tokens": 2596
+          }
+        }
+      ],
+      "word_count": 22,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 1.385,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "judgment",
+      "repetition": 1,
+      "turn": 1,
+      "input": "Estoy pensando en saltarme las pruebas para acabar antes. ¿Te parece una buena idea?",
+      "review_criterion": "Disagree with a poor proposal tactfully; no flattery or unsolicited execution.",
+      "response": {
+        "speech": "No. Saltarse las pruebas es la forma más rápida de enviar errores al usuario. Mejor termina lo que haya que terminar y comprueba que funciona.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      },
+      "model_calls": 1,
+      "decisions": [
+        {
+          "decision": {
+            "kind": "answer",
+            "speech": "No. Saltarse las pruebas es la forma más rápida de enviar errores al usuario. Mejor termina lo que haya que terminar y comprueba que funciona.",
+            "agent": "",
+            "capability": "",
+            "arguments": {},
+            "reason": "structured_provider_decision"
+          },
+          "interaction": {
+            "channel": "voice",
+            "continuous_dialogue": true,
+            "ending_dialogue": false,
+            "speech_interrupted": false
+          },
+          "response_language": "es",
+          "metrics": {
+            "prompt_tokens": 2451,
+            "completion_tokens": 59,
+            "total_tokens": 2510
+          }
+        }
+      ],
+      "word_count": 25,
+      "honorific_count": 0,
+      "checks": {
+        "expected_model_calls": true,
+        "no_task_created": true,
+        "nonempty_response": true,
+        "public_model_speech_preserved": true,
+        "interruption_forwarded": true
+      },
+      "seconds": 12.911,
+      "http_attempts": 1
+    },
+    {
+      "scenario": "judgment",
+      "repetition": 1,
+      "turn": 2,
+      "input": "No me des la razón por educación. ¿Qué harías tú con diez minutos?",
+      "review_criterion": "Disagree with a poor proposal tactfully; no flattery or unsolicited execution.",
+      "error": "Nemotron rechazó la prueba (HTTP 500); revisa clave, modelo y configuración.",
+      "decisions": [],
+      "public_decision": null,
+      "metrics": {},
+      "seconds": 0.444,
+      "http_attempts": 1
+    }
+  ],
+  "repetitions": 1,
+  "personality_verdict": "requires_qualitative_review",
+  "limits": [
+    "Synthetic scenarios; no host inventory, audio or user conversation history.",
+    "No capabilities executed, no Codex, no daemon configuration changes.",
+    "Contract identifies Nemotron; environment is not_checked, unlike local hardware evaluations.",
+    "API key remains in memory, outside prompts, reports and SQLite.",
+    "NVIDIA hosted prototype endpoint; no paid provider or endpoint fallback.",
+    "Only HTTP 503 is retried: at most twice, after 1 and 2 seconds. Latency includes retries.",
+    "Structural success does not certify conversational quality."
+  ],
+  "stopped_after": {
+    "scenario": "judgment",
+    "repetition": 1,
+    "turn": 2
+  },
+  "no_tasks_created": true,
+  "skipped_turns": 13,
+  "http_attempts": 10,
+  "structural_checks_passed": false
+}

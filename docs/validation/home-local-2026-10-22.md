@@ -191,3 +191,47 @@ Quedan sin completar honestidad, cambio de idioma, aislamiento entre sesiones y
 estado local en esta ejecución. La calidad y la disponibilidad deben validarse
 por separado. No se cambió el modelo de la consola ni se realizaron nuevas
 llamadas a partir de la lectura del informe.
+
+## Nemotron 3.5 Super mediante NVIDIA
+
+Tras obtener la clave, el usuario autorizó guardarla en un archivo privado.
+Se leyó desde el portapapeles sin mostrar su contenido y se guardó fuera del
+repositorio, en el directorio privado de credenciales de ARGOS, con permisos 0600
+(directorio 0700). El evaluador acepta ahora `--key-file`: valida propiedad,
+permisos y archivo regular, rechaza enlaces y no introduce la clave en los
+prompts, informes ni SQLite. La suite completa pasa 252 pruebas en 6,099 segundos.
+
+Se evaluó `nvidia/nemotron-3.5-super-vl-120b-a12b` en el endpoint de prototipado
+de NVIDIA con `reasoning_effort=none`, el mismo contexto sintético usado para
+Gemini, la personalidad compartida y validación de decisiones por Core. Los
+resultados no contienen voz, efectos reales ni conexiones a Codex.
+
+- [Ejecución inicial](home-nemotron-super-initial-2026-10-22.json): nueve respuestas
+  aceptadas, mediana 1,985 s y máximo 12,911 s; la décima petición devolvió HTTP 500.
+- [Repetición del escenario de criterio](home-nemotron-super-followup-2026-10-22.json):
+  el primer turno volvió a devolver 500. No se completó el escenario.
+- [Diagnóstico mínimo](home-nemotron-super-availability-2026-10-22.json): una petición
+  sin contexto de ARGOS ni esquema respondió HTTP 200 en 0,506 s. Esto confirma
+  disponibilidad básica y autenticación; no explica el 500 de las peticiones completas.
+- [Diagnóstico con JSON sin esquema](home-nemotron-super-format-2026-10-22.json):
+  se cambió solo el formato en el proceso de evaluación. Tras 32,841 s devolvió
+  una decisión que el validador rechazó. No se incorporó esta variante al evaluador
+  ni al runtime y no se ejecutaron acciones.
+- [Escenarios restantes de contexto](home-nemotron-super-context-2026-10-22.json):
+  once respuestas aceptadas; la prueba se detuvo en aislamiento de sesión tras
+  una petición fallida de 60,094 s. El escenario de estado local quedó sin ejecutar.
+
+La memoria de Helios, las referencias a los cables, la corrección tras interrupción
+y el cambio español/inglés funcionan en los turnos observados. Reconoce que no
+puede ver el setup y no inventa haberlo reparado. Sin embargo, la broma sobre una
+copia en el mismo disco provoca una aclaración sobre rutas para crearla, aunque
+no se solicitó esa operación. También introduce ofertas innecesarias y, al explicar
+una actualización, menciona un nombre de herramienta incorrecto (`desarrollo.check`).
+
+La latencia de muchas respuestas ronda 1–2 s, pero aparecen picos de 32,418 y
+49,967 s sin reintentos, además de los errores. Estos datos no permiten atribuir
+el problema exclusivamente al modelo, al esquema o a la carga del servicio.
+Se corrigió el mensaje genérico de errores 5xx para no sugerir que prueban una
+clave inválida. No se ha completado una pasada entera ni se ha validado la voz.
+El candidato no se activó como interlocutor principal; su disponibilidad y su
+distinción entre conversación casual y órdenes siguen pendientes de mejorar.

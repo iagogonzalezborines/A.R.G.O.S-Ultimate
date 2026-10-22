@@ -549,6 +549,15 @@ de NVIDIA:
 python scripts/validate_nemotron_live.py --run --report /tmp/argos-nemotron.json
 ```
 
+Si ya guardaste la clave en un archivo privado, puedes reutilizarlo sin pegarla:
+
+```bash
+python scripts/validate_nemotron_live.py --run --key-file ~/.local/state/argos/credentials/nvidia.key --report /tmp/argos-nemotron.json
+```
+
+El archivo indicado explícitamente tiene prioridad sobre la variable de entorno.
+Debe pertenecer a tu usuario y tener permisos `0600`; no se admiten enlaces simbólicos.
+
 Pide la clave de NVIDIA con entrada oculta, sin guardarla; también acepta
 `NVIDIA_API_KEY` si ya está definida. Admite tokens largos; ante una entrada vacía
 o con caracteres no válidos para la cabecera, explica el problema sin mostrar la
