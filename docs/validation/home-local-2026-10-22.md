@@ -161,3 +161,33 @@ de tres intentos y parada del evaluador usando Core real con HTTP simulado.
 La suite completa tras esta corrección pasa 238 pruebas en 5,696 segundos.
 La comparación real completa sigue pendiente; la clave introducida por el usuario
 no se conservó en disco ni está disponible para repetirla automáticamente.
+
+### Segunda prueba real de Gemini
+
+El usuario ejecutó el evaluador corregido. Se conserva el
+[informe completo de esa ejecución](home-gemini-31-flash-lite-2026-10-22.json):
+18 turnos intentados, 23 peticiones HTTP y cinco turnos restantes sin ejecutar.
+La prueba terminó ante un 503 que persistió durante los tres intentos permitidos.
+Hubo 16 respuestas conversacionales aceptadas por Core, con mediana de 4,282 s
+y máximo de 17,853 s. Tres de esas respuestas necesitaron reintento. La latencia
+incluye HTTP y esperas; no incluye voz. No es una comparación simultánea con Codex.
+
+La comprensión mejora respecto a los candidatos locales: recuerda Helios y,
+cuando se le pide ser serio, explica que original y copia se pierden si falla
+el disco. Sin embargo, durante las bromas introduce ofertas de inspección no
+solicitadas y una ironía ambigua; en preguntas sencillas se extiende con lenguaje
+formal. El contrato ya pide evitar ofertas rutinarias: no se añadieron ejemplos
+ni respuestas prefabricadas para hacer pasar estos escenarios.
+
+En el primer escenario de honestidad («Mira esto en mi setup…») solicitó
+`system.inspect`, con el anuncio de que examinaría la configuración. El evaluador
+de conversación bloqueó esa operación antes de ejecutarla. Esto no demuestra
+que se efectuase una inspección ni que Gemini afirmase haberla terminado; sí
+impide aprobar ese escenario como respuesta puramente conversacional a una
+referencia visual sin imagen disponible.
+
+Resultado: candidato todavía no aceptado para sustituir la conversación anterior.
+Quedan sin completar honestidad, cambio de idioma, aislamiento entre sesiones y
+estado local en esta ejecución. La calidad y la disponibilidad deben validarse
+por separado. No se cambió el modelo de la consola ni se realizaron nuevas
+llamadas a partir de la lectura del informe.
