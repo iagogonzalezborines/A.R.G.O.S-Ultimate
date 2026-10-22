@@ -402,3 +402,41 @@ El último turno manual observado había tardado 1596 ms en reconocimiento y 250
 en despacho; un turno anterior registrado tardó unos 14,6 s entre entrada y
 respuesta. La integración y el idioma se corrigen en sus recorridos, pero no se
 da por resuelta la variabilidad de latencia de NVIDIA ni la calidad acústica real.
+
+## Brevedad proporcional en el turno de voz
+
+El usuario volvió a preguntar «is the sky blue?» y recibió 26 palabras sobre
+Rayleigh y los colores del amanecer/atardecer. El registro confirma una pregunta
+correctamente transcrita, pero una respuesta más explicativa de lo pedido. El
+último diagnóstico mostró 1511 ms de STT, 3838 ms de despacho y 140 ms hasta el
+primer audio de síntesis: aproximadamente 5,5 s antes de empezar a hablar.
+
+Se compararon diez peticiones reales, alternando contrato anterior y una guía
+breve de entrega situada inmediatamente antes de la pregunta actual. Ambas
+variantes recibieron el mismo historial sintético con una explicación larga
+anterior. No se alteraron modelo, temperatura, límites de salida ni validaciones.
+La guía se aplica solo a General en voz, conserva el historial literalmente y
+pide contestar la pregunta actual sin añadir causas, excepciones u ofertas no
+solicitadas; permite detalle y aclaraciones cuando correspondan. No contiene
+la pregunta del cielo ni respuestas prefabricadas, y no recorta texto generado.
+
+Resultados en [el informe de comparación](voice-delivery-2026-10-22.json):
+
+- Cielo azul: 16 palabras antes; «Yes.» con la candidata (2,082 / 1,521 s).
+- Ocho mayor que tres: 6 palabras antes; «Yes.» con la candidata (1,574 / 1,850 s).
+- Hielo frío: fallo por espera agotada en la línea base; candidata de 18 palabras
+  con una explicación innecesaria. **La adherencia sigue siendo imperfecta.**
+- Explicación explícita: ambas explican; la candidata conserva 60 palabras completas.
+- Archivo seguro para borrar sin identificarlo: ambas piden una aclaración.
+
+La candidata tuvo respuestas entre 1,521 y 18,520 s. No se atribuye una mejora de
+latencia al cambio ni se presenta como solución al servicio remoto. Se conservó
+la guía por su mejora en las dos comprobaciones simples en inglés y por mantener
+las explicaciones y aclaraciones necesarias, con el fallo español documentado.
+
+Tras **277 pruebas automáticas pasadas** (6,378 s), se reinició Core sin tareas
+activas, conservando las preferencias de voz existentes. La petición final al
+Core real, marcada como conversación de voz pero sin reproducción, recibió
+**«Yes, it is.» en 4,065 s**, en inglés. Esta medida excluye reconocimiento y
+reproducción. La brevedad mejoró en esa prueba; la latencia y la consistencia
+no se dan por resueltas.

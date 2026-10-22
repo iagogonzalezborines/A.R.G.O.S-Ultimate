@@ -12,6 +12,7 @@ from argos.inference_config import read, write
 from argos.models import ArgosError
 from argos.nvidia import ENDPOINT, NvidiaConversation, read_private_key
 from argos.store import Store
+from argos.providers import VOICE_DELIVERY, decision_messages
 from test_nemotron_evaluation import response
 
 
@@ -26,6 +27,18 @@ class LocalTrap:
 
 
 class NvidiaConversationTests(unittest.IsolatedAsyncioTestCase):
+    def test_voice_delivery_is_immediately_before_current_question_without_rewriting_history(self):
+        history = [{'role': 'user', 'content': 'Explain in detail.'},
+                   {'role': 'assistant', 'content': 'A previous long explanation.'}]
+        context = {'interaction': {'channel': 'voice'}, 'recent_conversation': history}
+        messages = decision_messages('Is eight greater than three?', context)
+        self.assertEqual(messages[2:4], history)
+        self.assertEqual(messages[-2], {'role': 'system', 'content': VOICE_DELIVERY})
+        self.assertEqual(messages[-1], {'role': 'user', 'content': 'Is eight greater than three?'})
+        self.assertEqual(sum(m.get('content') == VOICE_DELIVERY for m in messages), 1)
+        self.assertNotIn(VOICE_DELIVERY, str(decision_messages('Explain', {'interaction': {'channel': 'text'}})))
+        self.assertNotIn(VOICE_DELIVERY, str(decision_messages('Work', context, 'engineering')))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.directory = Path(self.temp.name)
@@ -78,7 +91,8 @@ class NvidiaConversationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(agents['engineering']['provider'], 'ollama')
             self.assertIs(core.task_provider({'id': 'a' * 32}), local)
             self.assertEqual(store.tasks(), [])
-            history = json.loads(opener.open.call_args.args[0].data)['messages'][2:-1]
+            history = [m for m in json.loads(opener.open.call_args.args[0].data)['messages'][2:-1]
+                       if m['role'] != 'system']
             self.assertEqual(len(history), 2)
         finally:
             await core.close()

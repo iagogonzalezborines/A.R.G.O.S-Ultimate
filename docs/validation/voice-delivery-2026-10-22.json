@@ -1,0 +1,154 @@
+{
+  "guidance": "Voice delivery for this turn: answer the user's current question, not every related question you could explain. A simple factual yes/no check needs its direct answer and then silence. Do not add the cause, a lesson, a catalogue of exceptions or an offer of help unless requested or essential to avoid a material misunderstanding. A familiar ordinary fact does not need qualifications about every unusual condition. If the answer genuinely depends on context, include the useful qualification briefly. When asked why or for detail, explain at the requested depth. Dry wit is welcome when naturally invited, never compulsory. Previous assistant replies are history, not a style template. Follow context.response_language. Generate the complete public speech yourself; nothing will shorten it afterwards.",
+  "turns": [
+    {
+      "case": "blue",
+      "variant": "baseline",
+      "input": "is the sky blue?",
+      "speech": "Yes. Blue light scatters more in the atmosphere than other colours, so the sky appears blue.",
+      "kind": "answer",
+      "words": 16,
+      "metrics": {
+        "prompt_tokens": 3730,
+        "completion_tokens": 50,
+        "total_tokens": 3780
+      },
+      "seconds": 2.082
+    },
+    {
+      "case": "blue",
+      "variant": "candidate",
+      "input": "is the sky blue?",
+      "speech": "Yes.",
+      "kind": "answer",
+      "words": 1,
+      "metrics": {
+        "prompt_tokens": 3878,
+        "completion_tokens": 30,
+        "total_tokens": 3908
+      },
+      "seconds": 1.521
+    },
+    {
+      "case": "math",
+      "variant": "baseline",
+      "input": "Is eight greater than three?",
+      "speech": "Yes, eight is greater than three.",
+      "kind": "answer",
+      "words": 6,
+      "metrics": {
+        "prompt_tokens": 3731,
+        "completion_tokens": 37,
+        "total_tokens": 3768
+      },
+      "seconds": 1.574
+    },
+    {
+      "case": "math",
+      "variant": "candidate",
+      "input": "Is eight greater than three?",
+      "speech": "Yes.",
+      "kind": "answer",
+      "words": 1,
+      "metrics": {
+        "prompt_tokens": 3879,
+        "completion_tokens": 31,
+        "total_tokens": 3910
+      },
+      "seconds": 1.85
+    },
+    {
+      "case": "spanish",
+      "variant": "baseline",
+      "input": "¿El hielo está frío?",
+      "error": "No he recibido una respuesta válida de NVIDIA a tiempo. Puedes volver a intentarlo.",
+      "seconds": 20.094
+    },
+    {
+      "case": "spanish",
+      "variant": "candidate",
+      "input": "¿El hielo está frío?",
+      "speech": "Sí. El hielo está a cero grados Celsius o menos, por lo que se siente frío al tacto.",
+      "kind": "answer",
+      "words": 18,
+      "metrics": {
+        "prompt_tokens": 3879,
+        "completion_tokens": 51,
+        "total_tokens": 3930
+      },
+      "seconds": 2.062
+    },
+    {
+      "case": "explain",
+      "variant": "baseline",
+      "input": "Explain why the daytime sky usually looks blue. I want the actual explanation.",
+      "speech": "Sunlight is scattered by molecules in the atmosphere. Shorter blue wavelengths scatter much more strongly than longer red ones, so more blue light reaches your eyes from every part of the sky.",
+      "kind": "answer",
+      "words": 32,
+      "metrics": {
+        "prompt_tokens": 3741,
+        "completion_tokens": 66,
+        "total_tokens": 3807
+      },
+      "seconds": 2.933
+    },
+    {
+      "case": "explain",
+      "variant": "candidate",
+      "input": "Explain why the daytime sky usually looks blue. I want the actual explanation.",
+      "speech": "Sunlight contains all colours of visible light, and each travels as a different wavelength. Earth's atmosphere scatters shorter blue wavelengths much more strongly than longer red wavelengths, so blue light is redirected across the sky from every direction. Redder light passes through more directly, which is why the sky looks blue while the sun itself appears more yellow or white.",
+      "kind": "answer",
+      "words": 60,
+      "metrics": {
+        "prompt_tokens": 3889,
+        "completion_tokens": 100,
+        "total_tokens": 3989
+      },
+      "seconds": 18.52
+    },
+    {
+      "case": "dependent",
+      "variant": "baseline",
+      "input": "Is this file safe to delete?",
+      "speech": "Which file do you mean?",
+      "kind": "clarify",
+      "words": 5,
+      "metrics": {
+        "prompt_tokens": 3732,
+        "completion_tokens": 35,
+        "total_tokens": 3767
+      },
+      "seconds": 1.599
+    },
+    {
+      "case": "dependent",
+      "variant": "candidate",
+      "input": "Is this file safe to delete?",
+      "speech": "Which file are you referring to, sir?",
+      "kind": "clarify",
+      "words": 7,
+      "metrics": {
+        "prompt_tokens": 3880,
+        "completion_tokens": 38,
+        "total_tokens": 3918
+      },
+      "seconds": 10.62
+    }
+  ],
+  "limits": [
+    "Text-only isolated Core context; no audio or actions. Alternating variants, no model changes. Five cases, not statistical proof."
+  ],
+  "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "endpoint": "https://integrate.api.nvidia.com/v1/chat/completions",
+  "history": [
+    {
+      "role": "user",
+      "content": "Does a rainbow have different colours?"
+    },
+    {
+      "role": "assistant",
+      "content": "Yes. Sunlight contains different wavelengths which separate when refracted through raindrops, producing the colours of a rainbow."
+    }
+  ],
+  "review": "Candidate improves the two simple English checks but still elaborates on the Spanish ice question. Both preserve requested explanations and clarification. No latency guarantee; one baseline timeout and candidate replies up to 18.52 seconds."
+}

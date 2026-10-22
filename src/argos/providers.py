@@ -12,6 +12,18 @@ from .models import ArgosError, Decision, EscalationNeeded
 from .security import safe_data
 
 
+VOICE_DELIVERY = (
+    "Voice delivery for this turn: answer the user's current question, not every related question you "
+    'could explain. A simple factual yes/no check needs its direct answer and then silence. Do not add '
+    'the cause, a lesson, a catalogue of exceptions or an offer of help unless requested or essential to '
+    'avoid a material misunderstanding. A familiar ordinary fact does not need qualifications about every '
+    'unusual condition. If the answer genuinely depends on context, include the useful qualification '
+    'briefly. When asked why or for detail, explain at the requested depth. Dry wit is welcome when '
+    'naturally invited, never compulsory. Previous assistant replies are history, not a style template. '
+    'Follow context.response_language. Generate the complete public speech yourself; nothing will shorten '
+    'it afterwards.'
+)
+
 SCHEMA = {
     "type": "object", "additionalProperties": False,
     "properties": {
@@ -154,6 +166,8 @@ def decision_messages(text, context, agent="general"):
     ]
     messages.extend({"role": item["role"], "content": item["content"]}
                     for item in recent if item.get("role") in ("user", "assistant"))
+    if agent == "general" and context.get("interaction", {}).get("channel") == "voice":
+        messages.append({"role": "system", "content": VOICE_DELIVERY})
     messages.append({"role": "user", "content": text})
     return messages
 
