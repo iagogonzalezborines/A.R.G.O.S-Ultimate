@@ -1,0 +1,135 @@
+{
+  "scope": "Opt-in Codex checks: real tools on temporary folders, no desktop or audio.",
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "cases": [
+    {
+      "scenario": "spoken_name",
+      "response": {
+        "speech": "Request accepted.",
+        "kind": "accepted",
+        "task_id": "c0a54bc715a94ac6ac22c9381f765cdb",
+        "data": {
+          "status": "QUEUED",
+          "agent": "computer"
+        },
+        "route": "local",
+        "language": "en"
+      },
+      "task": {
+        "status": "COMPLETED",
+        "question": null,
+        "result": {
+          "speech": "Project Sum and CO2 registered.",
+          "evidence": {
+            "path": "/tmp/argos-folder-context-1gp81edf/Proyectos/some-and-co2",
+            "project": {
+              "id": "02d908fedd8d4dc4a5cd84108783e88b",
+              "name": "Sum and CO2",
+              "root": "/tmp/argos-folder-context-1gp81edf/Proyectos/some-and-co2"
+            }
+          },
+          "verification": "project_registered",
+          "elapsed_ms": 2.17
+        }
+      },
+      "projects": [
+        {
+          "id": "bb0a5bde4ec94996822361e2a4c49fc8",
+          "name": "ARGOS",
+          "root": "/tmp/argos-folder-context-1gp81edf/Proyectos/argos"
+        },
+        {
+          "id": "02d908fedd8d4dc4a5cd84108783e88b",
+          "name": "Sum and CO2",
+          "root": "/tmp/argos-folder-context-1gp81edf/Proyectos/some-and-co2"
+        }
+      ],
+      "decisions": [
+        {
+          "kind": "capability",
+          "speech": "Registering the existing project folder “some-and-co2” as “Sum and CO2”.",
+          "agent": "computer",
+          "capability": "projects.register",
+          "arguments": {
+            "name": "Sum and CO2",
+            "path": "/tmp/argos-folder-context-1gp81edf/Proyectos/some-and-co2"
+          },
+          "reason": "structured_provider_decision"
+        }
+      ],
+      "passed": true,
+      "seconds": 3.408,
+      "model_calls": 1
+    },
+    {
+      "scenario": "listing_followup",
+      "response": {
+        "speech": "argos\nskyline-v2\nsome-and-co2",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      },
+      "projects": [
+        {
+          "id": "429b6394d80d47fc8d54873ebc95d23e",
+          "name": "ARGOS",
+          "root": "/tmp/argos-folder-context-06qp5n0b/Proyectos/argos"
+        }
+      ],
+      "decisions": [
+        {
+          "kind": "answer",
+          "speech": "argos\nskyline-v2\nsome-and-co2",
+          "agent": "",
+          "capability": "",
+          "arguments": {},
+          "reason": "structured_provider_decision"
+        }
+      ],
+      "passed": true,
+      "seconds": 3.125,
+      "model_calls": 1
+    },
+    {
+      "scenario": "specialist_handoff",
+      "routing": "scripted General; real Computer specialist with captured history",
+      "response": {
+        "speech": "Request accepted by the specialist.",
+        "kind": "accepted",
+        "task_id": "0cb9320b53054b8da398220883533628",
+        "data": null,
+        "route": "local",
+        "language": "en"
+      },
+      "task": {
+        "status": "COMPLETED",
+        "question": null,
+        "result": {
+          "speech": "Project some-and-co2 registered.",
+          "detail": "",
+          "verification": "inspection_only",
+          "operations": 1
+        }
+      },
+      "projects": [
+        {
+          "id": "23f27057a478440eb471593082ab0a72",
+          "name": "ARGOS",
+          "root": "/tmp/argos-folder-context-e9kfay24/Proyectos/argos"
+        },
+        {
+          "id": "1b6738534d564455b501bb198c591db2",
+          "name": "some-and-co2",
+          "root": "/tmp/argos-folder-context-e9kfay24/Proyectos/some-and-co2"
+        }
+      ],
+      "decisions": [],
+      "passed": true,
+      "seconds": 5.155,
+      "model_calls": 1
+    }
+  ]
+}

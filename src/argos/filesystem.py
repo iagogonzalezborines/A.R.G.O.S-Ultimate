@@ -13,6 +13,7 @@ import os
 import re
 import shutil
 import stat
+import time
 import uuid
 from pathlib import Path
 
@@ -368,6 +369,76 @@ async def projects_create(project, args):
     return await files_mkdir(project, {"path": args["path"]})
 
 
+def project_directory(project, value):
+    """Validate an existing project without following links or reading its files."""
+    path = path_for(project, value)
+    if path == Path(path.anchor) or path == Path.home():
+        raise ArgosError("Selecciona una carpeta de proyecto concreta.")
+    try:
+        fd = open_directory(path)
+        os.close(fd)
+    except OSError:
+        raise ArgosError("La carpeta del proyecto no existe, no es accesible o contiene un enlace simbólico.") from None
+    return path
+
+
+def observe_project_folders(base):
+    """Bounded names-only observation, not a recursive scan or project import."""
+    result = {"path": str(base), "entries": [], "observed_at": time.time(),
+              "truncated": False, "status": "observed"}
+    fd = None
+    try:
+        fd = open_directory(path_for(None, str(base)))
+        with os.scandir(fd) as entries:
+            for index, entry in enumerate(entries):
+                if index >= 512 or len(result["entries"]) >= 50:
+                    result["truncated"] = True
+                    break
+                if entry.name.startswith(".") or not entry.is_dir(follow_symlinks=False):
+                    continue
+                try:
+                    path = path_for(None, str(base / entry.name))
+                    public_text(entry.name, 200)
+                except ArgosError:
+                    continue
+                result["entries"].append({"name": entry.name, "path": str(path)})
+        result["entries"].sort(key=lambda item: item["name"].casefold())
+    except OSError:
+        result.update(status="unavailable", truncated=True)
+    finally:
+        if fd is not None:
+            os.close(fd)
+    return result
+
+
+def project_locations(projects, include_directories=False):
+    """Observe a few likely workspaces; never assume Linux has a standard one."""
+    home = Path.home()
+    candidates = {}
+    for path, source in [(home / "Proyectos", "home_convention"),
+                         (home / "Projects", "home_convention"),
+                         *[(Path(p["root"]).parent, "registered_project_parent") for p in projects]]:
+        try:
+            path = project_directory(None, str(path))
+        except ArgosError:
+            continue
+        sources = candidates.setdefault(str(path), [])
+        if source not in sources:
+            sources.append(source)
+    return {"default": next(iter(candidates)) if len(candidates) == 1 else None,
+            "candidates": [{"path": path, "sources": sources} for path, sources in candidates.items()],
+            "directories": [observe_project_folders(Path(path)) for path in list(candidates)[:8]] if include_directories else [],
+            "registered": [{"name": p["name"], "root": p["root"]} for p in projects],
+            "basis": "Existing directories only; no universal Linux projects directory. Multiple candidates need context or clarification."}
+
+
+async def projects_register(project, args):
+    public_text(args["name"], 80)
+    path = project_directory(project, args["path"])
+    # Core commits the registry and only then reports registration as complete.
+    return outcome("Carpeta comprobada.", {"path": str(path)}, "directory_verified")
+
+
 async def workspace_open(project, args):
     import asyncio
     if args["editor"] not in ("code", "codex"):
@@ -430,6 +501,7 @@ def capabilities(C):
         C("files.move", "engineering", "Mover/renombrar o restaurar desde papelera sin sobrescribir; SHA de files.stat", ("source", "destination", "expected_sha256"), False, files_move, "write"),
         C("files.delete", "engineering", "Borrar archivo o árbol trasladándolo a papelera recuperable", ("path", "expected_sha256"), False, files_delete, "write"),
         C("projects.create", "engineering", "Crear y registrar proyecto nuevo; la tarea pasa a ese proyecto", ("name", "path"), False, projects_create, "write"),
+        C("projects.register", "computer", "Registrar carpeta existente como proyecto sin cambiar archivos; vincula solo esta tarea", ("name", "path"), False, projects_register, "routine"),
         C("workspace.open", "engineering", "Abrir workspace en code o terminal Codex (sesión externa independiente)", ("path", "editor"), False, workspace_open, "command"),
         C("commands.exec", "engineering", "Proponer argv JSON y cwd explícitos sin registro previo; siempre revisión exacta", ("cwd", "argv_json"), False, commands_exec, "command"),
     ]

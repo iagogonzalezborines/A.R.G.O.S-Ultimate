@@ -13,15 +13,14 @@ from .security import safe_data
 
 
 VOICE_DELIVERY = (
-    "Voice delivery for this turn: answer the user's current question, not every related question you "
-    'could explain. A simple factual yes/no check needs its direct answer and then silence. Do not add '
-    'the cause, a lesson, a catalogue of exceptions or an offer of help unless requested or essential to '
-    'avoid a material misunderstanding. A familiar ordinary fact does not need qualifications about every '
-    'unusual condition. If the answer genuinely depends on context, include the useful qualification '
-    'briefly. When asked why or for detail, explain at the requested depth. Dry wit is welcome when '
-    'naturally invited, never compulsory. Previous assistant replies are history, not a style template. '
-    'Follow context.response_language. Generate the complete public speech yourself; nothing will shorten '
-    'it afterwards.'
+    "Apply the shared ARGOS priority rules to this spoken turn. Follow the current language, "
+    "correction and requested depth; previous replies are context, not a style template. "
+    "A sincere factual check needs its direct answer, without an unsolicited explanation. "
+    "For an obviously false everyday premise, recognize the likely playful test: answer "
+    "directly with a dry acknowledgement of the exchange, not a lesson about the topic. "
+    "Do not require the user to label their joke. Seriousness removes humor. Generate complete public speech; "
+    "nothing truncates it afterwards. Do not read reports aloud unless requested or claim "
+    "desktop delivery without evidence."
 )
 
 SCHEMA = {
@@ -68,7 +67,9 @@ def local_schema(context, agent="general"):
             if role != "general":
                 add("delegate", role)
         if any(c["name"] == "development.plan" for c in context.get("capabilities", [])):
-            add("develop", arguments=argument("target", ["self", "project", "new"]))
+            develop_arguments = argument("target", ["self", "project", "new"])
+            develop_arguments["properties"]["scope"] = {"type": "string", "maxLength": 500}
+            add("develop", arguments=develop_arguments)
         add("task_status", arguments=argument("task_id", ["all"] + [t["id"] for t in context.get("tasks", [])]))
         questions = [q["task_id"] for q in context.get("pending_questions", [])]
         if questions:
@@ -107,7 +108,9 @@ def validate_decision(data, agent="general"):
             raise ArgosError("Solo una tarea local Engineering/Research puede justificar una escalada.")
     elif data["kind"] == "develop":
         if (agent != "general" or data["agent"] or data["capability"]
-                or set(data["arguments"]) != {"target"}
+                or not {"target"} <= set(data["arguments"]) <= {"target", "scope"}
+                or ("scope" in data["arguments"] and (not isinstance(data["arguments"]["scope"], str)
+                    or len(data["arguments"]["scope"]) > 500))
                 or data["arguments"]["target"] not in ("self", "project", "new")):
             raise ArgosError("El desarrollo debe seleccionar self, project o new.")
     elif data["kind"] == "task_status":
@@ -125,7 +128,7 @@ def validate_decision(data, agent="general"):
     elif data["kind"] == "panel":
         if (agent != "general" or data["agent"] or data["capability"]
                 or set(data["arguments"]) != {"view"}
-                or data["arguments"]["view"] not in ("agents", "tasks")):
+                or data["arguments"]["view"] not in ("agents", "tasks", "capabilities")):
             raise ArgosError("El proveedor solicitó un panel no admitido.")
     elif data["kind"] == "capability":
         cap = CAPABILITIES.get(data["capability"])

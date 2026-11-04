@@ -7,7 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-from argos.voice import VoiceOutput
+from argos.voice import STREAM_TAIL, VoiceOutput
 from argos.models import ArgosError
 
 
@@ -98,8 +98,12 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(voice.state, "thinking")
                     release.set()
                     await asyncio.wait_for(voice.job, 2)
-                    self.assertEqual(recorded.read_bytes(), pcm)
+                    self.assertEqual(recorded.read_bytes(), pcm + STREAM_TAIL)
                     self.assertEqual(voice.state, "idle")
+                    self.assertEqual(voice.snapshot()["last_stream"], {
+                        "status": "completed", "generated_bytes": len(pcm),
+                        "sent_bytes": len(pcm) + len(STREAM_TAIL), "padding_bytes": len(STREAM_TAIL),
+                        "source_complete": True, "player_exit_code": 0})
                 finally:
                     await voice.stop()
 
@@ -118,7 +122,7 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
             with patch("argos.voice.shutil.which", return_value=str(player)):
                 await voice.play_stream(chunks())
                 await voice.job
-                self.assertEqual(recorded.read_bytes(), pcm)
+                self.assertEqual(recorded.read_bytes(), pcm + STREAM_TAIL)
                 await voice.stop()
 
     async def test_stream_starts_before_generation_finishes_and_stop_closes_source(self):
@@ -146,6 +150,8 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(closed.is_set())
                     self.assertIsNotNone(child.returncode)
                     self.assertEqual(voice.state, "idle")
+                    self.assertEqual(voice.snapshot()["last_stream"]["status"], "interrupted")
+                    self.assertFalse(voice.snapshot()["last_stream"]["source_complete"])
                 finally:
                     await voice.stop()
 

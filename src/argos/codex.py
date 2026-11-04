@@ -5,9 +5,10 @@ import json
 import os
 import shutil
 
-from .agents import contract
+from .agents import AGENTS, contract
+from .capabilities import CAPABILITIES
 from .models import ArgosError
-from .providers import validate_decision
+from .providers import decision_messages, validate_decision
 from .security import safe_data
 
 
@@ -16,7 +17,7 @@ DECISION_SCHEMA = {
     "properties": {
         "kind": {"type": "string", "enum": ["answer", "clarify", "delegate", "capability", "panel", "reply", "develop", "task_status"]},
         "speech": {"type": "string"}, "agent": {"type": "string"},
-        "capability": {"type": "string"}, "arguments_json": {"type": "string"},
+        "capability": {"type": "string"}, "arguments_json": {"type": "string", "minLength": 2},
     },
     "required": ["kind", "speech", "agent", "capability", "arguments_json"],
 }
@@ -41,7 +42,12 @@ class Codex:
     name = "codex-chatgpt"
     conversation_allowed = False
 
-    def __init__(self, directory):
+    def __init__(self, directory, *, model=None, effort=None, conversation=False):
+        if conversation and (not model or not effort):
+            raise ArgosError("La conversación Codex requiere modelo y esfuerzo explícitos.")
+        self.model, self.effort = model, effort
+        self.conversation_allowed = conversation
+        self.complex_agents = frozenset(("engineering", "design3d", "printing3d")) if conversation else frozenset()
         self.directory = directory / "codex-root"
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.process, self.reader = None, None
@@ -51,6 +57,8 @@ class Codex:
         self.sequence = 0
         self.start_lock = asyncio.Lock()
         self.chat_locks, self.chat_threads = {}, {}
+        self.last_chat_threads = {}
+        self.metrics = {}
         self.fast_models, self.fast_threads = set(), set()
         self.connected = False
 
@@ -91,6 +99,11 @@ class Codex:
                 if account.get("type") != "chatgpt":
                     raise ArgosError("Codex necesita iniciar sesión con ChatGPT; no se usará una API de pago.")
                 models = await self.rpc("model/list", {})
+                if self.model:
+                    selected = next((m for m in models.get("data", []) if m["model"] == self.model), None)
+                    if not selected or (self.effort and self.effort not in {
+                            o["reasoningEffort"] for o in selected.get("supportedReasoningEfforts", [])}):
+                        raise ArgosError("El modelo/esfuerzo Codex configurado no está disponible en esta sesión.")
                 self.fast_models = {model["model"] for model in models.get("data", [])
                                     if any(option.get("reasoningEffort") == "low"
                                            for option in model.get("supportedReasoningEfforts", []))}
@@ -186,25 +199,36 @@ class Codex:
             "code": -32601, "message": "This operation is not exposed by ARGOS."}})
 
     async def thread(self, agent, thread_id=None, tools=False, ephemeral=False):
-        if agent == "general":
+        if agent == "general" and not self.conversation_allowed:
             raise ArgosError("Codex está reservado a tareas complejas escaladas, no a conversación General.")
         await self.start()
         params = {"cwd": str(self.directory), "sandbox": "read-only",
-                  "approvalPolicy": "never", "developerInstructions": contract(agent),
-                  "baseInstructions": "You are a specialist inside ARGOS. Use only the supplied ARGOS contract and tools.",
+                  "approvalPolicy": "never", "developerInstructions": contract(agent) +
+                  '\nTransport format: replace the contract arguments field with arguments_json, '
+                  'a string encoding the same JSON object. For no arguments, always use "{}", '
+                  'never an empty string. The supplied output schema is authoritative. '
+                  'For task results use the result schema instead. The messages array contains '
+                  'runtime data, public conversation history and the current user request in order.',
+                  "baseInstructions": "You are ARGOS. Use only the supplied ARGOS contract and tools.",
                   "config": {"project_doc_max_bytes": 0, "web_search": "disabled"},
                   "personality": "none"}
+        if self.model:
+            params["model"] = self.model
         if thread_id:
             params.update(threadId=thread_id, excludeTurns=True)
             result = await self.rpc("thread/resume", params)
         else:
             params.update(ephemeral=ephemeral, environments=[], dynamicTools=[TOOL] if tools else [])
             result = await self.rpc("thread/start", params)
+        if self.model and result.get("model") != self.model:
+            raise ArgosError("Codex no confirmó el modelo solicitado; no se iniciará inferencia.")
         if agent == "general" and result.get("model") in self.fast_models:
             self.fast_threads.add(result["thread"]["id"])
         return result["thread"]["id"]
 
     async def turn(self, thread_id, text, schema, tool_handler=None, progress=None, effort=None):
+        effort = effort or self.effort
+        self.metrics = {}
         queue = asyncio.Queue(maxsize=4096)
         self.queues[thread_id] = queue
         if tool_handler:
@@ -224,6 +248,11 @@ class Codex:
                 while True:
                     event = await queue.get()
                     method, params = event.get("method"), event.get("params", {})
+                    if method == "thread/tokenUsage/updated":
+                        usage = params.get("tokenUsage", {}).get("last", {})
+                        self.metrics = {k: v for k, v in usage.items()
+                                        if k in ("inputTokens", "cachedInputTokens", "outputTokens",
+                                                 "reasoningOutputTokens", "totalTokens") and isinstance(v, int)}
                     if method == "argos/toolError":
                         raise event["exception"]
                     if method == "argos/disconnected":
@@ -274,7 +303,7 @@ class Codex:
 
     def conversation_thread(self, context):
         key = (context.get("session", "default"), (context.get("project") or {}).get("id"), "general")
-        return self.chat_threads.get(key)
+        return self.last_chat_threads.get(key) or self.chat_threads.get(key)
 
     async def decide(self, text, context, agent="general"):
         key = (context.get("session", "default"), (context.get("project") or {}).get("id"), agent)
@@ -284,11 +313,29 @@ class Codex:
             if thread_id is None:
                 thread_id = await self.thread(agent, ephemeral=True)
                 self.chat_threads[key] = thread_id
-            payload = json.dumps({"request": text, "context": context,
+            # General uses the same compact context and bounded public history
+            # as the other providers, without duplicating growing native history.
+            compact = decision_messages(text, context, agent)
+            payload = json.dumps({"messages": compact[1:],
                                   "output_note": "Encode action arguments (capability or panel) as a JSON string in arguments_json."},
                                  ensure_ascii=False)
-            data = await self.turn(thread_id, payload, DECISION_SCHEMA,
-                                   effort="low" if thread_id in self.fast_threads else None)
+            safe_data(context)
+            allowed = [item["name"] for item in context.get("capabilities", [])
+                       if item.get("name") in CAPABILITIES and
+                       (agent == "general" or item["name"] in AGENTS[agent].capabilities)]
+            schema = {**DECISION_SCHEMA, "properties": {**DECISION_SCHEMA["properties"],
+                      "capability": {"type": "string", "enum": ["", *allowed]},
+                      "agent": {"type": "string", "enum": ["", *AGENTS]}}}
+            try:
+                data = await self.turn(thread_id, payload, schema,
+                                       effort=self.effort or ("low" if thread_id in self.fast_threads else None))
+            finally:
+                if agent == "general":
+                    self.last_chat_threads[key] = thread_id
+                    self.chat_threads.pop(key, None)
+                    self.fast_threads.discard(thread_id)
+                    with contextlib.suppress(ArgosError, TimeoutError):
+                        await asyncio.wait_for(self.rpc("thread/unsubscribe", {"threadId": thread_id}), 2)
             try:
                 data["arguments"] = json.loads(data.pop("arguments_json"))
             except (ValueError, KeyError, TypeError):
@@ -330,5 +377,6 @@ class Codex:
             await asyncio.gather(self.reader, return_exceptions=True)
         self.process = self.reader = None
         self.chat_threads.clear()
+        self.last_chat_threads.clear()
         self.fast_threads.clear()
         self.fast_models.clear()

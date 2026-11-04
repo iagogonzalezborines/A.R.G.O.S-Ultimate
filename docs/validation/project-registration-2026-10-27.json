@@ -1,0 +1,97 @@
+{
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "scope": "Opt-in General decision check; synthetic paths/history, no operations or audio.",
+  "turns": [
+    {
+      "scenario": "english",
+      "input": "Can you register a new project called Faro in my default Linux projects directory?",
+      "decision": {
+        "kind": "capability",
+        "speech": "I’ll register the existing Faro folder in the default projects directory.",
+        "agent": "computer",
+        "capability": "projects.register",
+        "arguments": {
+          "name": "Faro",
+          "path": "/home/argos/Proyectos/Faro"
+        },
+        "reason": "structured_provider_decision"
+      },
+      "passed": true,
+      "seconds": 2.736,
+      "metrics": {
+        "totalTokens": 8825,
+        "inputTokens": 8730,
+        "cachedInputTokens": 0,
+        "outputTokens": 95,
+        "reasoningOutputTokens": 29
+      }
+    },
+    {
+      "scenario": "history",
+      "input": "Yes, register that existing project now.",
+      "decision": {
+        "kind": "capability",
+        "speech": "Registering the existing Faro project.",
+        "agent": "computer",
+        "capability": "projects.register",
+        "arguments": {
+          "name": "Faro",
+          "path": "/home/argos/Proyectos/Faro"
+        },
+        "reason": "structured_provider_decision"
+      },
+      "passed": true,
+      "seconds": 3.334,
+      "metrics": {
+        "totalTokens": 8860,
+        "inputTokens": 8775,
+        "cachedInputTokens": 0,
+        "outputTokens": 85,
+        "reasoningOutputTokens": 25
+      }
+    },
+    {
+      "scenario": "missing_name",
+      "input": "Register a project from my Linux projects directory.",
+      "decision": {
+        "kind": "clarify",
+        "speech": "Which folder in /home/argos/Proyectos should I register, and what project name should it use?",
+        "agent": "",
+        "capability": "",
+        "arguments": {},
+        "reason": "structured_provider_decision"
+      },
+      "passed": true,
+      "seconds": 2.285,
+      "metrics": {
+        "totalTokens": 8798,
+        "inputTokens": 8725,
+        "cachedInputTokens": 0,
+        "outputTokens": 73,
+        "reasoningOutputTokens": 20
+      }
+    },
+    {
+      "scenario": "discovery",
+      "input": "Find my existing lighthouse project in my Linux projects directory and register it. I do not remember its exact folder name.",
+      "decision": {
+        "kind": "delegate",
+        "speech": "I’ll search the observed projects directory and identify the lighthouse folder before registering it.",
+        "agent": "computer",
+        "capability": "",
+        "arguments": {},
+        "reason": "structured_provider_decision"
+      },
+      "passed": true,
+      "seconds": 2.499,
+      "metrics": {
+        "totalTokens": 8816,
+        "inputTokens": 8739,
+        "cachedInputTokens": 0,
+        "outputTokens": 77,
+        "reasoningOutputTokens": 30
+      }
+    }
+  ]
+}

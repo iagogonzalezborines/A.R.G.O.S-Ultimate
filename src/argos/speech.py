@@ -121,6 +121,10 @@ class Speech:
         # Brevity belongs to the conversation contract, never a character slice.
         text = re.sub(r"https?://\S+", "link in the details" if language == "en" else "enlace en los detalles", text)
         text = re.sub(r"[`*_#]", "", text).strip()
+        # Pocket TTS pronounces typographic contractions unreliably (e.g. I’m).
+        # Normalize punctuation only for synthesis; preserve the model's words
+        # and the original public response in the conversation history.
+        text = text.translate(str.maketrans({"\u2019": "'", "\u2018": "'"}))
         if text and not self.queue.full():
             self.queue.put_nowait((text, language, on_complete))
             self.resume_queue()
@@ -258,7 +262,9 @@ class Capture:
                 content = voice_invocation(result["text"])
                 text = content if content else result["text"]
                 dispatched = time.monotonic()
-                await self.core.request({"method": "say", "text": text, "project": self.project,
+                from .router import Router
+                dispatch = self.core.voice_control if Router().resolve(text).kind == "stop_listening" else self.core.request
+                await dispatch({"method": "say", "text": text, "project": self.project,
                                          "session": self.session, "request_id": uuid.uuid4().hex, "speak": True,
                                          "conversation": True,
                                          "detected_language": result.get("language"),

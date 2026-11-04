@@ -126,6 +126,9 @@ class NvidiaConversation:
                     raise ArgosError("NVIDIA no está respondiendo correctamente. Puedes volver a intentarlo.") from None
                 if isinstance(error, ArgosError):
                     raise
+                if isinstance(error, TimeoutError) or (isinstance(error, urllib.error.URLError)
+                                                       and isinstance(error.reason, TimeoutError)):
+                    raise ArgosError("NVIDIA tarda demasiado. Inténtalo de nuevo.") from None
                 raise ArgosError("No he recibido una respuesta válida de NVIDIA a tiempo. Puedes volver a intentarlo.") from None
             self.connected = True
             return decision

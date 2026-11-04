@@ -1,0 +1,87 @@
+{
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "scope": "Real General decisions; synthetic directories/history; no operations or audio",
+  "turns": [
+    {
+      "scenario": "english",
+      "input": "Can you register a new project called Faro in my default Linux projects directory?",
+      "error": "Una respuesta no puede ocultar una operación.",
+      "public_decision": {
+        "kind": "delegate",
+        "speech": "I’ll check the default projects directory for Faro, then register the existing folder if it is found.",
+        "agent": "engineering",
+        "capability": "files.list",
+        "arguments_json": "{\"path\":\"/tmp/argos-location-eval-4mofcqhh/Proyectos\"}"
+      },
+      "seconds": 3.531,
+      "model_calls": 1
+    },
+    {
+      "scenario": "spanish",
+      "input": "Registra el proyecto Faro que está en mi carpeta de proyectos de Linux.",
+      "error": "Una respuesta no puede ocultar una operación.",
+      "public_decision": {
+        "kind": "delegate",
+        "speech": "Voy a localizar la carpeta Faro en tu directorio de proyectos y registrar la coincidencia encontrada.",
+        "agent": "computer",
+        "capability": "files.list",
+        "arguments_json": "{\"path\":\"/tmp/argos-location-eval-4mofcqhh/Proyectos\"}"
+      },
+      "seconds": 3.64,
+      "model_calls": 1
+    },
+    {
+      "scenario": "history",
+      "input": "Yes, register that existing project now.",
+      "decision": {
+        "kind": "capability",
+        "speech": "I’ll register the existing Faro project.",
+        "agent": "computer",
+        "capability": "projects.register",
+        "arguments": {
+          "name": "Faro",
+          "path": "/tmp/argos-location-eval-4mofcqhh/Proyectos/Faro"
+        },
+        "reason": "structured_provider_decision"
+      },
+      "seconds": 2.444,
+      "model_calls": 1
+    },
+    {
+      "scenario": "ambiguous_base",
+      "input": "Register Faro from my projects directory.",
+      "decision": {
+        "kind": "clarify",
+        "speech": "Which projects directory should I use: /tmp/argos-location-eval-4mofcqhh/Proyectos or /tmp/argos-location-eval-4mofcqhh/Projects?",
+        "agent": "computer",
+        "capability": "",
+        "arguments": {},
+        "reason": "structured_provider_decision"
+      },
+      "seconds": 2.929,
+      "model_calls": 1
+    },
+    {
+      "scenario": "explicit_override",
+      "input": "Register Faro from /tmp/argos-location-eval-4mofcqhh/Elsewhere/Faro, not the default location.",
+      "error": "El turno de Codex no terminó correctamente.",
+      "seconds": 1.112,
+      "model_calls": 1
+    },
+    {
+      "scenario": "missing_name",
+      "input": "Register a project from my Linux projects directory.",
+      "error": "El turno de Codex no terminó correctamente.",
+      "seconds": 1.163,
+      "model_calls": 1
+    },
+    {
+      "scenario": "discovery",
+      "input": "Find my existing lighthouse project in my Linux projects directory and register it. I do not remember its exact folder name.",
+      "error": "El turno de Codex no terminó correctamente.",
+      "seconds": 1.059,
+      "model_calls": 1
+    }
+  ]
+}

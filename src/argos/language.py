@@ -47,12 +47,12 @@ def choose_language(text, previous="es", detected=None, probability=0.0):
                    "lista las los el una un estoy estas esto tengo eso para del "
                    "programacion diseno imprime revisa analiza inspecciona lee leeme escribe archivo "
                    "entiendes hablando hablar espanol ingles sistema ordenador estado proyectos agentes capacidades "
-                   "buenos dias noches listo vale oyes").split())
+                   "buenos dias noches listo vale oyes deja escuchar escucharme microfono").split())
     english = set(("hello hi hey thanks goodbye speak tell can could would want need what "
                    "how when where please open search change switch answer respond list "
                    "the this that these those my your you i am is are it for with from "
                    "about have explain inspect review implement fix debug read write file understand speaking "
-                   "system information computer status projects agents capabilities morning evening good ready").split())
+                   "system information computer status projects agents capabilities morning evening good ready stop listening microphone").split())
     scores = [len(set(words) & spanish), len(set(words) & english)]
     if max(scores) and scores[0] != scores[1]:
         return "es" if scores[0] > scores[1] else "en"
@@ -69,8 +69,30 @@ def localize(text, language):
     if language != "en":
         return text
     exact = {
+        "NVIDIA tarda demasiado. Inténtalo de nuevo.": "NVIDIA is taking too long. Please try again.",
+        "No he recibido una respuesta válida de NVIDIA a tiempo. Puedes volver a intentarlo.":
+            "I couldn't get a valid response from NVIDIA. Please try again.",
+        "NVIDIA no está respondiendo correctamente. Puedes volver a intentarlo.":
+            "NVIDIA isn't responding correctly. Please try again.",
+        "NVIDIA ha alcanzado su límite de uso. Inténtalo más tarde.":
+            "NVIDIA's usage limit has been reached. Please try later.",
+        "NVIDIA no acepta la credencial configurada.": "NVIDIA rejected the configured credential.",
+        "NVIDIA no devolvió una respuesta completa. Puedes volver a intentarlo.":
+            "NVIDIA didn't return a complete response. Please try again.",
+        "NVIDIA excedió el tamaño máximo de respuesta.": "NVIDIA's response exceeded the size limit.",
+        "NVIDIA no terminó la respuesta; no se reproducirá texto cortado.":
+            "NVIDIA didn't finish its response. Please try again.",
+        "NVIDIA devolvió una operación fuera del contrato de ARGOS.":
+            "NVIDIA returned an unsupported operation. Nothing was executed.",
+        "NVIDIA devolvió una decisión inválida; no se ha ejecutado ninguna acción.":
+            "NVIDIA returned an invalid decision. Nothing was executed.",
+        "NVIDIA devolvió una respuesta vacía.": "NVIDIA returned an empty response.",
         "Hola.": "Hello.", "Buenas.": "Hello.", "De nada.": "You're welcome.",
         "De acuerdo.": "Understood.",
+        "Micrófono apagado.": "Microphone off.",
+        "He solicitado abrir la lista de capacidades.": "I've requested the capabilities window.",
+        "No pude abrir la lista de capacidades. El inventario sigue disponible por consola.":
+            "I couldn't open the capabilities window. The inventory is still available through the console.",
         "He solicitado abrir el mapa de agentes.": "I requested opening the agent map.",
         "He solicitado abrir el monitor de tareas.": "I requested opening the task monitor.",
         "Petición aceptada.": "Request accepted.",
@@ -79,7 +101,19 @@ def localize(text, language):
         "Plan confirmado. Continúo en segundo plano.": "Plan confirmed. Continuing in the background.",
         "No hay tareas activas.": "There are no active tasks.",
         "No hay proyectos registrados.": "There are no registered projects.",
+        "No hay proyecto seleccionado.": "No project is selected.",
+        "Selección de proyecto eliminada.": "Project selection cleared.",
+        "Ficha del proyecto actualizada.": "Project profile updated.",
+        "Ficha del proyecto consultada.": "Project profile retrieved.",
+        "Alias del proyecto guardado.": "Project alias saved.",
+        "Ese alias ya identifica otro proyecto.": "That alias already identifies another project.",
+        "Ese nombre ya identifica otro proyecto.": "That name already identifies another project.",
+        "El proyecto está fuera del ámbito de esta tarea.": "The project is outside this task's scope.",
         "¿En qué proyecto registrado?": "Which registered project?",
+        "Selecciona una carpeta de proyecto concreta.": "Choose a specific project folder.",
+        "Ese nombre o carpeta ya pertenece a otro proyecto.": "That name or folder already belongs to another project.",
+        "La carpeta del proyecto no existe, no es accesible o contiene un enlace simbólico.":
+            "The project folder does not exist, is inaccessible, or contains a symbolic link.",
         "Modo gaming activado.": "Gaming mode enabled.",
         "Modo normal activado.": "Normal mode enabled.",
         "No he entendido la petición.": "I didn't understand the request.",
@@ -106,6 +140,24 @@ def localize(text, language):
         "He solicitado abrir la ruta.": "I requested opening the path.",
         "El comando terminó correctamente.": "The command completed successfully.",
         "He enviado la página al navegador.": "I sent the page to the browser.",
+        "He consultado los reproductores disponibles.": "I checked the available media players.",
+        "Reproducción confirmada.": "Playback confirmed.",
+        "Reproducción del vídeo confirmada.": "Video playback confirmed.",
+        "Reproducción pausada.": "Playback paused.",
+        "La extensión ARGOS de Firefox no está conectada. Cárgala desde about:debugging.":
+            "The ARGOS Firefox extension is not connected. Load it from about:debugging.",
+        "Firefox bloqueó el inicio. Permite audio y vídeo en la configuración de reproducción automática de YouTube.":
+            "Firefox blocked autoplay. Allow audio and video in YouTube's autoplay permissions.",
+        "No encontré un resultado cuyo título coincida con la canción y artista solicitados.":
+            "I couldn't find a video title matching the requested song and artist.",
+        "YouTube necesita atención en Firefox: puede haber un aviso de consentimiento o inicio de sesión.":
+            "YouTube needs attention in Firefox: there may be a consent or sign-in screen.",
+        "Firefox está atendiendo otra petición de ARGOS.":
+            "Firefox is handling another ARGOS request.",
+        "No pude confirmar que el vídeo solicitado empezase a reproducirse.":
+            "I couldn't confirm that the requested video started playing.",
+        "No se pudo completar la reproducción en Firefox.":
+            "I couldn't start playback in Firefox.",
         "He inspeccionado el equipo. El inventario distingue observaciones y comprobaciones pendientes.":
             "I inspected the computer. The inventory distinguishes observations from pending checks.",
         "El especialista ha devuelto una propuesta; no ha ejecutado cambios.":
@@ -123,6 +175,8 @@ def localize(text, language):
                 .replace("Los cambios y comandos requieren aprobación.", "Changes and commands require approval."))
     patterns = (
         (r"Proyectos: (.*)", r"Projects: \1"),
+        (r"Proyecto (.*) registrado\.", r"Project \1 registered."),
+        (r"Proyecto (.*) seleccionado\.", r"Project \1 selected."),
         (r"(\d+) en ejecución, (\d+) en cola y (\d+) pendientes o bloqueadas\.",
          r"\1 running, \2 queued and \3 pending or blocked."),
         (r"He encontrado (\d+) aplicaciones\.", r"I found \1 applications."),

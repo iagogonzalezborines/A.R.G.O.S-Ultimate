@@ -1,0 +1,9 @@
+{
+  "manifest_version": 2,
+  "name": "ARGOS Firefox Media",
+  "version": "0.1.2",
+  "description": "Select and play requested YouTube videos through the local ARGOS Core.",
+  "browser_specific_settings": {"gecko": {"id": "firefox@argos.local"}},
+  "permissions": ["nativeMessaging", "https://www.youtube.com/*"],
+  "background": {"scripts": ["background.js"]}
+}

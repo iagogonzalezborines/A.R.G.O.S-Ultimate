@@ -228,6 +228,39 @@ def render_tasks(snapshot, detail, width, height, selected=0, scroll=0, error=No
     return canvas
 
 
+def capability_lines(snapshot, width):
+    """Full wrapped inventory; no truncated capability names or invented availability."""
+    agents = snapshot.get("agents", [])
+    general = next((a for a in agents if a["id"] == "general"), {})
+    capabilities = general.get("capability_status", [])
+    lines = ["Estado observado; disponible no significa operación ejecutada.", ""]
+    for agent in agents:
+        group = [cap for cap in capabilities if cap["agent"] == agent["id"]]
+        if not group:
+            continue
+        lines.extend([agent["name"] + " — " + agent["role"], ""])
+        for cap in group:
+            text = (f'{cap["name"]} [{cap.get("status", "not_checked")}]\n'
+                    f'  {cap["description"]}\n'
+                    f'  Efecto: {cap["effect"]}; proyecto requerido: {cap["needs_project"]}.\n'
+                    f'  {cap.get("reason", "Sin comprobación adicional.")}')
+            for line in clean(text).splitlines():
+                lines.extend(textwrap.wrap(line, max(12, width), subsequent_indent="  ") or [""])
+            lines.append("")
+    return lines
+
+
+def render_capabilities(snapshot, width, height, scroll=0, error=None):
+    canvas = Canvas(width, height)
+    header(canvas, "CAPACIDADES", snapshot, error)
+    lines = capability_lines(snapshot, width - 4)
+    start = max(0, min(scroll, max(0, len(lines) - max(1, height - 9))))
+    for row, line in enumerate(lines[start:start + max(1, height - 9)], 6):
+        canvas.put(2, row, line)
+    canvas.put(2, height - 2, "↑↓ / PgUp PgDn: recorrer · Seleccionar con ratón · Ctrl+Shift+C: copiar · Q: cerrar", 2)
+    return canvas
+
+
 async def monitor(directory, view="agents", session="default"):
     if not sys.stdin.isatty() or not sys.stdout.isatty():
         raise ArgosError("El monitor necesita una terminal interactiva.")
@@ -258,6 +291,15 @@ async def monitor(directory, view="agents", session="default"):
             while key != -1:
                 if key in (ord("q"), ord("Q"), 27):
                     return
+                if view == "capabilities":
+                    height, width = screen.getmaxyx()
+                    step = max(1, height - 9)
+                    delta = {curses.KEY_DOWN: 1, curses.KEY_UP: -1,
+                             curses.KEY_NPAGE: step, curses.KEY_PPAGE: -step}.get(key, 0)
+                    limit = max(0, len(capability_lines(snapshot, width - 4)) - step)
+                    scroll = max(0, min(limit, scroll + delta))
+                    key = screen.getch()
+                    continue
                 if (view == "agents" and key in (ord("t"), 10, 13)) or (view == "tasks" and key == ord("m")):
                     try:
                         await call(directory, {"method": "monitor.open", "session": session,
@@ -327,7 +369,7 @@ async def monitor(directory, view="agents", session="default"):
                     if selected_id:
                         selected = next((i for i, row in enumerate(rows) if row["id"] == selected_id), selected)
                     selected = max(0, min(selected, len(rows) - 1))
-                    if view != "agents" and rows:
+                    if view == "tasks" and rows:
                         next_id = rows[selected]["id"]
                         if selected_id and selected_id != next_id:
                             scroll = detail_page = 0
@@ -341,9 +383,10 @@ async def monitor(directory, view="agents", session="default"):
                     error = "Core desconectado"
                 refresh = time.monotonic() + .75
             height, width = screen.getmaxyx()
-            if follow:
+            if follow and view == "tasks":
                 scroll = scroll_limit(detail, width, height)
             canvas = (render_map(snapshot, width, height, map_selected, error) if view == "agents"
+                      else render_capabilities(snapshot, width, height, scroll, error) if view == "capabilities"
                       else render_tasks(snapshot, detail, width, height, selected, scroll, error))
             canvas.draw(screen)
             await asyncio.sleep(.08)

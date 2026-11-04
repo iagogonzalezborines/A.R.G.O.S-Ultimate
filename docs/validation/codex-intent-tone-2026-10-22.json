@@ -1,0 +1,195 @@
+{
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "audio_played": false,
+  "actions_executed": false,
+  "cases": [
+    {
+      "input": "Argos, is the sky green?",
+      "kind": "answer",
+      "speech": "No. A modest test of my observational standards, I see.",
+      "seconds": 2.82,
+      "metrics": {
+        "totalTokens": 8205,
+        "inputTokens": 8165,
+        "cachedInputTokens": 0,
+        "outputTokens": 40,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Is the sky green?",
+      "kind": "answer",
+      "speech": "No—the sky is blue. A modest test of reality, I see.",
+      "seconds": 2.93,
+      "metrics": {
+        "totalTokens": 8204,
+        "inputTokens": 8162,
+        "cachedInputTokens": 0,
+        "outputTokens": 42,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Argos, ¿el sol es frío?",
+      "kind": "answer",
+      "speech": "No. El sol es caliente; parece que hoy toca comprobar los fundamentos.",
+      "seconds": 6.143,
+      "metrics": {
+        "totalTokens": 8208,
+        "inputTokens": 8166,
+        "cachedInputTokens": 0,
+        "outputTokens": 42,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "¿El fuego moja?",
+      "kind": "answer",
+      "speech": "No. El fuego no moja; señor, la prueba estaba bastante húmeda de intención.",
+      "seconds": 2.616,
+      "metrics": {
+        "totalTokens": 8207,
+        "inputTokens": 8162,
+        "cachedInputTokens": 0,
+        "outputTokens": 45,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Can a triangle have four sides?",
+      "kind": "answer",
+      "speech": "No. That would be a quadrilateral—a remarkably ambitious triangle.",
+      "seconds": 2.48,
+      "metrics": {
+        "totalTokens": 8205,
+        "inputTokens": 8163,
+        "cachedInputTokens": 0,
+        "outputTokens": 42,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Is the sky blue?",
+      "kind": "answer",
+      "speech": "Yes. A pleasantly reliable feature of the daytime sky.",
+      "seconds": 3.137,
+      "metrics": {
+        "totalTokens": 8201,
+        "inputTokens": 8163,
+        "cachedInputTokens": 0,
+        "outputTokens": 38,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Why does it look blue?",
+      "kind": "answer",
+      "speech": "Because Earth’s atmosphere scatters blue light from the Sun more strongly than most other visible colors.",
+      "seconds": 3.291,
+      "metrics": {
+        "totalTokens": 8248,
+        "inputTokens": 8202,
+        "cachedInputTokens": 5888,
+        "outputTokens": 46,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Seriously, I saw a green sky before a storm. Is that possible?",
+      "kind": "answer",
+      "speech": "Yes. Severe thunderstorms can sometimes make the sky appear green, often because sunlight passes through thick rain or hail. It can be a sign of dangerous weather, so take shelter indoors.",
+      "seconds": 3.398,
+      "metrics": {
+        "totalTokens": 8278,
+        "inputTokens": 8215,
+        "cachedInputTokens": 5888,
+        "outputTokens": 63,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "He perdido un archivo importante y estoy agobiado. ¿Por dónde empiezo?",
+      "kind": "answer",
+      "speech": "Empieza por no sobrescribir nada: revisa la papelera y las carpetas recientes, y evita guardar archivos nuevos en esa unidad. Si me das la ruta o carpeta donde estaba, puedo ayudarte a localizarlo paso a paso.",
+      "seconds": 2.688,
+      "metrics": {
+        "totalTokens": 8248,
+        "inputTokens": 8174,
+        "cachedInputTokens": 0,
+        "outputTokens": 74,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "In my fantasy story the sun is cold. Suggest a name for it.",
+      "kind": "answer",
+      "speech": "How about **The Pale Ember**—a sun that gives light, but no warmth.",
+      "seconds": 2.903,
+      "metrics": {
+        "totalTokens": 8216,
+        "inputTokens": 8171,
+        "cachedInputTokens": 0,
+        "outputTokens": 45,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Ahora en serio: explícame brevemente por qué el fuego puede apagarse con agua.",
+      "kind": "answer",
+      "speech": "El agua apaga el fuego principalmente porque absorbe mucho calor al calentarse y evaporarse, enfriando el material por debajo de su temperatura de ignición. Además, el vapor desplaza parte del oxígeno cercano. ",
+      "seconds": 2.618,
+      "metrics": {
+        "totalTokens": 8311,
+        "inputTokens": 8220,
+        "cachedInputTokens": 0,
+        "outputTokens": 91,
+        "reasoningOutputTokens": 16
+      }
+    },
+    {
+      "input": "Hello, are you there?",
+      "kind": "answer",
+      "speech": "Yes, I’m here.",
+      "seconds": 2.625,
+      "metrics": {
+        "totalTokens": 8195,
+        "inputTokens": 8162,
+        "cachedInputTokens": 0,
+        "outputTokens": 33,
+        "reasoningOutputTokens": 0
+      }
+    }
+  ],
+  "assessment": "Public responses manually reviewed for recognition of playful tests versus sincere uncertainty. The target English case now acknowledges the conversational test; some literal corrections and strained Spanish wordplay remain. Not a guarantee of style consistency or a factual accuracy evaluation.",
+  "sha256": {
+    "src/argos/contracts/ARGOS.md": "81914a75843f294ff3c0a01d6d7b418d03b77b32c32445bc42904309ad9f055d",
+    "src/argos/providers.py": "29c9cc7e12f88b583fceef8511e60317ed71387f13a0d604895785dda3e3e5c7"
+  },
+  "running_core_cases": [
+    {
+      "input": "Argos, is the sky green?",
+      "seconds": 2.965,
+      "response": {
+        "speech": "No. A straightforward test, I see.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      }
+    },
+    {
+      "input": "Now seriously, why is it blue?",
+      "seconds": 3.186,
+      "response": {
+        "speech": "Because Earth’s atmosphere scatters blue light from the Sun more strongly than most other visible colors.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      }
+    }
+  ]
+}

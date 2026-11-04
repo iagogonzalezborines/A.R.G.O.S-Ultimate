@@ -20,6 +20,17 @@ MAX_BYTES = 128 * 1024 * 1024
 MAX_FILES = 10000
 
 
+def scoped_source(root, scope):
+    public_text(scope, 500)
+    relative = Path(scope)
+    if relative.is_absolute() or '..' in relative.parts:
+        raise ArgosError("Indica un módulo relativo al proyecto, sin '..'.")
+    if root is None:
+        return None
+    from .filesystem import project_directory
+    return str(project_directory({"root": root}, scope))
+
+
 def tree(root):
     """Bounded manifest; no links, private paths, devices or dependency caches."""
     result, total = {}, 0
@@ -42,7 +53,7 @@ def tree(root):
                 data = file.read(MAX_BYTES - total + 1)
             total += len(data)
             if total > MAX_BYTES or len(result) >= MAX_FILES:
-                raise ArgosError("La copia de desarrollo excede 128 MiB o 10000 archivos; concreta el proyecto.")
+                raise ArgosError("La copia excede 128 MiB o 10000 archivos. Indica un módulo relativo con scope, por ejemplo apps/backend-api.")
             result[str(path.relative_to(root))] = {
                 "sha256": hashlib.sha256(data).hexdigest(), "mode": stat.S_IMODE(path.stat().st_mode)}
     return result

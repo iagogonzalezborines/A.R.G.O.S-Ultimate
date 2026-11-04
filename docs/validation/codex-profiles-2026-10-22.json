@@ -1,0 +1,257 @@
+{
+  "date": "2026-10-22",
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "complex_model": "gpt-6-astra",
+  "complex_effort": "high",
+  "audio_played": false,
+  "actions_executed": false,
+  "model_cases": [
+    {
+      "input": "Hello, are you there?",
+      "language": "en",
+      "kind": "answer",
+      "speech": "Yes, I'm here.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.688,
+      "metrics": {
+        "totalTokens": 7783,
+        "inputTokens": 7751,
+        "cachedInputTokens": 0,
+        "outputTokens": 32,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Is the sky blue?",
+      "language": "en",
+      "kind": "answer",
+      "speech": "Yes, usually.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.203,
+      "metrics": {
+        "totalTokens": 7814,
+        "inputTokens": 7783,
+        "cachedInputTokens": 0,
+        "outputTokens": 31,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Why is it blue?",
+      "language": "en",
+      "kind": "answer",
+      "speech": "Because Earth’s atmosphere scatters blue light from the Sun more strongly than most other colors.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.922,
+      "metrics": {
+        "totalTokens": 7881,
+        "inputTokens": 7814,
+        "cachedInputTokens": 0,
+        "outputTokens": 67,
+        "reasoningOutputTokens": 20
+      }
+    },
+    {
+      "input": "Is the sky green?",
+      "language": "en",
+      "kind": "answer",
+      "speech": "No, not usually.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 3.069,
+      "metrics": {
+        "totalTokens": 7891,
+        "inputTokens": 7859,
+        "cachedInputTokens": 0,
+        "outputTokens": 32,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Hola, ¿puedes hablar español?",
+      "language": "es",
+      "kind": "answer",
+      "speech": "Sí, puedo hablar español.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.817,
+      "metrics": {
+        "totalTokens": 7927,
+        "inputTokens": 7894,
+        "cachedInputTokens": 0,
+        "outputTokens": 33,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Mi proyecto se llama Atlas. Recuérdalo durante esta conversación.",
+      "language": "es",
+      "kind": "answer",
+      "speech": "Entendido: tu proyecto se llama Atlas durante esta conversación.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.631,
+      "metrics": {
+        "totalTokens": 8000,
+        "inputTokens": 7937,
+        "cachedInputTokens": 5504,
+        "outputTokens": 63,
+        "reasoningOutputTokens": 22
+      }
+    },
+    {
+      "input": "En realidad, lo he cambiado a Orion.",
+      "language": "es",
+      "kind": "answer",
+      "speech": "Entendido: tu proyecto se llama Orion durante esta conversación.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 3.09,
+      "metrics": {
+        "totalTokens": 8040,
+        "inputTokens": 7980,
+        "cachedInputTokens": 0,
+        "outputTokens": 60,
+        "reasoningOutputTokens": 19
+      }
+    },
+    {
+      "input": "What is my project called now?",
+      "language": "en",
+      "kind": "answer",
+      "speech": "Your project is called Orion.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.683,
+      "metrics": {
+        "totalTokens": 8054,
+        "inputTokens": 8021,
+        "cachedInputTokens": 0,
+        "outputTokens": 33,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Open Firefox.",
+      "language": "en",
+      "kind": "capability",
+      "speech": "Opening Firefox.",
+      "agent": "computer",
+      "capability": "apps.open",
+      "arguments": {
+        "app": "Firefox"
+      },
+      "seconds": 3.234,
+      "metrics": {
+        "totalTokens": 8114,
+        "inputTokens": 8052,
+        "cachedInputTokens": 0,
+        "outputTokens": 62,
+        "reasoningOutputTokens": 19
+      }
+    },
+    {
+      "input": "Show me the agent map.",
+      "language": "en",
+      "kind": "panel",
+      "speech": "Opening the agent map.",
+      "agent": "",
+      "capability": "",
+      "arguments": {
+        "view": "agents"
+      },
+      "seconds": 2.512,
+      "metrics": {
+        "totalTokens": 8120,
+        "inputTokens": 8083,
+        "cachedInputTokens": 5504,
+        "outputTokens": 37,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "I backed up everything on the same disk. Nothing can go wrong.",
+      "language": "en",
+      "kind": "answer",
+      "speech": "That’s not a backup; it’s a second copy waiting for the same disaster.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 2.536,
+      "metrics": {
+        "totalTokens": 8192,
+        "inputTokens": 8124,
+        "cachedInputTokens": 0,
+        "outputTokens": 68,
+        "reasoningOutputTokens": 22
+      }
+    },
+    {
+      "input": "Can you control Fusion 360 right now?",
+      "language": "en",
+      "kind": "answer",
+      "speech": "Not directly. I can open or focus applications, but I don’t have Fusion 360 UI-control capability here.",
+      "agent": "",
+      "capability": "",
+      "arguments": {},
+      "seconds": 3.597,
+      "metrics": {
+        "totalTokens": 8286,
+        "inputTokens": 8172,
+        "cachedInputTokens": 5504,
+        "outputTokens": 114,
+        "reasoningOutputTokens": 62
+      }
+    }
+  ],
+  "running_core_cases": [
+    {
+      "input": "Hello, are you there?",
+      "seconds": 2.631,
+      "response": {
+        "speech": "Yes, I’m here.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      }
+    },
+    {
+      "input": "Is the sky blue?",
+      "seconds": 3.559,
+      "response": {
+        "speech": "Yes, usually.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "en"
+      }
+    },
+    {
+      "input": "¿Y por qué se ve azul?",
+      "seconds": 3.284,
+      "response": {
+        "speech": "Por la dispersión de Rayleigh: la atmósfera dispersa más la luz azul del Sol que otros colores, y esa luz llega desde muchas direcciones.",
+        "kind": "answer",
+        "task_id": null,
+        "data": null,
+        "route": "provider",
+        "language": "es"
+      }
+    }
+  ]
+}

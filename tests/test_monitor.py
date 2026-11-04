@@ -161,7 +161,7 @@ class MonitorTests(unittest.IsolatedAsyncioTestCase):
         self.core.panels.open.assert_awaited_once_with("agents", "default")
         self.core.interpreter.decide.assert_awaited_once()
         context = self.core.interpreter.decide.call_args.args[1]
-        self.assertEqual(context["panels"], ["agents", "tasks"])
+        self.assertEqual(context["panels"], ["agents", "tasks", "capabilities"])
         self.assertEqual(self.core.context(None, "engineering")["panels"], [])
         self.assertEqual(self.store.tasks("default"), [])
         messages = self.store.db.execute("SELECT content FROM messages WHERE role='assistant'").fetchall()
@@ -175,6 +175,43 @@ class MonitorTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ArgosError):
             await self.request("say", text="I'd like a live view of which ARGOS agents are working.")
         self.assertEqual(self.store.db.execute("SELECT status FROM conversations").fetchone()[0], "FAILED")
+
+    async def test_spoken_inventory_opens_one_panel_without_inference_or_display_claim(self):
+        self.core.panels = SimpleNamespace(open=AsyncMock(return_value={"view": "capabilities", "status": "requested"}))
+        self.core.interpreter = SimpleNamespace(name="test", decide=AsyncMock())
+        request = {"method": "say", "text": "List your capabilities", "conversation": True,
+                   "request_id": uuid.uuid4().hex}
+        result = await self.core.request(request)
+        self.assertEqual(result, await self.core.request(request))
+        self.core.panels.open.assert_awaited_once_with("capabilities", "default")
+        self.core.interpreter.decide.assert_not_awaited()
+        self.assertIn("requested", result["speech"])
+        self.assertNotIn("displayed", result["speech"])
+        self.assertLess(len(result["speech"].split()), 12)
+        self.assertEqual(self.store.tasks(), [])
+
+    async def test_inventory_launcher_failure_keeps_facts_without_claiming_display(self):
+        self.core.panels = SimpleNamespace(open=AsyncMock(side_effect=ArgosError("No terminal")))
+        result = await self.request("say", text="lista tus capacidades", conversation=True)
+        self.assertIn("No pude abrir", result["speech"])
+        self.assertTrue(result["data"]["capabilities"])
+        self.assertTrue(all(c["status"] == "not_checked" for c in result["data"]["capabilities"]))
+
+    async def test_capability_inventory_wraps_all_facts_and_sanitizes_terminal_controls(self):
+        from argos.monitor import capability_lines, render_capabilities
+        data = (await self.request())["data"]
+        lines = "\n".join(capability_lines(data, 120))
+        caps = data["agents"][0]["capability_status"]
+        for cap in caps:
+            self.assertIn(cap["name"], lines)
+            self.assertIn(cap["status"], lines)
+        caps[0]["description"] = "\x1b[2J external description"
+        for width, height in ((128,42),(80,24),(50,16)):
+            for scroll in (0, 20, 10000):
+                canvas = render_capabilities(data,width,height,scroll)
+                self.assertEqual(len(canvas.cells),height)
+                self.assertTrue(all(len(row)==width for row in canvas.cells))
+                self.assertNotIn("\x1b",canvas.text())
 
     async def test_diagram_and_task_views_fit_resize_and_sanitize_control_text(self):
         data = (await self.request())["data"]
@@ -204,7 +241,7 @@ class MonitorTests(unittest.IsolatedAsyncioTestCase):
         self.store.recover()
         self.assertEqual(self.store.db.execute("SELECT status FROM conversations WHERE id=?", (identifier,)).fetchone()[0],
                          "INTERRUPTED")
-        self.assertEqual(self.store.db.execute("PRAGMA user_version").fetchone()[0], 2)
+        self.assertEqual(self.store.db.execute("PRAGMA user_version").fetchone()[0], 3)
 
 
 class PanelTests(unittest.IsolatedAsyncioTestCase):

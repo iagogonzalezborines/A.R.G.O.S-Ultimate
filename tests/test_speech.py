@@ -70,6 +70,27 @@ class SpeechTests(unittest.IsolatedAsyncioTestCase):
             await speech.job
         self.assertEqual(observed, [text])
 
+    async def test_typographic_contractions_are_normalized_only_for_synthesis(self):
+        observed = []
+
+        class Worker:
+            async def chunks(self, text, language):
+                observed.append((text, language))
+                yield b"\0\0"
+
+        phrases = [("Yes, I’m here.", "en"),
+                   ("Don’t worry. I’ll check O’Connor’s file.", "en"),
+                   ("‘Sí’, señor. Mañana estará aquí.", "es")]
+        with tempfile.TemporaryDirectory() as temp:
+            speech = Speech(Worker(), SilentOutput(), Path(temp))
+            for text, language in phrases:
+                speech.enqueue(text, language=language)
+                await speech.job
+        self.assertEqual(observed, [("Yes, I'm here.", "en"),
+                                    ("Don't worry. I'll check O'Connor's file.", "en"),
+                                    ("'Sí', señor. Mañana estará aquí.", "es")])
+        self.assertEqual(phrases[0][0], "Yes, I’m here.")
+
     async def test_auto_recognition_passes_evidence_to_core_without_mutating_voice(self):
         with tempfile.TemporaryDirectory() as temp:
             speech = Speech(None, None, Path(temp))

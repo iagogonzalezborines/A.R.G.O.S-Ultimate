@@ -24,6 +24,7 @@ from .models import ArgosError
 class Utterance:
     pcm: bytes
     interrupted: bool = False
+    generation: int | None = None
 
 
 class Endpoint:
@@ -75,7 +76,18 @@ class WakeListener:
         self.echo = EchoCancellation()
         self.interrupt_job = None
         self.collecting_interruption = False
+        self.collecting_input = False
+        self.input_generation = 0
+        self.input_idle = asyncio.Event()
+        self.input_idle.set()
         self.interruptions = 0
+        # Aggregate diagnostics only: never expose standby text or retain PCM.
+        self.diagnostics = {"frames": 0, "active_frames": 0, "utterances": 0,
+                            "empty_transcripts": 0, "unmatched_invocations": 0,
+                            "activation_only": 0,
+                            "accepted_turns": 0, "completed_turns": 0, "failed_turns": 0,
+                            "suppressed_replies": 0, "merged_segments": 0, "discarded_segments": 0,
+                            "last_result": "waiting_for_audio"}
 
     async def configure(self, enabled, project=None, session="default"):
         if not isinstance(enabled, bool):
@@ -97,6 +109,9 @@ class WakeListener:
         await self._close_recorder()
         self.dialogue_open = False
         self.collecting_interruption = False
+        self.collecting_input = False
+        self.input_idle.set()
+        self.input_generation += 1  # Replies from the previous listener cannot resume.
         self.state = "off"
         while not self.utterances.empty():
             self.utterances.get_nowait()
@@ -137,32 +152,51 @@ class WakeListener:
             frame = await self.process.stdout.readexactly(640)
             if not self.available():
                 endpoint.reset()
+                self.collecting_input = False
+                self.input_idle.set()
                 self.state = "paused"
                 continue
             self.state = "conversation" if self.dialogue_open else "listening_for_argos"
             utterance = endpoint.feed(frame)
+            self.diagnostics["frames"] += 1
+            self.diagnostics["active_frames"] += int(endpoint.consecutive > 0)
             output_busy = (self.core.speech.state in ("thinking", "speaking")
                            or getattr(self.core.voice, "state", "idle") in ("thinking", "speaking"))
-            if (self.echo.active and self.dialogue_open and output_busy
-                    and endpoint.consecutive >= 8 and not self.collecting_interruption):
-                # 160 ms of sustained post-AEC activity rejects isolated clicks.
-                # Keep pre-roll and continue reading while TTS is cancelled.
-                self.collecting_interruption = True
-                self.core.speech.paused = True
-                self.interruptions += 1
-                self.interrupt_job = asyncio.create_task(self.core.speech.interrupt())
+            if endpoint.consecutive >= 8 and not self.collecting_input:
+                # Claim the conversational floor even during STT/inference,
+                # before there is any output to interrupt. Isolated clicks do
+                # not advance the generation or suppress a response.
+                self.collecting_input = True
+                self.input_generation += 1
+                self.input_idle.clear()
+                if self.dialogue_open:
+                    self.core.speech.paused = True
+                    if self.echo.active and (output_busy or self.busy or not self.utterances.empty()):
+                        self.collecting_interruption = True
+                        self.interruptions += 1
+                        if not self.interrupt_job or self.interrupt_job.done():
+                            self.interrupt_job = asyncio.create_task(self.core.speech.interrupt())
             if utterance:
+                self.diagnostics["utterances"] += 1
                 # Keep decoding independent of capture: never replay a backlog
                 # of playback frames after a slow model response.
                 if self.utterances.full():
-                    self.last_error = "Hay demasiados turnos pendientes; repite la última frase."
-                else:
-                    self.utterances.put_nowait(Utterance(utterance, self.collecting_interruption))
+                    # A bounded queue must retain the newest correction, not
+                    # discard it while preserving the oldest unprocessed audio.
+                    self.utterances.get_nowait()
+                    self.utterances.task_done()
+                    self.diagnostics["discarded_segments"] += 1
+                    self.last_error = "Se ha descartado audio antiguo de la cola; revisa las peticiones pendientes."
+                self.utterances.put_nowait(Utterance(
+                    utterance, self.collecting_interruption, self.input_generation))
                 self.collecting_interruption = False
+                self.collecting_input = False
+                self.input_idle.set()
 
     async def _turn_loop(self):
         while self.enabled:
             utterance = await self.utterances.get()
+            consumed = 1
             try:
                 # Without AEC a response must finish before local recognition.
                 speech_job = getattr(self.core.speech, "job", None)
@@ -176,13 +210,37 @@ class WakeListener:
                 if self.interrupt_job:
                     await self.interrupt_job
                     self.interrupt_job = None
-                await self.process_audio(utterance.pcm, interrupted=utterance.interrupted)
-            except ArgosError:
+                await self.input_idle.wait()
+                # Backlogged segments belong to one continuing intervention.
+                # Preserve their words and order instead of answering each
+                # fragment separately. Memory stays bounded by the input queue.
+                segments = [utterance.pcm]
+                if utterance.generation is not None:
+                    while not self.utterances.empty():
+                        following = self.utterances.get_nowait()
+                        consumed += 1
+                        segments.append(following.pcm)
+                        utterance = Utterance(b"", utterance.interrupted or following.interrupted,
+                                              following.generation)
+                    self.diagnostics["merged_segments"] += consumed - 1
+                await self.process_audio(b"".join(segments), interrupted=utterance.interrupted,
+                                         generation=utterance.generation)
+            except ArgosError as error:
                 # An invalid command/approval must not close the conversation.
-                self.last_error = "No he podido procesar ese turno. Revisa el diagnóstico o repite la petición."
-                self.core.speech.enqueue(self.last_error, language=self.core.speech.language)
+                # ArgosError is already a safe public error, never a raw provider
+                # exception. Keep the actual cause and the current turn language.
+                from .language import localize
+                self.last_error = localize(str(error), self.core.speech.language)
+                self.diagnostics["failed_turns"] += 1
+                self.diagnostics["last_result"] = "failed"
+                if (not self.collecting_input and self.utterances.empty()
+                        and (utterance.generation is None or utterance.generation == self.input_generation)):
+                    self.core.speech.enqueue(self.last_error, language=self.core.speech.language)
+                else:
+                    self.diagnostics["suppressed_replies"] += 1
             finally:
-                self.utterances.task_done()
+                for _ in range(consumed):
+                    self.utterances.task_done()
 
     async def _run(self):
         jobs = []
@@ -222,13 +280,15 @@ class WakeListener:
                 self.core.voice.target = None
             await self.echo.stop()
             self.collecting_interruption = False
+            self.collecting_input = False
+            self.input_idle.set()
             while not self.utterances.empty():
                 self.utterances.get_nowait()
                 self.utterances.task_done()
             self.core.speech.paused = False
             self.core.speech.resume_queue()
 
-    async def process_audio(self, pcm, interrupted=False):
+    async def process_audio(self, pcm, interrupted=False, generation=None):
         started = time.monotonic()
         self.timings = {}
         fd, path = tempfile.mkstemp(prefix="wake-", suffix=".wav", dir=self.directory)
@@ -244,29 +304,46 @@ class WakeListener:
                                                "previous_language": self.core.speech.language})
             self.timings["stt_ms"] = round((time.monotonic() - started) * 1000)
             dispatched = time.monotonic()
-            await self.handle_transcript(result, interrupted=interrupted)
-            self.timings["dispatch_ms"] = round((time.monotonic() - dispatched) * 1000)
+            try:
+                await self.handle_transcript(result, interrupted=interrupted, generation=generation)
+            finally:
+                self.timings["dispatch_ms"] = round((time.monotonic() - dispatched) * 1000)
         finally:
             Path(path).unlink(missing_ok=True)
             self.busy = False
-            self.core.speech.paused = self.collecting_interruption or not self.utterances.empty()
+            # A new intervention owns the floor until it has been processed.
+            self.core.speech.paused = self.collecting_input or not self.utterances.empty()
             self.core.speech.resume_queue()
 
-    async def handle_transcript(self, result, interrupted=False):
+    async def handle_transcript(self, result, interrupted=False, generation=None):
         from .language import normalized, voice_invocation
         text = result.get("text", "").strip()
+        if not text:
+            self.diagnostics["empty_transcripts"] += 1
+            self.diagnostics["last_result"] = "empty_transcript"
+            return
         # A quoted, negated or embedded mention does not open a conversation.
         content = voice_invocation(text)
         if content is not None:
             self.dialogue_open = True
             text = content
             if not text:
-                text = result["text"].strip()  # The invocation is a real conversational turn.
+                # A pause after the name creates a separate acoustic segment.
+                # Opening the microphone dialogue is local control, not a model
+                # request that should block the actual question behind it.
+                self.diagnostics["activation_only"] += 1
+                self.diagnostics["last_result"] = "activated"
+                return
         elif not self.dialogue_open:
+            self.diagnostics["unmatched_invocations"] += 1
+            self.diagnostics["last_result"] = "invocation_not_recognized"
             return  # Standby speech is never persisted or forwarded.
         if not text:
             return
-        dismiss = normalized(text) in ("eso es todo", "eso es todo gracias", "terminamos", "hasta luego",
+        self.diagnostics["accepted_turns"] += 1
+        self.diagnostics["last_result"] = "accepted"
+        farewell = re.sub(r"[, ]+argos$", "", normalized(text))
+        dismiss = farewell in ("eso es todo", "eso es todo gracias", "terminamos", "hasta luego",
                                        "vuelve a esperar", "that's all", "that is all", "that's all thanks",
                                        "we're done", "we are done", "go back to standby", "goodbye")
         if dismiss:
@@ -275,9 +352,14 @@ class WakeListener:
             while not self.utterances.empty():
                 self.utterances.get_nowait()
                 self.utterances.task_done()
-        await self.core.request({"method": "say", "text": text, "project": self.project,
+        from .router import Router
+        dispatch = self.core.voice_control if Router().resolve(text).kind == "stop_listening" else self.core.request
+        await dispatch({"method": "say", "text": text, "project": self.project,
                                  "session": self.session, "request_id": uuid.uuid4().hex, "speak": True,
                                  "conversation": True, "end_dialogue": dismiss,
+                                 **({"voice_generation": generation} if generation is not None else {}),
                                  "speech_interrupted": interrupted,
                                  "detected_language": result.get("language"),
                                  "language_probability": result.get("language_probability", 0.0)})
+        self.diagnostics["completed_turns"] += 1
+        self.last_error = None

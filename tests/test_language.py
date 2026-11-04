@@ -4,11 +4,11 @@ import unittest
 import uuid
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from argos.core import Core
 from argos.language import choose_language, language_command, voice_invocation
-from argos.models import Decision
+from argos.models import ArgosError, Decision
 from argos.speech import Speech, Capture
 from argos.store import Store
 from argos.voice_worker import transcribe
@@ -164,6 +164,39 @@ class LanguageCoreTests(unittest.IsolatedAsyncioTestCase):
         task = self.store.task(task_id)
         self.assertEqual(self.store.setting("task.language:" + task_id), "en")
         self.assertIn("logical CPUs", task["result"]["speech"])
+
+    async def test_browser_failure_speaks_original_task_language(self):
+        entered, release = asyncio.Event(), asyncio.Event()
+        message = ("Firefox bloqueó el inicio. Permite audio y vídeo en la configuración "
+                   "de reproducción automática de YouTube.")
+
+        class Provider:
+            name = "test"
+
+            async def decide(provider, text, context):
+                return Decision("capability", agent="computer", capability="browser.play",
+                                arguments={"query": "AC/DC Thunderstruck"})
+
+        async def blocked_play(*args):
+            entered.set()
+            await release.wait()
+            raise ArgosError(message)
+
+        self.core.interpreter = Provider()
+        self.core.speech = SimpleNamespace(enqueue=Mock(), close=AsyncMock())
+        with patch("argos.firefox.play", side_effect=blocked_play):
+            result = await self.say("Can you play Thunderstruck by AC/DC on YouTube?")
+            try:
+                await asyncio.wait_for(entered.wait(), 2)
+                await self.say("hola")
+            finally:
+                release.set()
+            await asyncio.wait_for(self.core.queue.join(), 3)
+        self.assertEqual(self.store.task(result["task_id"])["status"], "FAILED")
+        self.core.speech.enqueue.assert_called_with(
+            "Firefox blocked autoplay. Allow audio and video in YouTube's autoplay permissions.",
+            language="en")
+        self.assertEqual(self.core.language(), "es")
 
     async def test_input_configuration_does_not_disable_auto_language(self):
         directory = Path(self.temp.name)

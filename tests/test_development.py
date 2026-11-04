@@ -133,6 +133,42 @@ class DevelopmentTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("No se ha aplicado", status["speech"])
         self.assertNotIn(task["objective"], status["speech"])
 
+    async def test_scoped_candidate_keeps_registered_project_and_excludes_sibling_modules(self):
+        module = self.source / "apps/backend-api"
+        module.mkdir(parents=True)
+        (module / "README.md").write_text("Backend module\n")
+        (self.source / "sibling.txt").write_text("unrelated source")
+        self.store.select_project("default", self.project["id"])
+        response = await self.req("develop", text="Improve backend", target="project", scope="apps/backend-api")
+        task = await self.settled(response["task_id"])
+        self.assertEqual(task["status"], "WAITING_APPROVAL", task)
+        state = self.development.state(task["id"])
+        self.assertEqual(state["source"], str(module))
+        self.assertEqual(task["project"], self.project["id"])
+        self.assertFalse((Path(state["workspace"]) / "sibling.txt").exists())
+        await self.approve(task)
+        done = await self.settled(task["id"])
+        self.assertEqual(done["status"], "COMPLETED", done)
+        self.assertFalse((module / "feature.py").exists())
+
+    async def test_scoped_candidate_rejects_parent_absolute_and_linked_sources(self):
+        (self.source / "link").symlink_to(self.root)
+        for scope in ("../source", str(self.root), "link"):
+            with self.subTest(scope=scope), self.assertRaises(ArgosError):
+                await self.req("develop", text="Improve backend", target="project", project=self.project["id"], scope=scope)
+        self.assertEqual(self.store.tasks(), [])
+
+    async def test_scoped_candidate_waiting_for_project_preserves_its_scope(self):
+        module = self.source / "apps/backend-api"
+        module.mkdir(parents=True)
+        response = await self.req("develop", text="Improve backend", target="project", scope="apps/backend-api")
+        task = self.store.task(response["task_id"])
+        self.assertEqual(task["status"], "WAITING_INPUT")
+        await self.req("reply", task_id=task["id"], text="demo")
+        task = await self.settled(task["id"])
+        self.assertEqual(task["status"], "WAITING_APPROVAL", task)
+        self.assertEqual(self.development.state(task["id"])["source"], str(module))
+
     async def test_end_to_end_with_actual_isolated_unittest(self):
         if not shutil.which("bwrap"):
             self.skipTest("bubblewrap not installed")

@@ -1,0 +1,18 @@
+--- a/normalize.py
++++ b/normalize.py
+@@ -1,2 +1,2 @@
+ def normalize_label(value):
+-    return value.strip()
++    return value.strip().lower()
+--- a/tests/test_normalize.py
++++ b/tests/test_normalize.py
+@@ -3,3 +3,9 @@
+ class NormalizeTests(unittest.TestCase):
+     def test_whitespace(self):
+         self.assertEqual(normalize_label("  demo  "), "demo")
++
++    def test_uppercase(self):
++        self.assertEqual(normalize_label("  DEMO  "), "demo")
++
++    def test_empty(self):
++        self.assertEqual(normalize_label(""), "")

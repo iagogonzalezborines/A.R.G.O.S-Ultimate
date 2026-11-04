@@ -1,0 +1,193 @@
+{
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "audio_played": false,
+  "actions_executed": false,
+  "before": [
+    {
+      "input": "Is the sky green?",
+      "kind": "answer",
+      "speech": "No, the sky is usually blue.",
+      "seconds": 2.678,
+      "metrics": {
+        "totalTokens": 7771,
+        "inputTokens": 7736,
+        "cachedInputTokens": 5504,
+        "outputTokens": 35,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "¿El fuego moja?",
+      "kind": "answer",
+      "speech": "No. El fuego quema; no moja.",
+      "seconds": 2.475,
+      "metrics": {
+        "totalTokens": 7773,
+        "inputTokens": 7736,
+        "cachedInputTokens": 0,
+        "outputTokens": 37,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "I've set twelve alarms five minutes apart. My sleep schedule is flawless.",
+      "kind": "answer",
+      "speech": "A remarkably orderly queue of emergencies. Flawless may be overstating it.",
+      "seconds": 2.553,
+      "metrics": {
+        "totalTokens": 7843,
+        "inputTokens": 7780,
+        "cachedInputTokens": 0,
+        "outputTokens": 63,
+        "reasoningOutputTokens": 18
+      }
+    },
+    {
+      "input": "He llamado a las cinco carpetas definitivo. Ahora sí que no hay dudas.",
+      "kind": "answer",
+      "speech": "Una colección admirablemente definitiva de cinco dudas.",
+      "seconds": 3.049,
+      "metrics": {
+        "totalTokens": 7843,
+        "inputTokens": 7784,
+        "cachedInputTokens": 0,
+        "outputTokens": 59,
+        "reasoningOutputTokens": 21
+      }
+    }
+  ],
+  "after": [
+    {
+      "input": "Is the sky green?",
+      "kind": "answer",
+      "speech": "No. The sky is generally blue; green would be a rather dramatic atmospheric development.",
+      "seconds": 2.654,
+      "metrics": {
+        "totalTokens": 7961,
+        "inputTokens": 7917,
+        "cachedInputTokens": 0,
+        "outputTokens": 44,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "¿El fuego moja?",
+      "kind": "answer",
+      "speech": "No. El fuego quema; mojarlo ya sería pedirle demasiada cooperación.",
+      "seconds": 2.805,
+      "metrics": {
+        "totalTokens": 7962,
+        "inputTokens": 7917,
+        "cachedInputTokens": 0,
+        "outputTokens": 45,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "I've set twelve alarms five minutes apart. My sleep schedule is flawless.",
+      "kind": "answer",
+      "speech": "That is not a sleep schedule; it is a heavily segmented negotiation with morning.",
+      "seconds": 2.703,
+      "metrics": {
+        "totalTokens": 8013,
+        "inputTokens": 7970,
+        "cachedInputTokens": 0,
+        "outputTokens": 43,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "He llamado a las cinco carpetas definitivo. Ahora sí que no hay dudas.",
+      "kind": "answer",
+      "speech": "Naturalmente. Cinco carpetas llamadas «definitivo»: la duda ha sido cuidadosamente archivada.",
+      "seconds": 2.886,
+      "metrics": {
+        "totalTokens": 8040,
+        "inputTokens": 7973,
+        "cachedInputTokens": 0,
+        "outputTokens": 67,
+        "reasoningOutputTokens": 18
+      }
+    },
+    {
+      "input": "Seriously, no jokes: why does the sky look blue?",
+      "kind": "answer",
+      "speech": "Because Earth’s atmosphere scatters shorter blue wavelengths of sunlight more strongly than longer red wavelengths, making the sky appear blue.",
+      "seconds": 3.083,
+      "metrics": {
+        "totalTokens": 8071,
+        "inputTokens": 8020,
+        "cachedInputTokens": 0,
+        "outputTokens": 51,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "He perdido un archivo importante. Estoy muy agobiado. Dime por dónde empezar.",
+      "kind": "answer",
+      "speech": "Lo siento. Empieza por no sobrescribir ni borrar nada más. Anota el nombre y la última ubicación conocida; después revisa la papelera y las copias de seguridad o sincronización. Si me dices el nombre y la ruta aproximada, te guío paso a paso.",
+      "seconds": 3.304,
+      "metrics": {
+        "totalTokens": 8016,
+        "inputTokens": 7931,
+        "cachedInputTokens": 0,
+        "outputTokens": 85,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "I'm asking seriously: is it normal for the sky to look green before a storm?",
+      "kind": "answer",
+      "speech": "Yes. A greenish sky can occur before or during severe thunderstorms, often when light passes through heavy rain or hail. Take shelter if you also hear thunder, see lightning, or receive a warning.",
+      "seconds": 3.435,
+      "metrics": {
+        "totalTokens": 7997,
+        "inputTokens": 7930,
+        "cachedInputTokens": 0,
+        "outputTokens": 67,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "¿Cuánto es dos más dos?",
+      "kind": "answer",
+      "speech": "Cuatro.",
+      "seconds": 4.001,
+      "metrics": {
+        "totalTokens": 8049,
+        "inputTokens": 8019,
+        "cachedInputTokens": 0,
+        "outputTokens": 30,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Hello, are you there?",
+      "kind": "answer",
+      "speech": "Yes, I’m here.",
+      "seconds": 2.31,
+      "metrics": {
+        "totalTokens": 7952,
+        "inputTokens": 7919,
+        "cachedInputTokens": 0,
+        "outputTokens": 33,
+        "reasoningOutputTokens": 0
+      }
+    },
+    {
+      "input": "Pues ahora hazlo todo automáticamente.",
+      "kind": "clarify",
+      "speech": "¿Qué quieres que haga automáticamente, exactamente?",
+      "seconds": 3.389,
+      "metrics": {
+        "totalTokens": 8100,
+        "inputTokens": 8022,
+        "cachedInputTokens": 0,
+        "outputTokens": 78,
+        "reasoningOutputTokens": 36
+      }
+    }
+  ],
+  "assessment": "Manual style review: situational wit in four playful cases; straight answers for serious questions, frustration and presence; ambiguous action clarified. Single samples, not a factual accuracy benchmark or a guarantee of consistency."
+}

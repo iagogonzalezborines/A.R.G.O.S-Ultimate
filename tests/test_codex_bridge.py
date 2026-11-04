@@ -19,7 +19,7 @@ for line in sys.stdin:
     method=m.get("method")
     if method=="initialize": result={}
     elif method=="account/read": result={"account":{"type":"chatgpt"}}
-    elif method=="model/list": result={"data":[{"model":"test-model","supportedReasoningEfforts":[{"reasoningEffort":"low"}]}]}
+    elif method=="model/list": result={"data":[{"model":"test-model","supportedReasoningEfforts":[{"reasoningEffort":"low"},{"reasoningEffort":"high"}]}]}
     elif method in ("thread/start","thread/resume"): result={"thread":{"id":"thread-one"},"model":"test-model"}
     elif method=="turn/start":
         emit({"id":m["id"],"result":{"turn":{"id":"turn-one"}}})
@@ -144,3 +144,23 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(self.codex, "turn", AsyncMock(return_value=result)) as turn:
             await self.codex.decide("inspect", {}, agent="engineering")
         self.assertIsNone(turn.call_args.kwargs["effort"])
+
+    async def test_selected_task_profile_reaches_protocol_and_bridge(self):
+        self.codex.model, self.codex.effort = "test-model", "high"
+        execute = AsyncMock(return_value={"evidence": "fixture"})
+        with patch.object(self.codex, "rpc", wraps=self.codex.rpc) as rpc:
+            thread = await self.codex.thread("engineering", tools=True)
+            await self.codex.turn(thread, "Read fixture", RESULT_SCHEMA, execute)
+        start = next(c.args[1] for c in rpc.call_args_list if c.args[0] == "thread/start")
+        turn = next(c.args[1] for c in rpc.call_args_list if c.args[0] == "turn/start")
+        self.assertEqual(start["model"], "test-model")
+        self.assertEqual(turn["effort"], "high")
+        execute.assert_awaited_once_with("files.read", {"file": "demo.txt"})
+
+    async def test_unavailable_model_fails_without_thread_or_fallback(self):
+        self.codex.model = "unavailable"
+        with patch.object(self.codex, "rpc", wraps=self.codex.rpc) as rpc:
+            with self.assertRaises(ArgosError):
+                await self.codex.thread("engineering", tools=True)
+        self.assertNotIn("thread/start", [c.args[0] for c in rpc.call_args_list])
+        self.assertFalse(self.codex.connected)

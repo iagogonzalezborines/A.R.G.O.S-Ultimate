@@ -31,7 +31,7 @@ class Store:
         self.db = sqlite3.connect(directory / "argos.sqlite")
         os.chmod(directory / "argos.sqlite", 0o600)
         self.db.row_factory = sqlite3.Row
-        if self.db.execute("PRAGMA user_version").fetchone()[0] not in (0, 1, 2):
+        if self.db.execute("PRAGMA user_version").fetchone()[0] not in (0, 1, 2, 3):
             self.db.close()
             raise ArgosError("Esta base de datos requiere otra versión de ARGOS.")
         self.db.executescript("""
@@ -65,7 +65,13 @@ class Store:
             CREATE INDEX IF NOT EXISTS conversation_activity ON conversations(session,status,updated);
             CREATE INDEX IF NOT EXISTS message_conversation ON messages(conversation,seq);
             CREATE INDEX IF NOT EXISTS event_task ON events(task,seq);
-            PRAGMA user_version=2;
+            CREATE TABLE IF NOT EXISTS project_profiles(
+                project TEXT PRIMARY KEY REFERENCES projects(id), data TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS project_aliases(
+                alias TEXT PRIMARY KEY COLLATE NOCASE, project TEXT NOT NULL REFERENCES projects(id));
+            CREATE TABLE IF NOT EXISTS session_projects(
+                session TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects(id));
+            PRAGMA user_version=3;
         """)
         self.db.commit()
 
@@ -82,10 +88,13 @@ class Store:
             self.db.execute("INSERT OR REPLACE INTO settings VALUES (?,?)", (key, json.dumps(value)))
 
     def add_project(self, name, path):
+        from .filesystem import project_directory
         public_text(name, 80)
-        root = Path(path).expanduser().resolve(strict=True)
-        if not root.is_dir() or root == Path(root.anchor) or root == Path.home():
-            raise ArgosError("Selecciona una carpeta de proyecto concreta.")
+        # CLI and agent registration share the same path boundary.
+        root = project_directory(None, str(Path(path).expanduser().absolute()))
+        alias = self.db.execute("SELECT project FROM project_aliases WHERE alias=? COLLATE NOCASE", (name,)).fetchone()
+        if alias and self.project(alias[0])["root"] != str(root):
+            raise ArgosError("Ese nombre ya identifica otro proyecto.")
         existing = self.db.execute(
             "SELECT * FROM projects WHERE name=? COLLATE NOCASE OR root=?", (name, str(root))
         ).fetchone()
@@ -106,11 +115,55 @@ class Store:
         if not reference:
             return None
         row = self.db.execute(
-            "SELECT * FROM projects WHERE id=? OR name=? COLLATE NOCASE", (reference, reference)
+            """SELECT * FROM projects WHERE id=? OR name=? COLLATE NOCASE OR root=? OR id IN
+            (SELECT project FROM project_aliases WHERE alias=? COLLATE NOCASE)""",
+            (reference, reference, reference, reference)
         ).fetchone()
         if not row:
             raise ArgosError("Ese proyecto no está registrado.")
         return dict(row)
+
+    def project_profile(self, reference):
+        project = self.project(reference)
+        row = self.db.execute("SELECT data FROM project_profiles WHERE project=?", (project["id"],)).fetchone()
+        aliases = [r[0] for r in self.db.execute("SELECT alias FROM project_aliases WHERE project=? ORDER BY alias", (project["id"],))]
+        return {"project": project, "aliases": aliases, "inspection": json.loads(row[0]) if row else None}
+
+    def save_project_inspection(self, reference, inspection):
+        project = self.project(reference)
+        safe_data(inspection)
+        with self.db:
+            self.db.execute("INSERT OR REPLACE INTO project_profiles VALUES (?,?)", (project["id"], json.dumps(inspection)))
+
+    def add_project_alias(self, reference, alias):
+        project = self.project(reference)
+        alias = public_text(alias, 80).strip()
+        if not alias or len(alias.split()) > 12:
+            raise ArgosError("Indica un alias breve para el proyecto.")
+        aliases = self.project_profile(project["id"])["aliases"]
+        if len(aliases) >= 12 and alias.casefold() not in {a.casefold() for a in aliases}:
+            raise ArgosError("El proyecto ya tiene doce alias.")
+        existing = self.db.execute("""SELECT id FROM projects WHERE name=? COLLATE NOCASE OR root=? OR id=?
+            UNION SELECT project FROM project_aliases WHERE alias=? COLLATE NOCASE""", (alias, alias, alias, alias)).fetchall()
+        if any(r[0] != project["id"] for r in existing):
+            raise ArgosError("Ese alias ya identifica otro proyecto.")
+        with self.db:
+            self.db.execute("INSERT OR IGNORE INTO project_aliases VALUES (?,?)", (alias, project["id"]))
+        return self.project_profile(project["id"])
+
+    def select_project(self, session, reference):
+        public_text(session, 100)
+        project = self.project(reference)
+        with self.db:
+            if project:
+                self.db.execute("INSERT OR REPLACE INTO session_projects VALUES (?,?)", (session, project["id"]))
+            else:
+                self.db.execute("DELETE FROM session_projects WHERE session=?", (session,))
+        return project
+
+    def selected_project(self, session):
+        row = self.db.execute("SELECT project FROM session_projects WHERE session=?", (session,)).fetchone()
+        return self.project(row[0]) if row else None
 
     def create_task(self, session, project, agent, objective, capability="", arguments=None,
                     status=Status.QUEUED, question=None):

@@ -3,9 +3,9 @@
 ```text
 Micrófono → pulsador / invocación local → Whisper ─┐
 CLI ────────────────┴→ Core → intención conocida → capacidad local
-                         └→ modelo local → respuesta / capacidad / especialista local
+                         └→ perfil conversacional → respuesta / capacidad / especialista
                                                         ↓
-                                    escalada justificada → hilo Codex ligado a tarea y proyecto
+                                    perfil de tarea → hilo ligado a tarea y proyecto
                                                         ↓
                                   argos_capability → Policy → operación
                                                         ↓
@@ -45,6 +45,27 @@ que un proyecto atasque a los demás.
 
 ## Observación
 
+El contrato común versionado contiene las prioridades y tendencias de la
+personalidad; no existe un modelo Persona o Response Composer adicional.
+`agents.contract` comparte esas reglas entre General y especialistas;
+`local_contract` reutiliza la misma sección para otros proveedores. El recordatorio
+de voz es breve y se añade solo al turno de conversación. Core conserva el
+control determinista de estados, aprobaciones y respuestas de operaciones.
+La inferencia resuelve correcciones, referencias, intención, humor y longitud
+con el historial público acotado; no se introducen diagnósticos emocionales ni
+clasificaciones por otra llamada al modelo.
+
+El monitor añade `capabilities`, una vista agrupada del catálogo observado, con
+texto completo envuelto y desplazamiento. La voz solicita esa ventana para las
+órdenes conocidas de inventario sin pasar por General. El lanzador devuelve
+`requested`/`focused`, no un acuse de contenido mostrado; Core no afirma recepción
+visual. En ausencia/fallo de ventana conserva el inventario en la respuesta de
+diagnóstico y explica el fallo brevemente. Los resultados Engineering ya tienen
+`speech` y `detail`: solo speech se encola en TTS y detail conserva el informe en
+los eventos del monitor. No se recorta ni se reescribe la respuesta del modelo.
+General sigue sin una superficie para informes arbitrarios separados de su
+respuesta; el contrato no anuncia esa capacidad.
+
 `monitor.snapshot` devuelve estados de agentes, contadores y páginas de tareas
 o conversaciones de la sesión seleccionada. `monitor.detail` devuelve páginas
 de mensajes públicos o eventos de un registro de esa misma sesión. Ambas rutas
@@ -60,6 +81,17 @@ serializan trazas ni eventos internos de razonamiento del proveedor.
 Al recuperar Core, los turnos RUNNING pasan a INTERRUPTED sin reproducirse.
 La migración aditiva SQLite de versión 1 a 2 conserva proyectos, tareas y eventos.
 
+La versión 3 añade `project_profiles`, `project_aliases` y `session_projects` sin
+alterar los registros existentes. Las fichas contienen evidencia documental con
+fecha/hash, alias explícitos y un presupuesto acotado por metadatos. Sus fuentes
+son datos no fiables como instrucciones. La selección persistente pertenece a
+una sesión y solo se usa por defecto cuando la petición no indica otro proyecto;
+una selección explícita por petición no modifica la preferencia guardada.
+No reasigna tareas ni concede autorizaciones de escritura. General ve el registro
+de nombres/rutas/alias y solo la ficha del proyecto seleccionado; especialistas
+asignados reciben únicamente su proyecto. Los ejecutores internos de candidatas
+no se serializan en el registro público.
+
 El diagrama y monitor se ejecutan en procesos separados. Su cierre no afecta
 al Core, y no hay controles que aprueben ni cancelen trabajo desde estas vistas.
 El mapa mantiene siempre su función; T abre la otra ventana. El monitor tiene
@@ -68,12 +100,29 @@ la biblioteca estándar. El lanzador limita enfoque y geometría a ventanas
 ARGOS identificadas por vista, carpeta de estado y sesión. En Hyprland admite
 el protocolo Lua actual y las órdenes anteriores, sin cambiar reglas persistentes.
 General recibe `context.panels` y puede devolver una decisión `panel` con
-`view=agents|tasks`; Core abre la ventana y registra su propia respuesta.
+`view=agents|tasks|capabilities`; Core abre la ventana y registra su propia respuesta.
 La validación rechaza otras vistas, argumentos adicionales y solicitudes de
 panel desde especialistas. Esto permite interpretar peticiones naturales y
 aclaraciones sin limitar la función a frases exactas ni añadir otra inferencia.
 
 ## Codex
+
+`conversation_provider=codex` selecciona la política `codex_profiles`: un App
+Server Luna/low para General/Computer/Research y otro Astra/high para
+Engineering/Design3D/Printing3D. Modelo y esfuerzo se fijan explícitamente por
+instalación y se verifican con `model/list`; no se heredan del modelo global
+del IDE. La selección del rol corresponde al Core sin una inferencia adicional.
+La afinidad persistida incluye proveedor, modelo y esfuerzo; un cambio no reanuda
+automáticamente un hilo con otro perfil. Las capacidades directas siguen locales.
+No requiere Ollama, NVIDIA ni claves API; usa la sesión ChatGPT.
+
+General recibe el historial público acotado del Core en hilos efímeros y libera
+su suscripción al terminar. Preparar la conexión no genera texto. El esquema
+limita los nombres de herramientas al catálogo del turno y se valida antes de
+actuar. Las tareas conservan sus hilos y el bridge sujeto a permisos. Telemetría
+expone modelo/esfuerzo por rol. Un fallo no cambia de proveedor automáticamente.
+
+Los siguientes modos alternativos se conservan por selección explícita:
 
 La opción explícita `conversation_provider=nvidia` conecta `nvidia.py` solo a
 General mediante `Core.conversation_provider`. El intérprete local original
@@ -87,9 +136,9 @@ del turno. No acepta razonamiento privado ni llamadas nativas a herramientas.
 La política se identifica como `explicit_remote_conversation_local_tasks`; sin
 esa opción se conserva la política local que se describe a continuación.
 
-General y los especialistas usan el modelo local por defecto. Codex está
-conectado a un slot separado, reservado para tareas complejas. El adaptador
-rechaza General antes de iniciar App Server; Core también rechaza inyectarlo
+En la configuración Ollama, General y los especialistas usan el modelo local. Codex está
+conectado a un slot separado, reservado para tareas complejas. Sin un perfil conversacional explícito, el adaptador
+rechaza General antes de iniciar App Server y Core rechaza inyectarlo
 como intérprete conversacional. La falta/fallo del modelo local nunca activa
 Codex como fallback. No se añade inferencia de clasificación o Persona.
 
@@ -236,7 +285,40 @@ No hay borrado irreversible automático. Los procesos del mismo usuario siguen
 en el perímetro de confianza; esto no aísla frente a modificaciones externas hostiles.
 
 `projects.create` crea el directorio tras aprobación; Core registra y vincula
-el proyecto a la tarea, sin cambiar de hilo. `commands.exec` prepara argv/cwd
+el proyecto a la tarea, sin cambiar de hilo. `projects.register` verifica una
+carpeta existente con la misma barrera de rutas (sin enlaces ni credenciales),
+registra únicamente metadatos y vincula esa tarea. La evidencia
+`project_registered` se emite después de guardar el registro; no concede
+permisos para escribir archivos. CLI y agentes comparten la validación de rutas,
+la idempotencia nombre/carpeta y el rechazo de conflictos.
+
+`filesystem.project_locations` aporta candidatas existentes (`~/Proyectos`,
+`~/Projects` y padres de proyectos registrados), su procedencia y una base
+solo si es única. No recorre árboles ni lee archivos. General recibe el registro
+para resolver referencias; un especialista con proyecto seleccionado solo ve
+el suyo. Computer/Engineering sin proyecto pueden resolver una ubicación antes
+de registrarla. Los contratos usan esta evidencia y los detalles del usuario
+antes de preguntar por rutas; una inscripción directa no necesita otra llamada
+de planificación. Las rutas de carpetas concretas se verifican al ejecutar.
+
+La observación `project_locations.directories` enumera únicamente subcarpetas
+directas (máximo ocho bases, 50 entradas por base, 512 entradas inspeccionadas),
+fecha y estado/completitud. No lee contenido ni registra carpetas automáticamente.
+No se incluye el inventario de hermanos en el contexto de un especialista con
+proyecto asignado. General distingue el inventario del registro de proyectos.
+`task_context` añade proyecciones de listados anteriores solo de la misma sesión
+y proyecto: nombres, ruta, continuación y advertencia de que son observaciones
+anteriores, sin copiar contenido de archivos.
+
+Antes de devolver una delegación interpretada, Core guarda `CONVERSATION_CONTEXT`
+en la tarea: hasta ocho pares/8.000 caracteres de diálogo público y tres listados.
+El especialista recibe esa instantánea como `conversation_handoff`. No consulta
+conversaciones futuras, no cambia su autoridad y no ejecuta las órdenes antiguas.
+Las correcciones a una pregunta pendiente pueden completar la instantánea de
+una tarea anterior que aún no la tuviera. La incorporación es local, sin otra
+llamada al modelo.
+
+`commands.exec` prepara argv/cwd
 revisables sin registro previo, y compara la definición con el evento aprobado
 antes de ejecutarla. `workspace.open` solicita una ventana de VS Code o terminal
 Codex tras revisión; el trabajo posterior de esa sesión externa no es evidencia
@@ -267,13 +349,44 @@ Espacio inicia captura PipeWire; la segunda pulsación envía a Whisper; límite
 de 30 segundos. La escucha opcional de «Argos» usa PCM PipeWire, endpointing
 por energía y Whisper local; está apagada por defecto. La invocación abre un diálogo
 persistente, sin vencimiento por silencio ni reinvocación entre turnos. La invocación
-sola y las comprobaciones de presencia se envían como turnos reales al modelo:
+sola se resuelve localmente: abre el diálogo, sin inferencia, journal conversacional
+ni saludo hablado; la esfera pasa a escucha. Así una pausa tras el nombre no
+crea una petición remota que bloquee la pregunta posterior. La invocación con
+petición y las comprobaciones explícitas de presencia se envían al modelo:
 su respuesta pública se sintetiza una vez, sin saludo fijo ni llamada adicional
 de Persona. El contexto pide concisión proporcional a la pregunta, no una frase
 predefinida ni un honorífico obligatorio.
 
 La captura PCM permanece abierta y drena continuamente, separada del consumidor
 de reconocimiento/inferencia por una cola de cuatro segmentos en memoria.
+Cada segmento tiene una generación asignada tras 160 ms de actividad sostenida.
+Una intervención nueva pausa la salida también durante reconocimiento/inferencia,
+sin esperar a que ARGOS empiece a hablar. Core conserva el resultado y la evidencia
+del turno anterior pero no encola su voz si su generación ha quedado atrás; una
+revisión de plan no oída tampoco habilita aprobación hablada. No cancela tareas.
+La pausa permanece mientras se captura voz o quedan segmentos por procesar.
+El consumidor espera el final de la intervención y agrupa los segmentos pendientes
+en orden antes de transcribirlos, en lugar de producir una respuesta por fragmento.
+El lote está limitado al segmento tomado y los cuatro de la cola (hasta 100 s de
+PCM si todos alcanzan el máximo de 20 s). Si se llena la cola se descarta el segmento
+pendiente más antiguo para conservar la corrección reciente; se cuenta y señala
+la pérdida en diagnóstico. No se conservan grabaciones ni se reproducen efectos.
+Los errores de turnos superados se registran en diagnóstico sin interrumpir la
+entrada nueva. Los errores
+`ArgosError` ya saneados se localizan al idioma del turno, conservando su causa;
+una petición posterior correcta limpia el error anterior. Los tiempos de despacho
+se registran también al fallar. Se distinguen invocaciones aceptadas de turnos
+completados/fallidos. En NVIDIA, el timeout de red es 20 s para voz y texto,
+sin reintentos ni proveedor sustituto; no limita la longitud del texto generado
+ni garantiza una latencia total de 20 s incluyendo captura, colas y síntesis.
+La salida PCM expone `last_stream`: estado final, bytes generados/enviados,
+fin de síntesis y código de salida del reproductor. Un final normal exige EOF
+del generador y salida correcta del reproductor; una cancelación se distingue
+de ese final. No contiene audio/texto ni certifica lo oído en el dispositivo.
+Tras EOF de síntesis se envían 200 ms de silencio, manteniendo abierto el flujo
+para dar margen de vaciado al recorrido de audio antes de cerrar el reproductor.
+Los bytes de voz se preservan literalmente y `padding_bytes` cuenta solo ese
+silencio añadido. Una interrupción explícita cancela también ese margen.
 `EchoCancellation` mantiene un proceso `pw-cli --monitor load-module` con
 `libpipewire-module-echo-cancel` y WebRTC. Publica nodos privados con nombres únicos;
 fija el micrófono seleccionado y la salida predeterminada antes de crearlos. No
@@ -285,7 +398,8 @@ referencias de [cancelación de eco](https://docs.pipewire.org/page_module_echo_
 y [módulos locales de pw-cli](https://docs.pipewire.org/page_man_pw-cli_1.html).
 
 En diálogo abierto, ocho tramas consecutivas de actividad tras AEC (160 ms)
-interrumpen la voz sin esperar al final del turno. El reproductor se termina antes
+interrumpen la voz o invalidan su entrega pendiente sin esperar al final del turno.
+El reproductor se termina antes
 de esperar a que cierre el generador de síntesis. Se descarta la locución pendiente,
 se pausa la cola de voz y la captura conserva el preámbulo y el resto de la frase
 mientras se cierra TTS. No cancela tareas ni modifica aprobaciones. El siguiente
@@ -306,6 +420,15 @@ procesan sin identificar al hablante.
 Una despedida explícita cierra el diálogo y descarta sus segmentos pendientes;
 la respuesta a esa despedida también pertenece al modelo. No cancela tareas.
 
+Apagar el micrófono es distinto de despedirse: `stop_listening` es una intención
+local ES/EN que ejecuta `voice.stop`. El controlador de este comando tiene una
+tarea retenida por Core, protegida de la cancelación del consumidor de audio
+que está cerrando; Core la cancela durante su propio cierre. Así se evita esperar
+circularmente al consumidor manos libres o manual. Tras cerrar captura/AEC y
+vaciar la voz, se permite únicamente la confirmación `listening_stopped` aunque
+la generación anterior haya caducado. `voice.quiet` persiste el silencio de avisos;
+Espacio o habilitar manos libres lo levanta. Los resultados y tareas se conservan.
+
 General recibe hasta 16 intercambios completos de la misma sesión/proyecto,
 con un máximo de 24.000 caracteres de historial. Al reiniciar recupera la última
 conversación pública del mismo proveedor local; no importa hilos remotos ni
@@ -320,7 +443,11 @@ Las preguntas de tareas pendientes se exponen con su ID; la decisión `reply`
 selecciona una de ellas y Core devuelve a esa tarea el texto original del usuario.
 Se revalida sesión, proyecto y WAITING_INPUT; nunca se usa esta vía para aprobar.
 No se crea un modo global de especialista ni se ejecuta una inferencia extra.
-Escape y la transición al pulsador desactivan manos libres y guardan la preferencia.
+Escape desactiva manos libres y guarda la preferencia. Con la escucha activa,
+Espacio abre su diálogo actual sin cambiar proyecto/sesión, cerrar el capturador
+ni alterar la preferencia persistida; no inicia una segunda captura. Las siguientes
+pulsaciones son idempotentes y no cancelan inferencia, reproducción ni turnos
+pendientes. Con manos libres apagado conserva el pulsador manual de grabar/enviar.
 Se pausa TTS durante captura/transcripción.
 El modo predeterminado de idioma es automático español/inglés. Whisper aporta
 idioma y confianza; las expresiones inequívocas y las órdenes explícitas tienen
@@ -358,3 +485,58 @@ se expresa en el contrato de conversación y nunca con un recorte del texto.
 Lectura web dinámica/PDF, validación acústica de manos libres, Blender, impresión,
 aplicación/activación/rollback de candidatas de actualización y GUI Windows.
 No se anuncian como capacidades conectadas.
+
+
+## Firefox y reproducción multimedia
+
+`browser.play(query)` pasa por la política habitual de Core como efecto rutinario.
+Su puente Native Messaging está restringido al ID `firefox@argos.local`, con
+socket Unix `firefox.sock` de permisos 0600 bajo el estado privado de ARGOS. No
+expone un servidor HTTP ni recibe JavaScript, selectores o comandos arbitrarios.
+El manifiesto nativo se registra mediante `browser-setup`; la extensión temporal
+se carga manualmente en el Firefox del usuario. La selección no modifica su perfil.
+
+La extensión abre una pestaña propia de resultados de YouTube, limita candidatos
+a enlaces de vídeos con ID válido y selecciona el primero cuyo título normalizado
+contenga los términos de búsqueda. No usa botones de anuncios ni acepta avisos.
+El criterio es correspondencia textual, no certifica versión oficial/artista:
+si se necesita una edición concreta, incluirla en la petición. Comprueba ID del
+vídeo, ausencia de anuncio, estado no pausado/no silenciado, volumen positivo y
+tiempo avanzando antes de devolver `browser_video_advancing`. No certifica audio
+físico. Las restricciones de autoplay permanecen bajo control de Firefox.
+
+Desde 0.1.2 la creación usa `active: false` y la navegación no activa pestañas ni
+ventanas. La extensión recuerda únicamente el ID y la última URL de su pestaña;
+la reutiliza en siguientes órdenes si sigue allí. Si está cerrada o el usuario
+ha navegado, crea otra en segundo plano. Una cancelación solo cierra una pestaña
+creada por ese trabajo, nunca una reutilizada. No se deduplican órdenes distintas
+por parecido textual ni se considera éxito la mera apertura de una pestaña.
+
+Una sola petición de navegador está activa; las siguientes reciben busy.
+Timeout, desconexión o cancelación no reenvían el trabajo. La cancelación se
+transmite al complemento y cierra su pestaña si el trabajo seguía activo.
+Los resultados web y títulos se tratan como datos, no como instrucciones.
+
+`media.status`/`media.control` son capacidades Computer para reproductores MPRIS
+ya cargados. `playerctl` se ejecuta con argv, sin shell; nombres de reproductor,
+acciones y salida están acotados. Play/pause son explícitos, nunca toggle.
+El título esperado y la instancia única se revisan antes de actuar, y el estado
+se vuelve a comprobar después. MPRIS no ofrece selección de resultados web ni
+una operación atómica que garantice que otra pestaña no cambie justo al actuar.
+
+## Alcance de candidatas por módulo
+
+`develop` acepta `scope` opcional solo para `target=project`. Debe ser una carpeta
+relativa existente bajo la raíz registrada, sin `..`, rutas absolutas ni enlaces.
+La candidata toma ese módulo como raíz; la tarea conserva el ID del proyecto.
+Si aún falta elegir proyecto, el alcance se conserva mientras espera la respuesta.
+La aprobación queda ligada a esa fuente/candidata y sus comprobaciones; los módulos
+hermanos y el repositorio original quedan fuera de sus efectos. No se cambian
+permisos de dependencias o de ejecución por seleccionar un módulo.
+
+La ficha incluye un escaneo de metadatos limitado por el presupuesto de candidatas
+(128 MiB/10.000 archivos), con contadores, completitud y módulos `apps/*`/`packages/*`
+identificados por manifiestos. No se leen los contenidos de vídeos/binarios. Los
+contadores incompletos son cotas inferiores, no el tamaño exacto del repositorio.
+General usa el módulo indicado por el usuario o pide elegir entre los observados;
+no excluye recursos de código arbitrariamente para forzar una copia completa.

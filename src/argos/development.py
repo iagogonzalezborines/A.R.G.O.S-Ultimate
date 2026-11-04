@@ -174,7 +174,8 @@ class Development:
             project = self.store.project(task["project"])
             if not project:
                 raise ArgosError("Falta seleccionar el proyecto de desarrollo.")
-            state["source"] = project["root"]
+            from .development_workspace import scoped_source
+            state["source"] = scoped_source(project["root"], state["scope"]) if state.get("scope") else project["root"]
         if "workspace" not in state:
             # A cancelled snapshot is allowed to finish its local copy only. It
             # never executes code; await it before relinquishing task ownership.

@@ -200,3 +200,12 @@ CAPABILITIES["system.inspect"] = Capability(
 
 from .development import capabilities as development_capabilities
 CAPABILITIES.update({c.name: c for c in development_capabilities(Capability)})
+
+from .media import capabilities as media_capabilities
+CAPABILITIES.update({c.name: c for c in media_capabilities(Capability)})
+
+from .firefox import capabilities as firefox_capabilities
+CAPABILITIES.update({c.name: c for c in firefox_capabilities(Capability)})
+
+from .projects import capabilities as project_capabilities
+CAPABILITIES.update({c.name: c for c in project_capabilities(Capability)})

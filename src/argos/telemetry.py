@@ -46,7 +46,9 @@ def snapshot(core, request):
                 "SELECT title,id FROM conversations WHERE session=? AND status='RUNNING' ORDER BY updated DESC LIMIT 1",
                 (session,)).fetchone()
         assignment = core.store.setting("task.provider:" + current[1]) if current and identifier != "general" else None
-        active_provider = core.escalation_provider if assignment and assignment["route"] == "escalated" else core.interpreter
+        complex_task = (assignment["route"] in ("escalated", "complex") if assignment else
+                        identifier in getattr(core.interpreter, "complex_agents", ()))
+        active_provider = core.escalation_provider if complex_task else core.interpreter
         if identifier == "general":
             active_provider = core.conversation_interpreter
         active_name = active_provider.name if active_provider else "none"
@@ -54,6 +56,8 @@ def snapshot(core, request):
                              "configured" if active_provider else "not_configured")
         agents.append({"id": identifier, "name": NAMES[identifier], "role": definition.role,
                        "capabilities": list(definition.capabilities), "provider": active_name,
+                       "model": getattr(active_provider, "model", None),
+                       "effort": getattr(active_provider, "effort", None),
                        "capability_status": core.capability_catalogue(agent=identifier),
                        "connection": active_connection, "running": running, "queued": queued, "waiting": waiting,
                        "activity": current[0][:240] if current else None,

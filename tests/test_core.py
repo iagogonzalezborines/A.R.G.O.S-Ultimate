@@ -6,6 +6,8 @@ import time
 import unittest
 import uuid
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 from argos.core import Core
 from argos.models import ArgosError, Decision, Status
@@ -54,6 +56,51 @@ class CoreTests(unittest.IsolatedAsyncioTestCase):
         result = await self.req(text="hola")
         self.assertEqual(result["speech"], "Hola.")
         self.assertEqual(self.store.tasks(), [])
+
+    async def test_space_preserves_hands_free_and_escape_explicitly_disables_it(self):
+        from argos.wake import WakeListener, Utterance
+        capture = SimpleNamespace(toggle=AsyncMock(), cancel=AsyncMock(), session="default")
+        self.core.capture = capture
+        # Real listener state, without starting a microphone or inference.
+        listener = WakeListener(self.core, None, self.root)
+        self.core.wake = listener
+        listener.enabled = True
+        listener.project, listener.session = "Alpha", "hands-free"
+        listener.busy = True
+        listener.utterances.put_nowait(Utterance(b"pending"))
+        self.store.set_setting("voice.wake_enabled", True)
+        for _ in range(2):
+            await self.req("voice.toggle")
+            self.assertTrue(listener.enabled)
+            self.assertTrue(listener.dialogue_open)
+            self.assertTrue(self.store.setting("voice.wake_enabled"))
+            self.assertEqual(listener.utterances.qsize(), 1)
+            self.assertEqual((listener.project, listener.session), ("Alpha", "hands-free"))
+        capture.toggle.assert_not_awaited()
+        self.assertEqual(self.store.tasks(), [])
+
+        # Speech without the invocation is accepted after Space, then farewell
+        # restores the invocation gate while retaining the listener preference.
+        listener.core = SimpleNamespace(request=AsyncMock())
+        await listener.handle_transcript({"text": "is the sky blue?"})
+        self.assertEqual(listener.core.request.call_args.args[0]["text"], "is the sky blue?")
+        await listener.handle_transcript({"text": "that's all"})
+        self.assertFalse(listener.dialogue_open)
+        await listener.handle_transcript({"text": "background speech"})
+        self.assertEqual(listener.core.request.await_count, 2)
+        await listener.handle_transcript({"text": "Argos, hello"})
+        self.assertTrue(listener.dialogue_open)
+        self.assertEqual(listener.core.request.call_args.args[0]["text"], "hello")
+
+        await self.req("voice.stop")
+        self.assertFalse(listener.enabled)
+        self.assertFalse(listener.dialogue_open)
+        self.assertFalse(self.store.setting("voice.wake_enabled"))
+        capture.cancel.assert_awaited_once()
+        await self.req("voice.toggle", project="Alpha", session="manual")
+        capture.toggle.assert_awaited_once_with("Alpha")
+        self.assertEqual(capture.session, "manual")
+        self.assertFalse(self.store.setting("voice.wake_enabled"))
 
     async def test_conversation_preparation_is_visible_without_blocking_commands(self):
         entered, release = asyncio.Event(), asyncio.Event()
@@ -244,7 +291,7 @@ class CoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.settled(result["task_id"]))["status"], "FAILED")
 
     async def test_project_context_isolation(self):
-        another = self.root / "secret-project"
+        another = self.root / "unrelated-project"
         another.mkdir()
         self.store.add_project("UnrelatedPrivateName", another)
         context = self.core.context(self.store.project("Alpha"), "engineering")

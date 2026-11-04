@@ -18,20 +18,25 @@ def parser():
     p.add_argument("--session", default="default")
     p.add_argument("--request-id", default=None, help="Reutiliza este ID al reintentar la misma petición")
     sub = p.add_subparsers(dest="command", required=True)
+    sub.add_parser("browser-setup", help="Registrar el puente local de Firefox y mostrar la extensión que cargar")
     s = sub.add_parser("serve", help="Ejecutar Core; no muestra registros en la consola")
     s.add_argument("--ollama-model", help="Opcional: modelo local ya instalado; no descarga nada")
     s.add_argument("--codex", action="store_true", help="Habilitar Codex solo para escaladas de tareas complejas")
     s.add_argument("--voice", action="store_true", help="Whisper y Pocket TTS locales ya instalados")
-    s = sub.add_parser("console", help="Espacio: hablar/enviar. Escape: silencio. Q: cerrar esfera.")
+    s = sub.add_parser("console", help="Espacio: conversación/captura. Escape: apagar escucha. Q: cerrar esfera.")
     s.add_argument("--project", help="Proyecto seleccionado para las peticiones de voz")
     s = sub.add_parser("start", help="Abrir ARGOS con el modelo local configurado y voz")
     s.add_argument("--project")
     s = sub.add_parser("configure-providers", help="Elegir proveedores de esta instalación; no descarga ni reinicia")
-    s.add_argument("--ollama-model", required=True)
+    s.add_argument("--ollama-model")
     s.add_argument("--codex", choices=("on", "off"), default="off")
-    s.add_argument("--conversation-provider", choices=("ollama", "nvidia"), default="ollama")
+    s.add_argument("--conversation-provider", choices=("ollama", "nvidia", "codex"), default="ollama")
+    s.add_argument("--codex-model", default="gpt-5.6-luna")
+    s.add_argument("--codex-effort", default="low", choices=("low", "medium", "high", "xhigh", "max"))
+    s.add_argument("--codex-complex-model", default="gpt-6-astra")
+    s.add_argument("--codex-complex-effort", default="high", choices=("low", "medium", "high", "xhigh", "max"))
     s = sub.add_parser("monitor", help="Mapa de agentes o monitor de tareas y conversaciones")
-    s.add_argument("view", choices=("agents", "tasks"))
+    s.add_argument("view", choices=("agents", "tasks", "capabilities"))
     s.add_argument("--open", action="store_true", help="Abrir en otra ventana")
     s = sub.add_parser("say", help="Entrada textual para desarrollo; mismo punto de entrada que futuro STT")
     s.add_argument("text")
@@ -41,11 +46,17 @@ def parser():
     s.add_argument("text")
     s.add_argument("--target", choices=("self", "project", "new"), default="project")
     s.add_argument("--project")
+    s.add_argument("--scope", default="", help="Módulo relativo para la candidata, p. ej. apps/backend-api")
     for name in ("agents", "tasks", "projects"):
         sub.add_parser(name)
     s = sub.add_parser("add-project")
     s.add_argument("name")
     s.add_argument("path")
+    s = sub.add_parser("select-project", help="Seleccionar proyecto de esta sesión; --clear elimina la selección")
+    s.add_argument("project", nargs="?")
+    s.add_argument("--clear", action="store_true")
+    s = sub.add_parser("project-context", help="Ficha persistente del proyecto indicado o seleccionado")
+    s.add_argument("project", nargs="?")
     s = sub.add_parser("run", help="Ejecutar una capacidad registrada")
     s.add_argument("capability")
     s.add_argument("--project")
@@ -85,6 +96,10 @@ def parser():
 
 
 async def execute(args):
+    if args.command == "browser-setup":
+        from .firefox import setup
+        print(json.dumps(setup(args.state_dir), ensure_ascii=False, indent=2))
+        return
     if args.command == "monitor":
         if args.open:
             result = await call(args.state_dir, {"method": "monitor.open", "view": args.view,
@@ -100,6 +115,12 @@ async def execute(args):
         from .providers import OllamaInterpreter
         from .inference_config import read
         settings = read(args.state_dir)
+        if settings.get("conversation_provider") == "codex":
+            from .codex import Codex
+            routine = Codex(args.state_dir, model=settings["codex_model"], effort=settings["codex_effort"], conversation=True)
+            complex_tasks = Codex(args.state_dir, model=settings["codex_complex_model"], effort=settings["codex_complex_effort"])
+            await serve(args.state_dir, routine, voice_enabled=args.voice, escalation_provider=complex_tasks)
+            return
         model = args.ollama_model or settings["ollama_model"]
         provider = OllamaInterpreter(model) if model else None
         escalation = None
@@ -118,13 +139,29 @@ async def execute(args):
         if args.conversation_provider == "nvidia":
             from .nvidia import read_private_key
             read_private_key(args.state_dir / "credentials" / "nvidia.key")
-        settings = write(args.state_dir, args.ollama_model, args.codex == "on", args.conversation_provider)
+        profiles = {}
+        if args.conversation_provider == "codex":
+            from .codex import Codex
+            profiles = {key: getattr(args, key) for key in
+                        ("codex_model", "codex_effort", "codex_complex_model", "codex_complex_effort")}
+            # Validate account access before persisting a configuration that
+            # cannot run. No thread or model inference is created here.
+            for model, effort in ((args.codex_model, args.codex_effort),
+                                  (args.codex_complex_model, args.codex_complex_effort)):
+                probe = Codex(args.state_dir, model=model, effort=effort)
+                try:
+                    await probe.start()
+                finally:
+                    await probe.close()
+        settings = write(args.state_dir, args.ollama_model, args.codex == "on" or bool(profiles),
+                         args.conversation_provider, **profiles)
         print(json.dumps({**settings, "applies": "next Core startup; current process unchanged"}, ensure_ascii=False))
         return
     if args.command == "start":
         from .launcher import start
         await start(args.state_dir, args.project)
-        print("ARGOS abierto. Espacio: hablar/enviar · Escape: silencio · Q: cerrar consola.")
+        print("ARGOS abierto. Manos libres: invoca «Argos» si está activado. "
+              "Espacio: conversación/captura · Escape: apagar escucha · Q: cerrar consola.")
         return
     if args.command == "console":
         from .console import console
@@ -164,14 +201,17 @@ async def execute(args):
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return
     methods = {"projects": "projects.list", "add-project": "projects.add",
+               "select-project": "projects.select", "project-context": "projects.context",
                "play-wav": "voice.play", "stop-speech": "voice.stop",
                "voice-status": "voice.state", "voice-inputs": "voice.inputs",
                "system-status": "environment.inspect",
                "voice-config": "voice.configure", "voice-review": "approval.review", "review": "task", "register-command": "commands.register"}
     message = {"method": methods.get(args.command, args.command), "session": args.session,
                "request_id": args.request_id or uuid.uuid4().hex}
+    if args.command == "select-project" and bool(args.project) == bool(args.clear):
+        raise ArgosError("Indica un proyecto o --clear.")
     for name in ("text", "project", "task_id", "name", "path", "capability", "fingerprint", "speak", "argv",
-                 "language", "input_device", "target"):
+                 "language", "input_device", "target", "scope"):
         if hasattr(args, name) and getattr(args, name) is not None:
             message[name] = getattr(args, name)
     if args.command == "run":

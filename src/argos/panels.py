@@ -78,7 +78,7 @@ class Panels:
             pass  # Other compositors and manual terminal launches still work.
 
     async def open(self, view, session):
-        if view not in ("agents", "tasks"):
+        if view not in ("agents", "tasks", "capabilities"):
             raise ArgosError("Panel desconocido.")
         key = (view, session)
         identity = hashlib.sha256((str(self.directory.resolve()) + ":" + session).encode()).hexdigest()[:10]
@@ -103,7 +103,7 @@ class Panels:
             executable = Path(__file__).resolve().parents[2] / "argos"
             child = subprocess.Popen([
                 terminal, "--class", window_class,
-                "--title", "ARGOS · " + ("AGENTES" if view == "agents" else "TAREAS"),
+                "--title", "ARGOS · " + {"agents": "AGENTES", "tasks": "TAREAS", "capabilities": "CAPACIDADES"}[view],
                 "-o", "initial_window_width=128c", "-o", "initial_window_height=42c",
                 "-o", "remember_window_size=no", "-o", "font_size=11",
                 "-o", "background_opacity=1", "-o", "background=#0b1019",

@@ -22,6 +22,11 @@ class Router:
         text = re.sub(r"^argos[, :]+\s*", "", text.strip(), flags=re.I)
         text = re.sub(r"^(?:por favor|please)[, ]+", "", text, flags=re.I)
         value = normalize(text)
+        control = re.sub(r"[, ]+(?:please|por favor)$", "", value)
+        if control in ("stop listening", "stop listening to me", "turn off the microphone",
+                       "deja de escuchar", "deja de escucharme", "deja de escucharme argos",
+                       "apaga el microfono", "desactiva el microfono"):
+            return Decision("stop_listening", reason="explicit_microphone_stop")
         review = re.fullmatch(r"(?:revisa (?:la )?aprobacion|review approval)(?: ([a-f0-9]{8,32}))?", value)
         if review:
             return Decision("approval_review", arguments={"task_id": review[1] or ""})
@@ -61,6 +66,10 @@ class Router:
             "que puedes hacer": ("capabilities", ""),
             "what can you do": ("capabilities", ""),
             "capacidades": ("capabilities", ""),
+            "lista tus capacidades": ("capabilities", ""),
+            "muestra tus capacidades": ("capabilities", ""),
+            "list your capabilities": ("capabilities", ""),
+            "show your capabilities": ("capabilities", ""),
             "agentes": ("agents", ""),
             "agents": ("agents", ""),
             "lista los proyectos": ("projects", ""),
@@ -82,6 +91,7 @@ class Router:
             "silencio": ("stop_speech", ""),
             "deja de hablar": ("stop_speech", ""),
             "stop speaking": ("stop_speech", ""),
+            "stop talking": ("stop_speech", ""),
             "actualizate": ("maintenance", ""),
             "actualiza argos": ("maintenance", ""),
             "update yourself": ("maintenance", ""),

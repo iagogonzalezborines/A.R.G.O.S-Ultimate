@@ -14,7 +14,7 @@ from .security import safe_data
 
 TOOLS = ("git", "python", "python3", "uv", "node", "npm", "cargo", "cmake",
          "docker", "code", "codex", "kitty", "hyprctl", "gio", "xdg-open",
-         "pw-cli", "pw-dump", "pw-record", "pw-play", "pactl", "bwrap")
+         "pw-cli", "pw-dump", "pw-record", "pw-play", "pactl", "bwrap", "playerctl", "firefox")
 
 
 def observation(value, source, status="observed", reason=None):
@@ -187,7 +187,8 @@ class LinuxEnvironment:
                 return status("needs_context", "Disponible dentro de una tarea de desarrollo; Core prepara su copia.")
             return status("needs_context", "Requiere un proyecto seleccionado.")
         required = {"repo.inspect": ["git"], "apps.open": ["gio"], "files.open": ["xdg-open"],
-                    "web.open": ["xdg-open"]}.get(name, [])
+                    "web.open": ["xdg-open"], "media.status": ["playerctl"],
+                    "media.control": ["playerctl"], "browser.play": ["firefox"]}.get(name, [])
         if name == "workspace.open":
             if args.get("editor") == "codex":
                 required = ["kitty", "codex"]
@@ -221,7 +222,7 @@ class LinuxEnvironment:
             return status("not_checked", "Bubblewrap instalado; namespaces y prueba concreta se verifican al ejecutar.")
         if name in ("development.plan", "development.review"):
             return status("not_checked", "Requiere una tarea de desarrollo aislada gestionada por Core.")
-        if name.startswith("files.") or name in ("projects.create", "stl.inspect", "gcode.inspect", "repo.inspect"):
+        if name.startswith(("files.", "projects.")) or name in ("stl.inspect", "gcode.inspect", "repo.inspect"):
             return status("not_checked", "Adaptador presente; ruta, formato y permisos se verifican en la operación concreta.")
         if name in ("system.info", "system.inspect", "apps.list"):
             return status("available", "Capacidad local implementada; no requiere un servicio externo.")

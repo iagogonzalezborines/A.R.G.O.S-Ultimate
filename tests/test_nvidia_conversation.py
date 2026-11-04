@@ -129,6 +129,19 @@ class NvidiaConversationTests(unittest.IsolatedAsyncioTestCase):
                 await self.provider.decide('Hola', {})
             self.assertFalse(self.provider.connected)
 
+    async def test_voice_keeps_network_budget_and_reports_safe_timeout_without_retry(self):
+        opener = Mock()
+        opener.open.side_effect = TimeoutError('fixture-private-key')
+        with patch.object(self.provider, '_opener', return_value=opener):
+            with self.assertRaisesRegex(ArgosError, 'NVIDIA tarda demasiado'):
+                await self.provider.decide('Hello', {'interaction': {'channel': 'voice'}})
+        self.assertEqual(opener.open.call_count, 1)
+        self.assertEqual(opener.open.call_args.kwargs['timeout'], 20)
+        self.assertFalse(self.provider.connected)
+        # Voice retains the same complete-output budget as text.
+        payload = json.loads(opener.open.call_args.args[0].data)
+        self.assertEqual(payload['max_tokens'], 4096)
+
     async def test_specialists_and_redirects_are_rejected(self):
         with self.assertRaises(ArgosError):
             await self.provider.decide('Work', {}, agent='engineering')
