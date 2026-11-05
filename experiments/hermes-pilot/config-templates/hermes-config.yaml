@@ -1,0 +1,80 @@
+{
+  "model": {
+    "provider": "gemini",
+    "default": "gemini-3.8-flash"
+  },
+  "auth": {
+    "adopt_external_logins": false
+  },
+  "platform_toolsets": {
+    "cli": [
+      "argos_broker",
+      "memory",
+      "skills"
+    ],
+    "desktop": [
+      "argos_broker",
+      "memory",
+      "skills"
+    ]
+  },
+  "agent": {
+    "disabled_toolsets": [
+      "terminal",
+      "browser",
+      "file",
+      "code_execution",
+      "delegation",
+      "cronjob",
+      "connections",
+      "computer_use",
+      "desktop_ui",
+      "project",
+      "web",
+      "image",
+      "tts",
+      "catalog"
+    ]
+  },
+  "plugins": {
+    "enabled": [
+      "argos-broker"
+    ],
+    "auto_update_check_hours": 0,
+    "auto_apply": false
+  },
+  "skills": {
+    "inline_shell": false,
+    "write_approval": true
+  },
+  "security": {
+    "allow_lazy_installs": false
+  },
+  "approvals": {
+    "mode": "manual",
+    "single_query_mode": "deny",
+    "cron_mode": "deny",
+    "unattended_mode": "deny",
+    "timeout": 10
+  },
+  "memory": {
+    "memory_enabled": true,
+    "user_profile_enabled": true,
+    "nudge_interval": 0
+  },
+  "telemetry": {
+    "shared_metrics": {
+      "enabled": false,
+      "send": false
+    }
+  },
+  "auxiliary": {
+    "background_review": {
+      "enabled": false
+    }
+  },
+  "compression": {
+    "codex_app_server_auto": "native",
+    "idle_compact_after_seconds": 0
+  }
+}

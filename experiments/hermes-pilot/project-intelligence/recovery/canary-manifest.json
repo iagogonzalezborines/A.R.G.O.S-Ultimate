@@ -1,0 +1,21 @@
+{
+  "probe_sha256": "93e8b2494cff56aa5edea770733bd6bfe77edd2837a7b32efb170d3d6cc8cfe7",
+  "canaries": {
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native/kanban/boards/secure-proof/synthetic-board-canary.txt": "8acfcceb6b64e5ad2482cd9a7bffe170dbfcfe771f3638f0abec5a13d04b2af7",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native/profiles/engineering/synthetic-credential.txt": "140ca08ebaa90ac21dd9b9127e1970d1d38fbe05b2d040195626a3a71ca1d850",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/codex/synthetic-credential.txt": "140ca08ebaa90ac21dd9b9127e1970d1d38fbe05b2d040195626a3a71ca1d850",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/synthetic-controller.txt": "140ca08ebaa90ac21dd9b9127e1970d1d38fbe05b2d040195626a3a71ca1d850",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/other-project/canary.txt": "0cc3e0ef4c26d65eeeb8bc0c42291b940e8a4177a473965f9dc86b8f097544ca",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/operational-argos/canary.txt": "2b57e2e519f94c6d6c17f2fe2d4780fa33ac8c29c674b58e1737a3ca4f464715",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/ide/canary.txt": "a49f8357d1162806059bd58cdc11f0bbdcfd7c26d855792b23b1e81e69783516"
+  },
+  "forbidden_write_markers": [
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native/kanban/boards/secure-proof/unexpected-worker-write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native/profiles/engineering/unexpected-worker-write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/codex/unexpected-worker-write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/controller/unexpected-worker-write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/other-project/unexpected-worker-write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/operational-argos/unexpected-worker-write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/ide/unexpected-worker-write"
+  ]
+}

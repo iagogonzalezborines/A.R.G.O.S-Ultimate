@@ -1,0 +1,7 @@
+ARGOS Media Bridge — Data handling
+
+The extension acts on explicit media requests from the local ARGOS application. It searches YouTube, selects the requested video and checks playback. It reads titles, URLs and playback state for the tab it creates or reuses for that request. It returns the selected title, URL and success/failure result to the local ARGOS native-messaging companion. ARGOS may include these results in its configured AI conversation provider.
+
+The extension itself has no analytics, advertising service or remote developer endpoint. It does not read or copy browser passwords, cookies, login tokens, messages, contacts, bookmarks or general browsing history. Existing Firefox accounts, preferences and content blockers remain in Firefox. YouTube receives the search/navigation requests needed to play the requested media.
+
+Required data declarations cover browsing activity, website content and website activity passed to the local companion. Only www.youtube.com is granted host access. Native messaging is restricted to argos.firefox.

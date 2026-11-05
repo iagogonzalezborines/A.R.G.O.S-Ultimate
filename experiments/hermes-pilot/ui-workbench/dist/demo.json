@@ -1,0 +1,20 @@
+{
+ "topic":"Auroras boreales",
+ "mode":"prepared-demonstration",
+ "summary":{
+  "title":"La luz que conecta el Sol y la Tierra.",
+  "intro":"Las auroras aparecen cuando partículas cargadas interactúan con la atmósfera terrestre. El campo magnético guía esas partículas hacia las regiones polares, donde el encuentro con los gases produce luz.",
+  "sections":[
+   {"title":"01 / QUÉ ESTAMOS VIENDO","text":"Las auroras del norte y del sur son manifestaciones de la misma interacción entre partículas y magnetismo. Su forma y su intensidad cambian con las condiciones del entorno espacial."},
+   {"title":"02 / DE DÓNDE VIENE EL COLOR","text":"La luz procede de los gases de la alta atmósfera. El oxígeno y el nitrógeno participan en la emisión; el color depende del gas y de las condiciones en que ocurre la interacción."},
+   {"title":"03 / PARA SEGUIR INVESTIGANDO","text":"NASA explica el fenómeno físico. NOAA publica productos para consultar las condiciones aurorales. Wikipedia permite explorar términos y referencias. Esta secuencia no incluye una predicción local actual."}
+  ]
+ },
+ "sources":[
+  {"publisher":"NASA","type":"FUENTE PRIMARIA","title":"Auroras","url":"https://science.nasa.gov/sun/auroras/","description":"Introducción al vínculo entre partículas solares, campo magnético y luces polares."},
+  {"publisher":"NOAA / SWPC","type":"OBSERVACIÓN Y PRONÓSTICO","title":"Aurora — 30 Minute Forecast","url":"https://www.swpc.noaa.gov/products/aurora-30-minute-forecast","description":"Producto oficial de condiciones aurorales. Ábrelo para consultar su fecha y cobertura."},
+  {"publisher":"WIKIPEDIA","type":"REFERENCIA GENERAL","title":"Aurora polar","url":"https://es.wikipedia.org/wiki/Aurora_polar","description":"Contexto general y referencias para ampliar la lectura del fenómeno."}
+ ],
+ "video":{"title":"NASA · La ionosfera","url":"https://images.nasa.gov/details/GSFC_20171107_Ionosphere_m12532_ICON","asset_metadata":"https://images-assets.nasa.gov/video/GSFC_20171107_Ionosphere_m12532_ICON/collection.json"},
+ "provenance":{"summary":"Prepared UI fixture, based on linked public sources; not a live agent research result.","image":"NASA Science / Bin Li, aurora at Ny-Ålesund, https://science.nasa.gov/sun/auroras/"}
+}

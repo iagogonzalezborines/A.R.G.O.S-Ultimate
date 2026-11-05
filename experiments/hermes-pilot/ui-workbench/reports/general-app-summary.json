@@ -1,0 +1,445 @@
+{
+  "date": "2026-11-05",
+  "scope": "Isolated ARGOS/Hermes general desktop voice app; no operational migration",
+  "owner": {
+    "reasoning_history_sessions": "native Hermes AIAgent and SessionDB",
+    "audio_and_presentation": "thin I/O controller"
+  },
+  "model": "gpt-6-luna",
+  "reasoning": "low",
+  "api_mode": "codex_app_server",
+  "voice": "local Qwen3-TTS Base / public Peter Yearsley reference",
+  "features": [
+    "SteelSeries hands-free wake and follow-up dialogue",
+    "separate speech and chime output controls",
+    "real native hosted web search and cited source windows",
+    "cylinder only on actual process start",
+    "single-instance app and graphical-login autostart registration",
+    "Native workspace inspection and window management with renderer acknowledgement",
+    "Internal YouTube and direct video panels",
+    "Content-dependent sizing and weighted layout",
+    "Custom file explorer: roots, filename search, selected-file context, text/image/PDF preview",
+    "Exact reviewed create/edit/rename/move/copy and folder creation",
+    "Native and local-voice workspace.clear with actual browser closure and stale presentation suppression",
+    "Read-only physical disk/partition inventory and mounted free-space observations",
+    "Personal folder and mounted data-volume browsing",
+    "Internal file clipboard, explicit user Ctrl+C/Ctrl+V and reviewed agent paste",
+    "Streamed binary copies above old 1 MiB limit without automatic overwrite",
+    "Backend-owned persistent speech setting and visible independent speaker control",
+    "Local voice-enable command, isolated QA speech preferences, legacy renderer mute migration",
+    "Pinned compiled Qwen/Peter streaming with warm decoder phases and continuous raw player",
+    "Normal Firefox music tool retaining accounts/theme/blocker and checking actual playback",
+    "CUDA large-v3-turbo multilingual recognition with one decode and no phonetic name replacements",
+    "Real research stage speech, incremental source/page presentation, separate detailed report and spoken conclusion",
+    "Bounded weighted layout split avoids recursion for skewed panel weights",
+    "Native Codex programming and commands in an isolated candidate, with concrete user patch review",
+    "Structured autolog and bounded automatic diagnosis of execution errors",
+    "Trusted restart supervisor with durable backup journal and startup rollback",
+    "Current workspace observations delivered through native turn input with original user display text retained"
+  ],
+  "validation": {
+    "desktop_checks_passed": 20,
+    "desktop_checks_total": 20,
+    "overlap_verified": true,
+    "native_web_search_verified": true,
+    "first_audio_ready_seconds": 5.583054222999635,
+    "serial_first_audio_estimate_seconds": 9.738179563000813,
+    "playback_simulated": true,
+    "interruption": {
+      "api_mode": "codex_app_server",
+      "suppressed_stale_reply": true,
+      "microphone_remained_off": true,
+      "subsequent_reply_seconds": 4.758432561000518,
+      "simulation": "muted audio duration, real native model and synthesis"
+    },
+    "source_protection": {
+      "argos_source_files_checked": 152,
+      "changed": []
+    },
+    "workspace_followup": {
+      "workspace-ui-checks": {
+        "passed": 18,
+        "total": 18
+      },
+      "workspace-followup-checks": {
+        "passed": 8,
+        "total": 8
+      },
+      "workspace-final-checks": {
+        "passed": 8,
+        "total": 8
+      },
+      "files-capability-checks": {
+        "passed": 25,
+        "total": 25
+      },
+      "general-ui-checks": {
+        "passed": 20,
+        "total": 20
+      }
+    },
+    "latest_clause_sample": {
+      "first_audio_ready_seconds": 4.76934120399892,
+      "same_text_serial_estimate_seconds": 6.826262150998446,
+      "playback_simulated": true
+    },
+    "storage_clear_clipboard": {
+      "storage-clipboard-checks": {
+        "passed": 21,
+        "total": 21
+      },
+      "storage-clear-ui-checks": {
+        "passed": 14,
+        "total": 14
+      },
+      "clear-voice-checks": {
+        "passed": 7,
+        "total": 7
+      },
+      "files-capability-checks": {
+        "passed": 25,
+        "total": 25
+      }
+    },
+    "speech_repair": {
+      "speech-settings-checks": {
+        "passed": 8
+      },
+      "speech-settings-ui-checks": {
+        "passed": 10
+      }
+    },
+    "continuous_speech": {
+      "turns": [
+        {
+          "input": "For a speech timing test, repeat exactly: The workspace is clear. Your files are unchanged. I'm ready for the next task.",
+          "metrics": {
+            "chunks": [
+              {
+                "ordinal": 1,
+                "characters": 78,
+                "synthesis_start_seconds": 4.626291396001761,
+                "duration_seconds": 4.634666666666667,
+                "cache_hit": false,
+                "playback_start_seconds": 4.962181795999641,
+                "playback_end_seconds": 9.602661320001062,
+                "synthesis_end_seconds": 7.475306172000273
+              }
+            ],
+            "audio_packets": [
+              {
+                "ready_seconds": 4.962099135998869,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 5.248371482000948,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 5.535315050001373,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 5.819353582999611,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 6.101312793998659,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 6.449998449999839,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 6.801298980000865,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 7.152866579999682,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 7.453615803999128,
+                "duration_seconds": 0.4
+              }
+            ],
+            "first_audio_ready_seconds": 4.962099135998869,
+            "first_playback_start_seconds": 4.962181795999641,
+            "streamed_characters": 78,
+            "continuous_pcm": true,
+            "first_text_seconds": 4.493602205999196,
+            "total_seconds": 9.602682479999203,
+            "web_calls": 0,
+            "model_seconds": 4.7878144229980535,
+            "session_id": "argos-continuous-speech-check",
+            "playback_simulated": true
+          },
+          "simulated_queue_gaps": []
+        },
+        {
+          "input": "Para una prueba de voz, repite exactamente: La primera frase termina aquí. La siguiente continúa con naturalidad. Sin pausas interminables.",
+          "metrics": {
+            "chunks": [
+              {
+                "ordinal": 1,
+                "characters": 95,
+                "synthesis_start_seconds": 2.0134677089990873,
+                "duration_seconds": 6.912,
+                "cache_hit": false,
+                "playback_start_seconds": 2.324900425999658,
+                "playback_end_seconds": 9.246680740998272,
+                "synthesis_end_seconds": 6.10218030499891
+              }
+            ],
+            "audio_packets": [
+              {
+                "ready_seconds": 2.3248298859980423,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 2.605894753996836,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 2.887366982999083,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 3.1712765749980463,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 3.455517496997345,
+                "duration_seconds": 0.4693333333333333
+              },
+              {
+                "ready_seconds": 3.8021595279969915,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 4.149823520998325,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 4.4981830949982395,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 4.846771827997145,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 5.196928193996428,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 5.5454838480000035,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 5.894015390997083,
+                "duration_seconds": 0.6293333333333333
+              },
+              {
+                "ready_seconds": 6.077673984997091,
+                "duration_seconds": 0.16
+              }
+            ],
+            "first_audio_ready_seconds": 2.3248298859980423,
+            "first_playback_start_seconds": 2.324900425999658,
+            "streamed_characters": 95,
+            "continuous_pcm": true,
+            "first_text_seconds": 1.5523612909964868,
+            "total_seconds": 9.24670080100259,
+            "web_calls": 0,
+            "model_seconds": 2.049270665000222,
+            "session_id": "argos-continuous-speech-check",
+            "playback_simulated": true
+          },
+          "simulated_queue_gaps": []
+        }
+      ],
+      "recovery": {
+        "chunks": [
+          {
+            "ordinal": 1,
+            "characters": 24,
+            "synthesis_start_seconds": 1.7801367819993175,
+            "duration_seconds": 1.648,
+            "cache_hit": false,
+            "playback_start_seconds": 2.0913693549991876,
+            "playback_end_seconds": 3.741387608999503,
+            "synthesis_end_seconds": 2.898150994002208
+          }
+        ],
+        "audio_packets": [
+          {
+            "ready_seconds": 2.0913088750021416,
+            "duration_seconds": 0.4693333333333333
+          },
+          {
+            "ready_seconds": 2.375700994001818,
+            "duration_seconds": 0.4693333333333333
+          },
+          {
+            "ready_seconds": 2.6599873830018623,
+            "duration_seconds": 0.4693333333333333
+          },
+          {
+            "ready_seconds": 2.881029441999999,
+            "duration_seconds": 0.24
+          }
+        ],
+        "first_audio_ready_seconds": 2.0913088750021416,
+        "first_playback_start_seconds": 2.0913693549991876,
+        "streamed_characters": 24,
+        "continuous_pcm": true,
+        "first_text_seconds": 1.6644723150020582,
+        "total_seconds": 3.7414055289991666,
+        "web_calls": 0,
+        "model_seconds": 1.89823886099839,
+        "session_id": "argos-continuous-speech-check",
+        "playback_simulated": true
+      },
+      "playback": "muted duration simulation with real model and PCM generation",
+      "engine_pin": "b8db6ff1cebc0d6554cf0977045850bcc796b383"
+    },
+    "raw_pcm_output": {
+      "raw_pcm_playback_passed": true,
+      "source_seconds": 4.634666666666667,
+      "actual_player_seconds": 4.669465807997767,
+      "all_source_bytes_written": true,
+      "eof_drains_audio_tail": true,
+      "interruption_stops_player": true,
+      "playback": "temporary null sink, not speakers"
+    },
+    "firefox_music": {
+      "ok": true,
+      "status": "playing",
+      "title": "AC/DC - Thunderstruck (Official Video)",
+      "url": "https://www.youtube.com/watch?v=v2AC41dglnM",
+      "browser": "Firefox habitual",
+      "verification": "requested_video_advancing_and_not_showing_ad_at_check",
+      "ad_free_guaranteed": false,
+      "seconds": 11.548232572000416
+    },
+    "new_checks": {
+      "continuous-ui-checks": {
+        "passed": 7
+      },
+      "media-connector-checks": {
+        "passed": 10
+      }
+    }
+  },
+  "limits": [
+    "Timing measured with muted simulated playback; physical sound onset not measured",
+    "Autostart generator and entries validated, no reboot/login cycle tested",
+    "Pilot native Codex built-ins require existing filesystem containment; online production boundary not certified",
+    "XWayland/software rendering; native Wayland/GPU optimization pending",
+    "External application automation, project engineering execution, CAD/printer operations not attached",
+    "Explorer has bounded filename search, small regular-file changes, first-ten-page PDF text extraction; no universal binary/CAD viewer or directory move",
+    "Site-specific media consent, sign-in, ads or playback restrictions can require interaction",
+    "Selected file contents may be provided to the existing subscription model when requested; no bulk indexing",
+    "Unmounted partitions are identifiable but not browsable; no mounting/unmounting/formatting tools",
+    "File clipboard is internal to ARGOS; recursive folder copy not implemented",
+    "Exact voice-clear test uses text entry and actual synthesis with muted playback, not new hardware recognition test",
+    "Native public message text is completed before streaming PCM generation; model time remains additional",
+    "Initial compile/warmup can take tens of seconds before microphone readiness",
+    "Normal Firefox add-on is temporary and removed on Firefox restart; no signed distribution yet",
+    "Verified music was not an ad at check; installed blocker cannot guarantee no future ads",
+    "New recognition checks use synthetic public Peter voice and additive noise; live user microphone/accent accuracy still needs assessment",
+    "Research measurements are a small warm subscription-provider sample; final web research is not guaranteed to finish immediately",
+    "Self-development only edits the listed pilot source files; new modules, system packages and permission-controller changes require extending the trusted scope",
+    "Update install/rollback and crash recovery tested on disposable copies; a user-approved production update cycle has not yet been exercised",
+    "Generic voice confirmation cannot approve an update; approval uses the concrete local review panel",
+    "Named Codex permission profiles are version-sensitive; native preflight refuses coding if credential/network containment cannot be verified"
+  ],
+  "followup": "Native workspace MCP, scoped explorer, real media and semantic layout",
+  "speech_delivery": "Continuous PCM per public answer; research uses actual stage feedback and a separate complete native-agent spoken conclusion with a detailed workspace report",
+  "speech_engine_pin": "b8db6ff1cebc0d6554cf0977045850bcc796b383",
+  "recognition": {
+    "model": "large-v3-turbo",
+    "device": "cuda",
+    "compute_type": "int8_float16",
+    "revision": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf",
+    "decode_passes": 1,
+    "audio_persistence": "No captured microphone audio retained",
+    "median_seconds": 0.4092570020002313,
+    "synthetic_cases": 16,
+    "previous_base_cpu_median_seconds": 1.0795,
+    "limits": "Synthetic public Peter voice with clean and additive-noise variants; user microphone/accent not validated.",
+    "resources_snapshot": {
+      "gpu_system_snapshot": "6422 MiB, 8188 MiB",
+      "workers": [
+        {
+          "pid": 376573,
+          "rss_kib": 982800
+        },
+        {
+          "pid": 376574,
+          "rss_kib": 2691192
+        }
+      ]
+    }
+  },
+  "incremental_research": {
+    "owner": "Native Hermes/Codex; typed presentation-only research_sources/research_result actions",
+    "checks": "reports/incremental-voice-checks.json",
+    "boundary_checks": 17,
+    "cancel_checks": "reports/incremental-cancel.json",
+    "first_uncached_dispatch_audio_seconds": 0.35200194700155407,
+    "sources_displayed_seconds": 7.534602759998961,
+    "report_displayed_seconds": 10.871307653000258,
+    "model_seconds": 11.968241703998501,
+    "ordinary_first_audio_seconds": [
+      1.6820832420016814,
+      1.9387679220017162
+    ],
+    "counts": "Distinct selected URLs and actual renderer-acknowledged page panels; no page-load verification claim",
+    "clear_suppresses_older_turn_research_panels": true
+  },
+  "latest_live_state": "reports/eager-start-live-state.json",
+  "self_development": {
+    "reasoning_owner": "Native CodexAppServerSession; native Codex threads retain coding history",
+    "controller_role": "Scoped release proposals, approval grants, validation, installation journal and diagnostics; no custom reasoning/task/memory runtime",
+    "scope": "Allowlisted existing desktop UI, voice adapters and conversation contract in the isolated pilot",
+    "commands": "Native coding shell/patch tools inside the candidate. Named permission profile denies network and credential reads; outer bubblewrap hides host projects, IDE sessions and approval broker.",
+    "approval": "Exact candidate/baseline hashes plus full diff; only trusted desktop user route can approve. Voice yes and model tool calls cannot grant installation.",
+    "updates": "Apply after owned app/backend close; preserve state/credentials; check voice and renderer readiness for up to 210 seconds; restore previous source on startup failure or interrupted install. User-requested rollback is available for installed patches.",
+    "incidents": "Bounded redacted structured errors/traces/counts; runtime error candidates limited to 3/day and 10-minute cooldown; no automatic installation",
+    "validation_limits": "Python/JS syntax and three fixed speech regressions; not universal feature correctness or a complete security certification",
+    "tested": {
+      "permission_and_transaction_checks": 26,
+      "automatic_diagnosis_checks": 8,
+      "desktop_and_native_conversation_checks": 13,
+      "native_coding_thread": "01a1abfe-e22d-7072-b454-f58a95ae36ac",
+      "disposable_install_and_rollback": true,
+      "production_update_cycle_tested": false
+    },
+    "live_ready": true,
+    "production_pending_update": false,
+    "permission_incidents": "Displayed as blocked_by_policy; no repair button, and development.propose refuses to treat permission denials as bugs"
+  },
+  "startup": {
+    "codex": "Native Hermes prompt/history lifecycle plus Codex app-server initialize, thread start/resume and account/read before ready; no synthetic conversation or startup model turn",
+    "independent_of_ide": true,
+    "component_seconds": {
+      "recognition": 1.9052131910000298,
+      "speech": 18.123821600000156,
+      "codex": 3.408277271000088
+    },
+    "component_deadlines_seconds": {
+      "codex": 45,
+      "recognition": 60,
+      "speech": 180
+    },
+    "release_startup_health_deadline_seconds": 210,
+    "component_specific_failure_and_cleanup": true,
+    "historical_timeout_component": "Unknown; old shared-timeout error did not identify its component",
+    "native_checks": 6,
+    "lifecycle_checks": 10,
+    "desktop_checks": 9
+  }
+}

@@ -1,0 +1,21 @@
+const {_electron:electron}=require('../source/node_modules/playwright');
+const fs=require('node:fs'),path=require('node:path');const ROOT=__dirname,BASE='http://127.0.0.1:42721',report={checks:[],turns:[],errors:[]};
+function check(name,ok,detail){report.checks.push({name,ok,detail});console.log(name,ok);if(!ok)throw Error(name)}
+(async()=>{const env={PATH:'/usr/bin:/bin',HOME:path.join(ROOT,'state/home'),LANG:'C.UTF-8',ARGOS_UI_QA:'1',ARGOS_UI_PLATFORM:'x11',ARGOS_UI_ORIGIN:BASE};for(const k of ['DISPLAY','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS'])if(process.env[k])env[k]=process.env[k];
+ const token=fs.readFileSync(path.join(ROOT,'private/presentation.token'),'utf8').trim();async function api(route,payload){const r=await fetch(BASE+route,{method:payload?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});const value=await r.json();if(!r.ok)throw Error(JSON.stringify(value));return value}
+ const app=await electron.launch({executablePath:path.join(ROOT,'../source/node_modules/electron/dist/electron'),args:[path.join(ROOT,'desktop/main.cjs')],env,timeout:25000});
+ try{const page=await app.firstWindow();page.on('pageerror',e=>report.errors.push(String(e)));await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setFullScreen(true));await page.waitForFunction(()=>window.ARGOSWorkspace?.voiceState().ready,null,{timeout:90000});
+  const cached=await api('/api/voice',{op:'test-tts',text:"Yes, I'm here.",language:'en'});check('chosen voice presence reply ready from audio cache',cached.ok&&cached.cache_hit&&cached.generation_seconds<.15,cached);
+  const record=async text=>{const begin=Date.now();await api('/api/voice',{op:'test-text',text});const metric=fs.readFileSync(path.join(ROOT,'reports/voice-latency.jsonl'),'utf8').trim().split('\n').map(l=>JSON.parse(l)).filter(r=>r.session_id==='argos-workspace-followup').at(-1);const row={input:text,seconds:(Date.now()-begin)/1000,metrics:metric};report.turns.push(row);console.log(JSON.stringify(row));return row};
+  await record('Open https://www.youtube.com/watch?v=dQw4w9WgXcQ in a large video window inside this workspace.');
+  const snapshot=await api('/api/capability',{tool:'workspace',arguments:{action:'inspect'}});check('voice path invokes actual workspace video capability',snapshot.windows.some(w=>w.kind==='video'&&w.url?.includes('youtube.com/watch')));
+  const audit=fs.readFileSync(path.join(ROOT,'reports/workspace-capability-audit.jsonl'),'utf8').trim().split('\n').map(l=>JSON.parse(l));check('video action receives successful acknowledgement',audit.some(x=>x.tool==='workspace'&&x.action==='open'&&x.ok)&&!audit.some(x=>!x.ok),audit);
+  await record('Open the file explorer in my default Linux projects directory.');const files=(await api('/api/capability',{tool:'workspace',arguments:{action:'inspect'}})).windows.find(w=>w.kind==='files');check('voice resolves default Linux projects without asking for a path',files?.path==='/home/tyrant/Proyectos');
+  const timing=await record('For this speech timing test, repeat exactly: The blue enclosure is a disposable test fixture; its budget is eighty euros.');
+  check('long opening clause enters synthesis early',timing.metrics?.chunks?.length>=2,timing.metrics);
+  const full=await api('/api/voice',{op:'test-tts',text:'The blue enclosure is a disposable test fixture; its budget is eighty euros.',language:'en'});report.fullSynthesis=full;report.serialFirstAudioEstimateSeconds=timing.metrics.model_seconds+full.generation_seconds;
+  check('audio queues overlap',timing.metrics.chunks[1].synthesis_start_seconds<timing.metrics.chunks[0].playback_end_seconds);
+  check('ordinary reply has no new process cylinder',await page.locator('#workspace').getAttribute('data-phase')!=='expanding');
+  check('no renderer errors',!report.errors.length,report.errors);
+ }finally{await app.close();fs.writeFileSync(path.join(ROOT,'reports/workspace-followup-checks.json'),JSON.stringify(report,null,2))}
+})().catch(e=>{report.failure=String(e);fs.writeFileSync(path.join(ROOT,'reports/workspace-followup-checks.json'),JSON.stringify(report,null,2));console.error(e);process.exitCode=1});

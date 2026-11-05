@@ -1,0 +1,21 @@
+// Local release review. Remote source pages never receive this bridge.
+const call=args=>window.argosDesktop.capability({tool:'development',arguments:args});
+export async function renderMaintenance(w,{make,manager,toast}){
+ const pad=make('div','maintenance-panel');w.body.append(pad);let busy=false;
+ const button=(label,action)=>{const b=make('button','file-button',label);b.onclick=async()=>{if(busy)return;busy=true;b.disabled=true;try{await action()}catch(e){toast(e.message)}finally{busy=false;b.disabled=false}};return b};
+ const text=(tag,cls,value)=>make(tag,cls,String(value??''));
+ const load=async()=>{if(!manager.windows.has(w.id))return;const data=await call({action:'status'});pad.replaceChildren();const head=make('div','file-actions');head.append(text('div','eyebrow-blue','ARGOS / DESARROLLO Y AUTOLOG'),button('Actualizar',load));pad.append(head,text('p','file-status','Codex programa y ejecuta comandos en una copia aislada. Cada actualización requiere revisión antes de instalarse.'));
+  pad.append(text('h2','','Cambios de ARGOS'));
+  if(!data.proposals.length)pad.append(text('p','file-status','Sin propuestas. Puedes pedir una mejora o reparar una incidencia por voz.'));
+  for(const brief of data.proposals){const p=await call({action:'review',proposal_id:brief.id}),card=make('section','maintenance-card');card.dataset.proposal=p.id;card.append(text('h3','',p.goal),text('p','file-status',p.status));if(p.summary)card.append(text('p','',p.summary));if(p.error)card.append(text('p','file-error',p.error));
+   if(p.events?.length){const log=make('details');log.append(text('summary','','Ejecución nativa de Codex'),text('pre','maintenance-log',p.events.map(e=>[e.type,e.item_type,e.command,e.output,e.exit_code==null?'':'salida '+e.exit_code].filter(x=>x!==undefined&&x!=='').join(' · ')).join('\n')));card.append(log)}
+   if(p.validation)card.append(text('p','file-status',p.validation.ok?'Validación base superada · '+p.validation.limits:'Validación fallida'));
+   if(p.diff){const details=make('details');details.open=p.status==='awaiting_review';details.append(text('summary','','Revisar cambio completo'),text('pre','maintenance-diff',p.diff));card.append(details)}
+   if(p.status==='awaiting_review'){const controls=make('div','file-actions');controls.append(button('Aprobar actualización y reiniciar',async()=>{await call({action:'confirm',proposal_id:p.id,review_digest:p.review_digest,approve:true});toast('Actualización aprobada. Reiniciando ARGOS.')}),button('Rechazar',async()=>{await call({action:'confirm',proposal_id:p.id,review_digest:p.review_digest,approve:false});await load()}));card.append(controls)}if(p.status==='installed')card.append(button('Restaurar versión anterior y reiniciar',async()=>{await call({action:'rollback',proposal_id:p.id,review_digest:p.review_digest});toast('Restauración aprobada. Reiniciando ARGOS.')}));pad.append(card)}
+  pad.append(text('h2','','Incidencias'));
+  if(!data.incidents.length)pad.append(text('p','file-status','No hay errores registrados.'));
+  for(const incident of [...data.incidents].reverse()){const card=make('section','maintenance-card');card.dataset.incident=incident.id;card.append(text('h3','',incident.component+' · '+incident.code),text('p','',incident.message),text('p','file-status',new Date(incident.last_seen*1000).toLocaleString()+' · '+incident.count+' veces'),text('pre','maintenance-log',incident.frames.map(f=>`${f.file}:${f.line} · ${f.function}`).join('\n')),text('p','file-status',incident.diagnosis));if(incident.repairable!==false)card.append(button('Preparar corrección con Codex',async()=>{await call({action:'propose',incident_id:incident.id,goal:'Investigate and fix the recorded ARGOS incident. Use only the isolated candidate and actual trace. If the cause cannot be established or the necessary files are protected, report that limitation rather than inventing a fix.'});await load()}));pad.append(card)}
+  const details=make('details');details.append(text('summary','','Capacidades y workspace observado'),text('pre','maintenance-log',JSON.stringify({capabilities:data.capabilities,workspace:data.workspace,commands:data.commands},null,2)));pad.append(details)
+ };
+ w.refresh=()=>load().catch(e=>toast(e.message));await load();
+}

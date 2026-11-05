@@ -1,0 +1,56 @@
+[
+  {
+    "id": "pocket-peter",
+    "title": "Peter",
+    "engine": "Pocket TTS · Voz actual",
+    "description": "Referencia masculina que utiliza ARGOS actualmente."
+  },
+  {
+    "id": "pocket-peter-b",
+    "title": "Peter · Variante B",
+    "engine": "Pocket TTS · Mismo timbre",
+    "description": "Un poco más de variación en la generación. Compárala con Peter original."
+  },
+  {
+    "id": "pocket-alba",
+    "title": "Alba",
+    "engine": "Pocket TTS · Alternativa",
+    "description": "Voz femenina para comparar el timbre y la naturalidad."
+  },
+  {
+    "id": "qwen-female",
+    "title": "Qwen · Femenina",
+    "engine": "Qwen3-TTS · Voice Design",
+    "description": "Diseño original con una interpretación serena y conversacional."
+  },
+  {
+    "id": "qwen-male",
+    "title": "Qwen · Masculina",
+    "engine": "Qwen3-TTS · Voice Design",
+    "description": "Diseño original con una interpretación serena y conversacional."
+  },
+  {
+    "id": "qwen-british-seasoned",
+    "title": "Qwen · British maduro",
+    "engine": "Qwen3-TTS · Diseño A",
+    "description": "Objetivo: timbre masculino maduro, acento británico y autoridad tranquila."
+  },
+  {
+    "id": "qwen-british-warm",
+    "title": "Qwen · British cálido",
+    "engine": "Qwen3-TTS · Diseño B",
+    "description": "Objetivo: voz de más edad, acento británico y conversación cercana."
+  },
+  {
+    "id": "qwen-peter-reference",
+    "title": "Qwen + Peter · Referencia",
+    "engine": "Qwen3-TTS · Referencia acústica",
+    "description": "Prueba con el audio original de Peter para fijar timbre y acento."
+  },
+  {
+    "id": "qwen-peter-identity",
+    "title": "Qwen + Peter · Identidad",
+    "engine": "Qwen3-TTS · Identidad vocal",
+    "description": "Misma referencia de Peter, con una condición de voz más ligera."
+  }
+]

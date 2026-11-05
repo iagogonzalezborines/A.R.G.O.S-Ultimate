@@ -1,0 +1,11 @@
+{
+  "baseline_file_count": 152,
+  "changed_or_removed_files": [],
+  "new_nonignored_files": [],
+  "source_unchanged": true,
+  "auth": {
+    "codex_auth_mode": "chatgpt",
+    "openai_api_key_configured": false
+  },
+  "containment_evidence": "validation.json: actual negative access checks inside the namespace"
+}

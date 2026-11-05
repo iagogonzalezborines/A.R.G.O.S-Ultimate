@@ -1,0 +1,2 @@
+# A unified diff represents empty context lines with one required leading space.
+project-intelligence/recovery/upstream-change-proposal.diff whitespace=-blank-at-eol

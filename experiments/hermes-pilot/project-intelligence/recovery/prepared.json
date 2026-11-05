@@ -1,0 +1,10 @@
+{
+  "root": "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native",
+  "engineering": "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native/profiles/engineering",
+  "repository": "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/repository",
+  "board": "secure-proof",
+  "db": "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native/kanban/boards/secure-proof/kanban.db",
+  "project_id": "p_9f1177bb",
+  "task_id": "t_f644a56a",
+  "codex_home": "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/codex"
+}

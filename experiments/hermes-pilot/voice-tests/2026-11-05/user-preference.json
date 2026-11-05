@@ -1,0 +1,18 @@
+{
+  "source": "User selected a favorite in the local audition page and confirmed in chat.",
+  "selected_voice": "qwen-peter-reference",
+  "selected_language": "en",
+  "selected_title": "Qwen + Peter · Referencia",
+  "feedback_time": 1793866940.9748769,
+  "direction": "Prior Qwen designs still sound American. Wants English accent and character as close as possible to Paul Bettany/JARVIS.",
+  "accepted": "Favorite audition: Qwen Base with full public Peter audio/transcript reference, in English.",
+  "method_next": "Validate this voice on short conversational turns, voice consistency and first-audio latency before operational integration.",
+  "scope": "Preferred audition candidate; operational ARGOS voice unchanged.",
+  "character_feedback": {
+    "source": "Latest explicit user feedback",
+    "accepted": "Other audition answers; the change-of-branding joke; response times are acceptable in the audition.",
+    "needs_refinement": "The unsolicited storm-warning clause makes factual information and irony hard to distinguish. Prefer the ordinary answer and a clearly dry aside.",
+    "boundary": "Preserve genuine exceptions when actually asked; do not learn that a green-looking sky is impossible.",
+    "candidate_contract": "contract-irony-v2.txt"
+  }
+}

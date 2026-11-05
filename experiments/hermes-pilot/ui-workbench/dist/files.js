@@ -1,0 +1,52 @@
+const call=arguments_=>window.argosDesktop.capability({tool:'files',arguments:arguments_});
+function size(bytes){return bytes<1024?bytes+' B':bytes<1048576?(bytes/1024).toFixed(1)+' KB':(bytes/1048576).toFixed(1)+' MB'}
+function button(make,label,action){const b=make('button','file-button',label);b.type='button';b.onclick=action;return b}
+function message(w,make,error){w.error=String(error.message||error);w.body.append(make('p','file-error',w.error))}
+
+export async function renderFiles(w,{make,manager,openPanel,toast}){
+ w.error=null;const shell=make('div','file-explorer'),nav=make('div','file-roots'),bar=make('form','file-toolbar'),up=button(make,'↑',()=>{const parts=w.spec.path?.split('/');if(parts?.length>3){parts.pop();load(parts.join('/'))}else load('')}),address=make('input'),search=make('input'),refresh=button(make,'↻',()=>load(w.spec.path||'')),create=button(make,'Nueva carpeta',()=>change('mkdir')),status=make('div','file-status'),list=make('div','file-list'),actions=make('div','file-actions'),form=make('form','file-change-form');
+ address.setAttribute('aria-label','Carpeta');address.placeholder='Carpeta';search.type='search';search.placeholder='Buscar archivos por nombre…';search.setAttribute('aria-label','Buscar archivos');bar.append(up,address,search,refresh,create);shell.append(nav,bar,status,list,actions,form);w.body.append(shell);let selected=null;
+ let copying=false;
+ const copy=async()=>{if(!selected||selected.directory)return;try{await call({action:'copy',path:selected.path});toast('Archivo copiado al portapapeles de ARGOS.')}catch(e){toast(e.message)}};
+ const paste=async()=>{if(copying)return;try{copying=true;status.textContent='Copiando archivo…';await call({action:'paste',path:w.spec.path||''});toast('Archivo pegado.');await load(w.spec.path||'')}catch(e){toast(e.message);status.textContent=e.message}finally{copying=false}};
+ bar.append(button(make,'Pegar',paste));
+ shell.tabIndex=0;shell.onkeydown=e=>{if(e.target.matches('input,textarea,[contenteditable]')||!(e.ctrlKey||e.metaKey))return;if(e.key.toLowerCase()==='c'&&selected&&!selected.directory){e.preventDefault();copy()}if(e.key.toLowerCase()==='v'){e.preventDefault();paste()}};
+ const select=entry=>{selected=entry;w.spec.selected_path=entry.path;manager.changed();actions.replaceChildren();if(entry.directory)return;for(const [label,op] of [['Abrir','open'],['Copiar','copy'],['Renombrar','rename'],['Mover','move']])actions.append(button(make,label,()=>op==='open'?open(entry):op==='copy'?copy():change(op)))};
+ const open=async entry=>{if(entry.directory)return load(entry.path);openPanel('document',{id:'file-'+hash(entry.path),title:entry.name,path:entry.path})};
+ const show=async result=>{list.replaceChildren();selected=null;delete w.spec.selected_path;actions.replaceChildren();status.textContent=result.query?'Resultados: '+result.entries.length+(result.truncated?' · búsqueda limitada':''):result.entries.length+' elementos'+(result.truncated?' · lista limitada':'');for(const entry of result.entries){const row=make('button','file-row');row.type='button';row.dataset.path=entry.path;row.append(make('span','file-icon',entry.directory?'▰':'◇'),make('span','file-name',entry.name),make('span','file-size',entry.directory?'CARPETA':size(entry.size)));row.onclick=()=>{list.querySelectorAll('.selected').forEach(r=>r.classList.remove('selected'));row.classList.add('selected');select(entry)};row.ondblclick=()=>open(entry).catch(e=>toast(e.message));row.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();open(entry).catch(e=>toast(e.message))}};list.append(row)}};
+ async function load(path){try{form.replaceChildren();status.textContent='Leyendo carpeta…';const data=await call({action:'list',path});w.spec.path=data.path||'';address.value=data.path||'';search.value='';if(data.roots){list.replaceChildren();status.textContent='Carpetas disponibles';for(const root of data.roots)list.append(button(make,root.name,()=>load(root.path)))}else await show(data);manager.changed()}catch(error){toast(error.message);status.textContent=error.message;throw error}}
+ function change(operation){form.replaceChildren();const input=make('input');input.setAttribute('aria-label',operation==='mkdir'?'Nombre de carpeta':'Destino del archivo');input.placeholder=operation==='mkdir'?'Nombre de carpeta':'Ruta de destino';if(operation==='rename'&&selected)input.value=selected.name;const submit=make('button','file-button','Revisar cambio');submit.type='submit';form.append(input,submit,button(make,'Cancelar',()=>form.replaceChildren()));form.onsubmit=async e=>{e.preventDefault();try{let path=selected?.path||w.spec.path,destination='';if(operation==='mkdir'){if(!w.spec.path)throw Error('Abre una carpeta primero.');path=w.spec.path+'/'+input.value}else destination=operation==='rename'?path.slice(0,path.lastIndexOf('/')+1)+input.value:input.value;await call({action:'propose',operation,path,destination});form.replaceChildren()}catch(error){toast(error.message)}};input.focus()}
+ bar.onsubmit=async e=>{e.preventDefault();try{if(search.value.trim()){status.textContent='Buscando…';await show(await call({action:'search',path:w.spec.path||'',query:search.value.trim()}))}else await load(address.value)}catch(error){toast(error.message)}};
+ search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();bar.requestSubmit()}};
+ address.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();load(address.value).catch(()=>{})}};
+ try{const data=await call({action:'list'});for(const root of data.roots)nav.append(button(make,root.name,()=>load(root.path).catch(()=>{})));w.refresh=()=>load(w.spec.path||'').catch(()=>{});await load(w.spec.path||'')}catch(error){message(w,make,error)}
+}
+
+function hash(text){let h=2166136261;for(const c of text)h=Math.imul(h^c.charCodeAt(0),16777619);return (h>>>0).toString(16)}
+export async function renderDocument(w,{make,manager,toast}){
+ w.error=null;const shell=make('div','file-document'),status=make('div','file-status','Abriendo archivo…');shell.append(status);w.body.append(shell);
+ try{const file=await call({action:'read',path:w.spec.path});w.spec.path=file.path;status.textContent=file.path+' · '+size(file.size)+(file.truncated?' · vista parcial':'');
+  if(file.data_url){const image=make('img','file-image');image.src=file.data_url;image.alt=file.name;shell.append(image)}
+  else{const text=make(file.editable?'textarea':'pre','file-content');text.setAttribute('aria-label','Contenido de '+file.name);if(file.editable){text.value=file.text;text.spellcheck=false;const bar=make('div','file-actions');bar.append(button(make,'Revisar y guardar cambios',async()=>{try{await call({action:'propose',operation:'write',path:file.path,content:text.value})}catch(error){toast(error.message)}}));shell.append(bar)}else text.textContent=file.text||'No hay una vista previa para este formato.';shell.append(text)}manager.changed();
+ }catch(error){message(w,make,error)}
+}
+
+export async function renderChange(w,{make,manager,toast}){
+ w.error=null;const pad=make('div','file-review');w.body.append(pad);
+ try{const brief=JSON.parse(w.spec.text),change=await call({action:'review',proposal_id:brief.id});pad.append(make('div','eyebrow-blue','ARGOS / CAMBIO PROPUESTO'),make('h2','',({write:'Guardar archivo',mkdir:'Crear carpeta',rename:'Renombrar archivo',move:'Mover archivo',copy:'Copiar archivo'})[change.operation]),make('p','file-path',change.path));if(change.destination)pad.append(make('p','file-path','→ '+change.destination));
+  if(change.operation==='write'){const diff=make('div','file-diff');for(const [label,value] of [['ANTES',change.previous_content],['DESPUÉS',change.content]]){const side=make('div');side.append(make('div','eyebrow-blue',label),make('pre','',value||'(vacío)'));diff.append(side)}pad.append(diff)}
+  const controls=make('div','file-actions');for(const [label,approve] of [['Aplicar cambio',true],['Cancelar',false]])controls.append(button(make,label,async()=>{try{controls.querySelectorAll('button').forEach(b=>b.disabled=true);if(approve)pad.append(make('p','file-status','Aplicando cambio…'));const result=await call({action:'confirm',proposal_id:change.id,approve});toast(result.status==='applied'?'Cambio aplicado.':'Cambio cancelado.');manager.close(w.id)}catch(error){toast(error.message);controls.querySelectorAll('button').forEach(b=>b.disabled=false)}}));pad.append(controls);
+ }catch(error){message(w,make,error)}
+}
+
+export async function renderStorage(w,{make,manager,toast}){
+ w.error=null;const pad=make('div','storage-panel');w.body.append(pad);
+ const bytes=n=>n===null||n===undefined?'Desconocido':(n/1073741824).toFixed(1)+' GiB';
+ const load=async()=>{try{const data=await window.argosDesktop.capability({tool:'storage',arguments:{action:'inspect'}});pad.replaceChildren();const top=make('div','file-actions');top.append(make('div','eyebrow-blue','ARGOS / ALMACENAMIENTO'),button(make,'Actualizar',load));pad.append(top,make('p','file-status','Información real de Linux. Las particiones sin montar muestran capacidad, pero su espacio libre y sus archivos no están disponibles.'));
+  for(const disk of data.disks){const card=make('section','storage-disk');card.append(make('h2','',disk.name+' · '+bytes(disk.size_bytes)),make('div','file-status',disk.device+(disk.removable?' · EXTRAÍBLE':'')));
+   const nodes=[];const visit=(n,depth)=>{nodes.push([n,depth]);for(const child of n.children||[])visit(child,depth+1)};if(disk.children?.length)for(const child of disk.children)visit(child,0);else visit(disk,0);
+   for(const [volume,depth] of nodes){const row=make('div','storage-volume');row.style.paddingLeft=(depth*16)+'px';const info=make('div');info.append(make('strong','',volume.name+(volume.label?' · '+volume.label:'')),make('div','file-status',(volume.filesystem||'Sin sistema de archivos identificado')+' · '+bytes(volume.size_bytes)+(volume.read_only?' · SOLO LECTURA':'')),make('div','file-status',volume.mounted?volume.mountpoints.join(' · '):'SIN MONTAR'));
+    row.append(info,make('div','storage-free',volume.mounted?bytes(volume.available_bytes)+' libres':'Espacio libre desconocido'));
+    const browse=volume.mountpoints.some(p=>p==='/'||p==='/home'||/^\/(?:mnt|media|run\/media\/tyrant)\//.test(p));if(browse)row.append(button(make,'Abrir archivos',async()=>{try{await window.argosDesktop.capability({tool:'storage',arguments:{action:'browse',device:volume.device}})}catch(e){toast(e.message)}}));card.append(row)}pad.append(card)}manager.changed();
+ }catch(error){message(w,make,error)}};await load();
+}

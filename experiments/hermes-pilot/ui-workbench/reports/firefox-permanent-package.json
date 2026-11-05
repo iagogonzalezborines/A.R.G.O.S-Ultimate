@@ -1,0 +1,42 @@
+{
+  "package": "/home/tyrant/Descargas/argos-media-0.1.4-para-firmar.zip",
+  "sha256": "1f3e6e50f2e80dee02cf97773e9c08a75e72d5218cbfe2acae6c1f67f9c8d138",
+  "files": [
+    "background.js",
+    "manifest.json",
+    "PRIVACY.txt"
+  ],
+  "version": "0.1.4",
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 0
+  },
+  "web_ext_version": "10.8.0",
+  "playback_code_preserved": true,
+  "native_host_id_compatible": true,
+  "signature": "Mozilla_signed_and_accepted_by_Firefox",
+  "installation": "permanent_active_app_profile",
+  "name": "ARGOS Media Bridge",
+  "mozilla_validation": "passed",
+  "submission": "unlisted_submitted",
+  "source_question": "No: readable unminified source included",
+  "observed_status": "Firma de versi\u00f3n pendiente",
+  "evidence": "mozilla-signing-screen.png",
+  "signed_download_available": true,
+  "firefox_restart_verified": false,
+  "updated_at": "2026-11-05T19:16:43.062151+00:00",
+  "mozilla_review": "automated_approval_0.1.4_confirmed_by_email_and_developer_page",
+  "addon_id": 3119349,
+  "signed_package": "/home/tyrant/.config/mozilla/firefox/4mwutkh7.default-release/extensions/firefox@argos.local.xpi",
+  "signed_backup": "/home/tyrant/Descargas/argos-media-0.1.4-firmado.xpi",
+  "signed_sha256": "18323db8c84bf9970dbe56d88cc402acaae966f4ae36c3ff71378dcbf285079e",
+  "signed_manifest_matches_reviewed": true,
+  "native_bridge_connected": true,
+  "registered_installation": {
+    "permanent": true,
+    "enabled": true,
+    "version": "0.1.4",
+    "signed_state": 2
+  }
+}

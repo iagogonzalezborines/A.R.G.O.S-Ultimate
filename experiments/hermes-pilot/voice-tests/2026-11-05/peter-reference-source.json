@@ -1,0 +1,7 @@
+{
+  "repo": "kyutai/tts-voices",
+  "revision": "323332d33f997de8394f24a193e1a76df720e01a",
+  "url": "https://huggingface.co/kyutai/tts-voices/resolve/323332d33f997de8394f24a193e1a76df720e01a/voice-zero/peter_yearsley.wav",
+  "file": "peter-original.wav",
+  "usage": "Acoustic reference for Qwen audition; not Paul Bettany audio."
+}

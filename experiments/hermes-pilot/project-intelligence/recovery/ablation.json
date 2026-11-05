@@ -1,0 +1,216 @@
+{
+  "inference_calls": 0,
+  "cases": [
+    {
+      "case": "named_without_owned_overrides",
+      "exit_code": 0,
+      "effective": {
+        "default_permissions": "argos-proof",
+        "sandbox_mode": null,
+        "sandbox_workspace_write": null
+      },
+      "checks": [
+        {
+          "name": "repository write/read",
+          "ok": true
+        },
+        {
+          "name": "board read denied",
+          "ok": true
+        },
+        {
+          "name": "board write denied",
+          "ok": true
+        },
+        {
+          "name": "credentials read denied",
+          "ok": true
+        },
+        {
+          "name": "credentials write denied",
+          "ok": true
+        },
+        {
+          "name": "controller read denied",
+          "ok": true
+        },
+        {
+          "name": "controller write denied",
+          "ok": true
+        },
+        {
+          "name": "other-project read denied",
+          "ok": true
+        },
+        {
+          "name": "other-project write denied",
+          "ok": true
+        },
+        {
+          "name": "operational-argos read denied",
+          "ok": true
+        },
+        {
+          "name": "operational-argos write denied",
+          "ok": true
+        },
+        {
+          "name": "ide read denied",
+          "ok": true
+        },
+        {
+          "name": "ide write denied",
+          "ok": true
+        },
+        {
+          "name": "network denied",
+          "ok": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "case": "native_owned_legacy_overrides",
+      "exit_code": 0,
+      "effective": {
+        "default_permissions": "argos-proof",
+        "sandbox_mode": "workspace-write",
+        "sandbox_workspace_write": {
+          "writable_roots": [
+            "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private/board"
+          ],
+          "network_access": false,
+          "exclude_tmpdir_env_var": false,
+          "exclude_slash_tmp": false
+        }
+      },
+      "checks": [
+        {
+          "name": "repository write/read",
+          "ok": true
+        },
+        {
+          "name": "board read denied",
+          "ok": false
+        },
+        {
+          "name": "board write denied",
+          "ok": false
+        },
+        {
+          "name": "credentials read denied",
+          "ok": false
+        },
+        {
+          "name": "credentials write denied",
+          "ok": true
+        },
+        {
+          "name": "controller read denied",
+          "ok": false
+        },
+        {
+          "name": "controller write denied",
+          "ok": true
+        },
+        {
+          "name": "other-project read denied",
+          "ok": false
+        },
+        {
+          "name": "other-project write denied",
+          "ok": true
+        },
+        {
+          "name": "operational-argos read denied",
+          "ok": false
+        },
+        {
+          "name": "operational-argos write denied",
+          "ok": true
+        },
+        {
+          "name": "ide read denied",
+          "ok": false
+        },
+        {
+          "name": "ide write denied",
+          "ok": true
+        },
+        {
+          "name": "network denied",
+          "ok": true
+        }
+      ],
+      "passed": false
+    },
+    {
+      "case": "owned_with_fixed_launcher",
+      "exit_code": 0,
+      "effective": {
+        "default_permissions": "argos-proof",
+        "sandbox_mode": null,
+        "sandbox_workspace_write": null
+      },
+      "checks": [
+        {
+          "name": "repository write/read",
+          "ok": true
+        },
+        {
+          "name": "board read denied",
+          "ok": true
+        },
+        {
+          "name": "board write denied",
+          "ok": true
+        },
+        {
+          "name": "credentials read denied",
+          "ok": true
+        },
+        {
+          "name": "credentials write denied",
+          "ok": true
+        },
+        {
+          "name": "controller read denied",
+          "ok": true
+        },
+        {
+          "name": "controller write denied",
+          "ok": true
+        },
+        {
+          "name": "other-project read denied",
+          "ok": true
+        },
+        {
+          "name": "other-project write denied",
+          "ok": true
+        },
+        {
+          "name": "operational-argos read denied",
+          "ok": true
+        },
+        {
+          "name": "operational-argos write denied",
+          "ok": true
+        },
+        {
+          "name": "ide read denied",
+          "ok": true
+        },
+        {
+          "name": "ide write denied",
+          "ok": true
+        },
+        {
+          "name": "network denied",
+          "ok": true
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "revision": "0073fa98cfcf61c066a919df4b336924720f8463",
+  "inference_calls": 0,
+  "native_reproduction": {
+    "rejected": true,
+    "reason": "invalid_params"
+  },
+  "allowed_sidecars": [
+    "_anthropic_rejected_thinking",
+    "_proactive_prune_rearm_tokens",
+    "_usage_anchor"
+  ],
+  "real_owned_worker_pending_operations": [
+    {
+      "journal": "native/profiles/engineering/worker-outboxes/admission-worker-881b9ea35112418ba670bf631e0fb3d2/pending.json",
+      "sequence": 35,
+      "operation": "session.sidecars",
+      "payload_keys": [
+        "patch"
+      ],
+      "patch_types": {
+        "codex_thread_id": "str"
+      },
+      "unsupported_keys": [
+        "codex_thread_id"
+      ]
+    }
+  ]
+}

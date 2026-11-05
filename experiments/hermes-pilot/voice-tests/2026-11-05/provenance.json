@@ -1,0 +1,7 @@
+{
+  "qwen_code_revision": "022e286b98fbec7e1e916cb940cdf532cd9f488e",
+  "qwen_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+  "qwen_revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+  "pocket_version": "3.3.0",
+  "purpose": "Local voice auditions; no operational configuration changes or automatic playback."
+}

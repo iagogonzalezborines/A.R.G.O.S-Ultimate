@@ -1,0 +1,137 @@
+{
+  "connector_apps_enabled": true,
+  "audio_workers": 0,
+  "events": [
+    {
+      "seconds": 2.8577245149999726,
+      "event": "text.boundary"
+    },
+    {
+      "seconds": 3.4502504689999114,
+      "event": "context.usage",
+      "last": {
+        "totalTokens": 20983,
+        "inputTokens": 20922,
+        "cachedInputTokens": 8064,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 61,
+        "reasoningOutputTokens": 0
+      },
+      "modelContextWindow": 258400
+    },
+    {
+      "seconds": 4.9715038690001165,
+      "event": "context.usage",
+      "last": {
+        "totalTokens": 21045,
+        "inputTokens": 21007,
+        "cachedInputTokens": 20736,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 38,
+        "reasoningOutputTokens": 0
+      },
+      "modelContextWindow": 258400
+    },
+    {
+      "seconds": 6.98227037200013,
+      "event": "context.usage",
+      "last": {
+        "totalTokens": 29835,
+        "inputTokens": 29805,
+        "cachedInputTokens": 20864,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 30,
+        "reasoningOutputTokens": 0
+      },
+      "modelContextWindow": 258400
+    },
+    {
+      "seconds": 8.607195556000079,
+      "event": "context.usage",
+      "last": {
+        "totalTokens": 30067,
+        "inputTokens": 30033,
+        "cachedInputTokens": 29568,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 34,
+        "reasoningOutputTokens": 0
+      },
+      "modelContextWindow": 258400
+    },
+    {
+      "seconds": 10.44000747500013,
+      "event": "text.boundary"
+    },
+    {
+      "seconds": 10.446999404999588,
+      "event": "context.usage",
+      "last": {
+        "totalTokens": 30159,
+        "inputTokens": 30138,
+        "cachedInputTokens": 29824,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 21,
+        "reasoningOutputTokens": 0
+      },
+      "modelContextWindow": 258400
+    }
+  ],
+  "requested_app": "discord",
+  "startup": {
+    "ready": true,
+    "session_id": "argos-discord-native-check-20261105",
+    "model": "gpt-6-luna",
+    "api_mode": "codex_app_server",
+    "codex_ready": true,
+    "subscription_account_present": true,
+    "thread_id": "01a1ad41-9c6a-79e2-83c9-cc2dac32be7d",
+    "startup_seconds": 3.1435046340002373,
+    "model_turns_during_startup": 0
+  },
+  "result": {
+    "ok": true,
+    "speech": "Discord was found and its launch was dispatched. The app window itself wasn\u2019t verified.",
+    "seconds": 10.517260072999306,
+    "interrupted": false,
+    "session_id": "argos-discord-native-check-20261105",
+    "usage": {
+      "prompt_tokens": 30138,
+      "completion_tokens": 21,
+      "total_tokens": 30159,
+      "cache_read_tokens": 29824
+    }
+  },
+  "discord_window_present": true,
+  "app_tool_calls": [
+    {
+      "time": 1793908127.9812312,
+      "tool": "apps",
+      "action": "list",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1793908129.5957506,
+      "tool": "apps",
+      "action": "open",
+      "ok": true,
+      "error": null,
+      "status": "launch_dispatched"
+    }
+  ],
+  "passed": true,
+  "live_restart": {
+    "ready": true,
+    "phase": "standby",
+    "listening": true,
+    "codex_ready": true,
+    "components": {
+      "recognition": "ready",
+      "speech": "ready",
+      "codex": "ready"
+    }
+  },
+  "discord_still_open": true,
+  "protected_source_unchanged": true
+}

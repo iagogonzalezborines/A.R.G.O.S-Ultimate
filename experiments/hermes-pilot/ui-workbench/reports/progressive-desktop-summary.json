@@ -1,0 +1,80 @@
+{
+  "native_model": "gpt-6-luna / low",
+  "native_startup_seconds": 2.8906622650001736,
+  "model_turns_during_startup": 0,
+  "first_native_source_metadata_seconds": 7.3234,
+  "first_selected_source_seconds": 9.4324,
+  "report_delivery_seconds": 22.7654,
+  "research_model_total_seconds": 24.62395272700087,
+  "simple_conversation_model_seconds": [
+    2.087079707000157,
+    1.256360438000229,
+    1.7137899680001283,
+    1.2703702259996135,
+    2.3296926250004617
+  ],
+  "native_compactions_in_test": 0,
+  "latency_scope": "Real subscription inference and native tools; research renderer acknowledgements simulated in the latency harness. Electron progress/pages tested separately; not a microphone-to-visible-page benchmark.",
+  "checks": {
+    "incremental_and_permissions": {
+      "passed": 25,
+      "total": 25
+    },
+    "research_boundaries": {
+      "passed": 17,
+      "total": 17
+    },
+    "renderer": {
+      "passed": 7,
+      "total": 7
+    },
+    "address_guard": {
+      "passed": 13,
+      "total": 13
+    }
+  },
+  "real_calculator": {
+    "dispatch": {
+      "ok": true,
+      "status": "launch_dispatched",
+      "application": "calculator",
+      "name": "Calculadora",
+      "window_verified": false
+    },
+    "visible_window_verified": true,
+    "tested_app": "calculator",
+    "test_window_closed": true
+  },
+  "browser_pages": [
+    {
+      "url": "https://www.esa.int/",
+      "title": "Homepage",
+      "loading": false
+    },
+    {
+      "url": "https://science.nasa.gov/",
+      "title": "NASA Science",
+      "loading": false
+    }
+  ],
+  "operational_argos_unchanged": true,
+  "firefox_signing": "still_pending; unrelated to external browser launch",
+  "protected_files_checked": 152,
+  "live_restart": {
+    "health": {
+      "ready": true,
+      "mode": "argos-app",
+      "agent_connected": true,
+      "renderer_connected": true
+    },
+    "ready": true,
+    "phase": "standby",
+    "listening": true,
+    "codex_ready": true,
+    "startup_seconds": {
+      "recognition": 1.9193993019998743,
+      "speech": 18.143849541000236,
+      "codex": 4.5182526149992555
+    }
+  }
+}

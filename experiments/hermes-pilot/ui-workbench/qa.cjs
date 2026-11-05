@@ -1,0 +1,53 @@
+const {_electron:electron}=require('../source/node_modules/playwright');
+const fs=require('node:fs'),path=require('node:path');
+const ROOT=__dirname,report={checks:[],errors:[]};
+function check(name,ok,detail){console.log(name,ok);report.checks.push({name,ok,detail});if(!ok)throw Error(name)}
+(async()=>{
+ const env={PATH:'/usr/bin:/bin',HOME:path.join(ROOT,'state/home'),LANG:'C.UTF-8',ARGOS_UI_QA:'1',ARGOS_UI_PLATFORM:'x11'};
+ for(const key of ['XDG_RUNTIME_DIR','WAYLAND_DISPLAY','DISPLAY','DBUS_SESSION_BUS_ADDRESS'])if(process.env[key])env[key]=process.env[key];
+ const app=await electron.launch({executablePath:path.join(ROOT,'../source/node_modules/electron/dist/electron'),args:[path.join(ROOT,'desktop/main.cjs')],env,timeout:25000});
+ const shot=async name=>{const data=await app.evaluate(async({BrowserWindow})=>{const img=await Promise.race([BrowserWindow.getAllWindows()[0].webContents.capturePage(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Capture timeout')),5000))]);return img.toPNG().toString('base64')});fs.writeFileSync(path.join(ROOT,'reports',name+'.png'),Buffer.from(data,'base64'))};
+ try{
+  const page=await app.firstWindow();page.on('pageerror',e=>report.errors.push(String(e)));await page.waitForFunction(()=>!!window.ARGOSWorkspace,{timeout:15000});
+  check('idle symbol',await page.locator('#core').isVisible());
+  check('no permanent chat input or sidebar',await page.locator('input').count()===0);
+  await shot('idle');
+  await page.evaluate(()=>{void window.ARGOSWorkspace.runDemo({silent:true,speed:.3})});
+  await page.waitForTimeout(600);await shot('cylinder');
+  await page.waitForFunction(()=>window.ARGOSWorkspace.phase()==='complete',null,{timeout:15000});await page.waitForTimeout(650);
+  check('demo opens five distinct panels',await page.evaluate(()=>window.ARGOSWorkspace.snapshot().length===5));
+  const token=fs.readFileSync(path.join(ROOT,'private/presentation.token'),'utf8').trim();
+  const present=async intent=>{const response=await fetch('http://127.0.0.1:42720/api/presentation',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(intent)});if(response.status!==202)throw Error('Presentation bridge rejected valid intent')};
+  await present({type:'window.open',id:'trusted-bridge',kind:'note',title:'Prueba de presentación',text:'<script>window.pwned=true</script>'});
+  await page.locator('[data-window="trusted-bridge"]').waitFor({state:'visible',timeout:5000});
+  await present({type:'window.open',id:'trusted-bridge',kind:'note',title:'Prueba de presentación',text:'No duplicate'});
+  check('authenticated controller reaches UI without duplicate windows',await page.locator('[data-window="trusted-bridge"]').count()===1);
+  check('agent-provided content is rendered as text',await page.evaluate(()=>!window.pwned)&&await page.locator('[data-window="trusted-bridge"] .note-body').innerText()==='<script>window.pwned=true</script>');
+  await present({type:'window.move',id:'trusted-bridge',x:75,y:55,width:400,height:250});
+  await page.waitForFunction(()=>window.ARGOSWorkspace.snapshot().find(w=>w.id==='trusted-bridge')?.x===75);
+  check('controller can move its panel',await page.evaluate(()=>window.ARGOSWorkspace.snapshot().find(w=>w.id==='trusted-bridge').y===55));
+  await present({type:'window.close',id:'trusted-bridge'});await page.locator('[data-window="trusted-bridge"]').waitFor({state:'detached'});
+  await shot('workspace');
+  const old=await page.evaluate(()=>window.ARGOSWorkspace.snapshot().find(x=>x.id==='summary'));
+  const title=page.locator('[data-window="summary"] .window-title');const box=await title.boundingBox();await page.mouse.move(box.x+100,box.y+17);await page.mouse.down();await page.mouse.move(box.x+145,box.y+42,{steps:8});await page.mouse.up();
+  const moved=await page.evaluate(()=>window.ARGOSWorkspace.snapshot().find(x=>x.id==='summary'));
+  check('user can drag panel',moved.x!==old.x||moved.y!==old.y);
+  const handle=await page.locator('[data-window="summary"] .window-resize').boundingBox();await page.mouse.move(handle.x+8,handle.y+8);await page.mouse.down();await page.mouse.move(handle.x+42,handle.y-40,{steps:8});await page.mouse.up();
+  check('user can resize panel',await page.evaluate(w=>{const a=window.ARGOSWorkspace.snapshot().find(x=>x.id==='summary');return a.width!==w.width||a.height!==w.height},moved));
+  await page.locator('[data-window="summary"] [aria-label="Minimizar"]').click();check('minimize creates restore control',await page.locator('#window-dock button').count()===1);await page.locator('#window-dock button').click();
+  await page.locator('[data-window="summary"] [aria-label="Maximizar"]').click();check('maximize',await page.evaluate(()=>window.ARGOSWorkspace.snapshot().find(x=>x.id==='summary').maximized));await page.locator('[data-window="summary"] [aria-label="Maximizar"]').click();
+  await page.evaluate(()=>window.ARGOSWorkspace.apply({type:'window.open',id:'controller-test',kind:'note',title:'Observación de ARGOS',text:'Presentación desde un controlador, sin ejecutar tareas.'}));
+  check('presentation intent opens a window',await page.locator('[data-window="controller-test"]').count()===1);await page.evaluate(()=>window.ARGOSWorkspace.apply({type:'window.close',id:'controller-test'}));
+  await page.evaluate(()=>window.ARGOSWorkspace.apply({type:'workspace.arrange'}));
+  check('arrange stays inside workspace',await page.evaluate(()=>window.ARGOSWorkspace.snapshot().every(w=>w.x>=0&&w.y>=0&&w.width>0&&w.height>0)));
+  await page.evaluate(()=>window.ARGOSWorkspace.apply({type:'window.focus',id:'browser'}));await page.waitForTimeout(3000);
+  const contents=await app.evaluate(({webContents})=>webContents.getAllWebContents().filter(c=>c.getURL().startsWith('https:')).map(c=>({url:c.getURL(),title:c.getTitle(),node:c.getLastWebPreferences().nodeIntegration,sandbox:c.getLastWebPreferences().sandbox})));
+  check('native browser content is isolated',contents.length>0&&contents.every(c=>!c.node&&c.sandbox),contents);
+  await shot('browser');
+  let denied=false;try{await page.evaluate(()=>window.argosDesktop.browser({type:'open',id:'blocked',url:'file:///etc/passwd'}))}catch{denied=true}check('native browser denies local files',denied);
+  await page.evaluate(async()=>{const v=document.querySelector('video');v.muted=true;await v.play()});await page.waitForTimeout(800);check('local NASA video plays',await page.evaluate(()=>document.querySelector('video').currentTime>0));await page.evaluate(()=>document.querySelector('video').pause());
+  report.windows=await page.evaluate(()=>window.ARGOSWorkspace.snapshot());check('no renderer errors',report.errors.length===0,report.errors);
+  report.launch=await app.evaluate(({app})=>({platform:app.commandLine.getSwitchValue('ozone-platform'),softwareRendering:app.commandLine.hasSwitch('disable-gpu'),testDriverDisablesOSSandbox:app.commandLine.hasSwitch('no-sandbox'),metrics:app.getAppMetrics().map(m=>({type:m.type,workingSetKiB:m.memory?.workingSetSize}))}));
+ }finally{await app.close();fs.writeFileSync(path.join(ROOT,'reports/ui-checks.json'),JSON.stringify(report,null,2))}
+ console.log(JSON.stringify(report,null,2));
+})().catch(error=>{report.failure=String(error);fs.writeFileSync(path.join(ROOT,'reports/ui-checks.json'),JSON.stringify(report,null,2));console.error(error);process.exitCode=1});

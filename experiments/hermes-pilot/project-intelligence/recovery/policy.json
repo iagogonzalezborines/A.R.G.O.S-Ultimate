@@ -1,0 +1,26 @@
+{
+  "filesystem": {
+    ":minimal": "read",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/repository": "write",
+    "/home/tyrant/.local/share/argos-hermes-pilot/bin": "read",
+    "/home/tyrant/.local/share/argos-hermes-pilot/tools": "read",
+    "/home/tyrant/.local/share/argos-hermes-pilot/env": "read",
+    "/home/tyrant/.local/share/argos-hermes-pilot/source": "read",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/repository/scope_probe.py": "read",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/codex": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/private": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/launch_policy.py": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/policy.json": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/synthetic-controller.txt": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native_control.py": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/run_action.py": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/native_setup.py": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/make_probe.py": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/launch-audit.jsonl": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/prepared.json": "deny",
+    "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/canary-manifest.json": "deny",
+    ":root": "deny"
+  },
+  "repository": "/home/tyrant/.local/share/argos-hermes-pilot/project-intelligence/recovery/repository"
+}

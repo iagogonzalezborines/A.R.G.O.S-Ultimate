@@ -1,0 +1,21 @@
+{
+  "source_commit": "0073fa98cfcf61c066a919df4b336924720f8463",
+  "upstream": "https://github.com/NousResearch/hermes-agent.git",
+  "source_clean": true,
+  "system_python": "3.14.9",
+  "kernel": "7.3.1-1-cachyos",
+  "locks": {
+    "pyproject.toml": "b1531ab4807bc64441a3fe3f56d6c166dcf0074e3510e061a1377c4d05d3ca24",
+    "uv.lock": "5057a8a3cbc6d2b1f2059d66e27ffa43f447021f89779599dca416056574c064",
+    "pm/lock.json": "40b06778980ff8c50dcd97c0d9b39ba3eb4a7a242ea62eaeaaa9a90d68ea1a85",
+    "package-lock.json": "3f08a5521c64c615be1a12d36dfd01a109025f95f531f13dc9856b5d7e6e5827"
+  },
+  "codex_binaries": {
+    "codex": "e6d386e8822288f6d5f327e966a5a5e1de928de8795bb6149716005a410f38f2",
+    "codex-code-mode-host": "e9369405b2308bd5de62cabf4e88ba48334c89717f9ff1b1e05de4ef6ce06a99",
+    "rg": "e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849"
+  },
+  "configuration_sha256": "de60b4a5df01712b7b0f9bbe62f554feb7cbebc4307b82fc9006cdf53e5311a0",
+  "detached_head": true,
+  "python_executable": "/usr/bin/python3.14"
+}

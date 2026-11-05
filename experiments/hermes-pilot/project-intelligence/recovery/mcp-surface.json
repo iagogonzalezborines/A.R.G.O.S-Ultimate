@@ -1,0 +1,16 @@
+{
+  "inference_calls": 0,
+  "servers": [
+    {
+      "name": "hermes-tools",
+      "tool_names": [
+        "kanban_block",
+        "kanban_comment",
+        "kanban_heartbeat",
+        "kanban_request_review",
+        "kanban_show"
+      ],
+      "error": null
+    }
+  ]
+}

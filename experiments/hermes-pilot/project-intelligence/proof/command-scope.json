@@ -1,0 +1,95 @@
+{
+  "stage": "A",
+  "inference_calls": 0,
+  "checks": [
+    {
+      "name": "authorized repository write",
+      "ok": true
+    },
+    {
+      "name": "cross-project write denied",
+      "ok": true
+    },
+    {
+      "name": "direct board-root write denied",
+      "ok": false
+    },
+    {
+      "name": "controller write denied",
+      "ok": true
+    },
+    {
+      "name": "worker credential read denied",
+      "ok": false
+    },
+    {
+      "name": "Hermes credential read denied",
+      "ok": false
+    },
+    {
+      "name": "board read denied",
+      "ok": false
+    },
+    {
+      "name": "operational ARGOS read denied",
+      "ok": false
+    },
+    {
+      "name": "IDE credential read denied",
+      "ok": false
+    },
+    {
+      "name": "command network denied",
+      "ok": true
+    }
+  ],
+  "native_thread_started": true,
+  "run_id": 3,
+  "command_exit_code": 0,
+  "passed": false,
+  "derived_credential_copies_removed": [
+    "proof/hermes/auth.json",
+    "proof/hermes/profiles/engineering/auth.json",
+    "proof/codex/auth.json"
+  ],
+  "secret_contents_read_or_logged": false,
+  "test_method": "Command attempted open(..., rb) and read(0); only success/denial booleans were returned. Write probes used disposable marker files, removed immediately; no task database bytes were modified by the probe.",
+  "existing_app_state": {
+    "available": false
+  },
+  "operational_source_unchanged": true,
+  "protected_file_count": 152,
+  "gate": "failed",
+  "stages_B_C_D_started": false,
+  "native_tasks": [
+    {
+      "id": "t_4271677f",
+      "status": "triage",
+      "current_run_id": null
+    },
+    {
+      "id": "t_b4a230fa",
+      "status": "blocked",
+      "current_run_id": null
+    }
+  ],
+  "native_runs": [
+    {
+      "id": 1,
+      "status": "blocked",
+      "outcome": "blocked"
+    },
+    {
+      "id": 2,
+      "status": "blocked",
+      "outcome": "blocked"
+    },
+    {
+      "id": 3,
+      "status": "blocked",
+      "outcome": "blocked"
+    }
+  ],
+  "open_runs_remaining": 0,
+  "pinned_vendor_tracked_changes": false
+}

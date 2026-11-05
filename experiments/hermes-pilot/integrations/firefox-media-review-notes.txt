@@ -1,0 +1,9 @@
+ARGOS Media Bridge 0.1.4 — unlisted self-distribution
+
+This is a local personal-assistant integration. Request Mozilla signing for self-distribution (On your own / unlisted); it is not intended as a public store listing.
+
+No build process, remote code or minification is used. background.js is the complete human-readable extension source. page.toString() serializes a static function from that packaged file; the native companion cannot supply JavaScript or selectors. Its only accepted action is a bounded play query, plus cancellation, with validated request IDs and deadlines. The script acts only on the tab the extension created or reused for the current media request.
+
+The local native companion is installed separately as argos.firefox. It provides a private Unix-socket bridge for the installed ARGOS application. No browser credentials are copied. The extension sends back only bounded media metadata and result status. PRIVACY.txt describes this data flow.
+
+Native-host compatibility: extension ID remains firefox@argos.local; host name remains argos.firefox. Required Firefox version: 142 or later, for built-in data consent.
