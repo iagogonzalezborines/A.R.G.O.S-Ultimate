@@ -1,6 +1,8 @@
 # Continuar en el equipo principal
 
-Estado al 6-11-2026: [red experimental ejecutada](../reports/adaptive-network-2026-11-06.md), A/B operativos conservados; no migración ni funciones de operación/publicación de C/D. El [catálogo](CATALOGUE.md) distingue pruebas de candidatos. No copiar bases privadas, modelos ni autenticación mediante Git.
+Continuación implementada: [fiabilidad, mapa interactivo, aplicación generada y aceptación de casa](../reports/reliability-2026-11-06.md). Activación del código validado: `python scripts/prepare_hermes_pilot.py --projects on --project-map on --adaptive on --register`. El procedimiento de laboratorio siguiente sigue siendo opcional; no hace falta para usar Projects/Map con Codex.
+
+Estado del experimento anterior al 6-11-2026: [red experimental ejecutada](../reports/adaptive-network-2026-11-06.md), A/B operativos conservados; no migración ni funciones de operación/publicación de C/D. El [catálogo](CATALOGUE.md) distingue pruebas de candidatos. No copiar bases privadas, modelos ni autenticación mediante Git.
 
 ## 1. Base validada y laboratorio
 

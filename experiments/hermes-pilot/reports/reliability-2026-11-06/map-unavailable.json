@@ -1,0 +1,10 @@
+{
+  "checks": [
+    {
+      "name": "disabled installation explains unavailability",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "last": "ARGOS\n▦\n♪\n⛶\n×\n01 /Proyectos\n−\n□\n×\nActualizar\n\nProject Map no está habilitado en esta instalación.\n\nARGOS\nMICRÓFONO APAGADO\nARGOS\nPreparando conversación…\nMICRÓFONO APAGADO\n01 VENTANAS\n00:00"
+}

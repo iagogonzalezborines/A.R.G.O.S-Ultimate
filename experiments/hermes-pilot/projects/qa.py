@@ -162,7 +162,7 @@ class NativeProjectTests(unittest.TestCase):
     def test_feature_gate_and_approval_cannot_be_forged(self):
         config = {**self.config,'projects_enabled':False}
         self.config_path.write_text(json.dumps(config));self.broker=self.fresh()
-        self.assertEqual(self.call({'action':'availability'}),{'enabled':False})
+        self.assertEqual(self.call({'action':'availability'}),{'enabled':False,'project_map':False})
         with self.assertRaises(PermissionError):self.call(self.idea)
         self.config_path.write_text(json.dumps(self.config));self.broker=self.fresh()
         with self.assertRaises(PermissionError):self.call({**self.idea,'action':'create'})

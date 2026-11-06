@@ -1,0 +1,902 @@
+{
+  "source": "Real Electron, ARGOS Broker, native Hermes Projects/Kanban and Codex subscription",
+  "project": {
+    "id": "p_0a192318",
+    "name": "Biblioteca 3D de prueba",
+    "slug": "biblioteca-3d-de-prueba",
+    "brief": {
+      "objective": "Crear una aplicación local de prueba para organizar modelos de impresión 3D con indexación, etiquetas, notas, búsqueda y persistencia.",
+      "verification": [
+        "Tests cubren indexación STL/OBJ, deduplicación, integridad de originales, búsqueda por nombre/etiquetas/notas y persistencia tras cierre/reapertura.",
+        "La API pública de catalogue.py coincide con las firmas solicitadas.",
+        "La búsqueda retorna diccionarios con tags y notes.",
+        "No hay conexiones a impresoras, ejecución de slicers, solicitudes de red desde Engineering ni instalaciones."
+      ],
+      "decisions": [
+        "El prototipo incluye únicamente archivos STL y OBJ; no ampliar a 3MF hasta resolver la tarea de decisión dependiente.",
+        "Usar solo Python estándar y una CLI documentada para verificar; añadir tests.",
+        "Sin conexión a impresoras ni ejecución de slicers.",
+        "Engineering no realizará solicitudes de red ni instalaciones."
+      ],
+      "requirements": [
+        "Implementar catalogue.py con ModelLibrary(db_path), index(folder), tag(absolute_path, tags), note(absolute_path, text), search(query) y close().",
+        "search(query) devuelve una lista de diccionarios que incluyen tags y notes.",
+        "index(folder) indexa archivos STL y OBJ locales, sin duplicados y sin modificar los originales.",
+        "La búsqueda funciona por nombre, etiquetas y notas.",
+        "Los índices, etiquetas y notas persisten tras reiniciar."
+      ],
+      "aliases": []
+    },
+    "scope": "Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion."
+  },
+  "tasks": [
+    {
+      "id": "t_41f5ba72",
+      "title": "Implementar prototipo local STL/OBJ",
+      "kind": "engineering",
+      "capability": "Codex Engineering",
+      "status": "done",
+      "state": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 1,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1793967013,
+          "ended_at": 1793967114,
+          "kind": "execution",
+          "summary": "Implementé el catálogo local SQLite para STL/OBJ, documentación y pruebas estándar. Verificación: `python3 -m unittest -v` ejecutó 4 pruebas con resultado OK; `py_compile` también terminó con código 0. Artefactos: catalogue.py, test_catalogue.py, README.md.",
+          "metadata_truncated": false,
+          "metadata": {
+            "files": [
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/catalogue.py",
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/test_catalogue.py",
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/README.md"
+            ],
+            "tests": "python3 -m unittest -v: 4 passed; python3 -m py_compile catalogue.py test_catalogue.py: passed"
+          }
+        },
+        {
+          "id": 2,
+          "status": "completed",
+          "outcome": "completed",
+          "started_at": 1793967205,
+          "ended_at": 1793967205,
+          "kind": "state_transition",
+          "summary": "User accepted independently verified artifacts",
+          "metadata_truncated": false,
+          "metadata": {
+            "verification": {
+              "exit_code": 0,
+              "files": {
+                "README.md": "7cc21a4ca8957c2c6ddb28f42a616aa1caed7932066fd56e8e457fddf1c1dc36",
+                "catalogue.py": "002271568f9b346bef675b4a6746da3c35900410ce077f72f95e416c8bd32a93",
+                "test_catalogue.py": "e6126ae6c03f7c725dd03c065aac79309c063dd973e841b705acd3780903aa67"
+              },
+              "kind": "verification",
+              "output": "ARGOS_ACCEPTANCE: indexing, idempotency, tags, notes, search, persistence, preservation passed\n",
+              "passed": true,
+              "profile": "model_library_v1",
+              "project_id": "p_0a192318",
+              "run_id": 1,
+              "seconds": 0.06833196399384178,
+              "snapshot_unchanged": true,
+              "task_id": "t_41f5ba72"
+            }
+          }
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "catalogue.py",
+          "sha256_now": "a4d0894703d7f943127d50573fe763f44255be2d11a85341c8f326919b94e2e0",
+          "bytes": 7388,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "test_catalogue.py",
+          "sha256_now": "ace3f785fdfc48c46e239ab0312c36945e2aae626f5ea52d226a6b70023593d3",
+          "bytes": 4474,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "README.md",
+          "sha256_now": "77e7f42f51e73addcc8eae42b592dceacb6cbe7df2e09f0274e3d0c16344f028",
+          "bytes": 2381,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ],
+      "controller_evidence": [
+        {
+          "exit_code": 0,
+          "files": {
+            "README.md": "7cc21a4ca8957c2c6ddb28f42a616aa1caed7932066fd56e8e457fddf1c1dc36",
+            "catalogue.py": "002271568f9b346bef675b4a6746da3c35900410ce077f72f95e416c8bd32a93",
+            "test_catalogue.py": "e6126ae6c03f7c725dd03c065aac79309c063dd973e841b705acd3780903aa67"
+          },
+          "kind": "verification",
+          "output": "ARGOS_ACCEPTANCE: indexing, idempotency, tags, notes, search, persistence, preservation passed\n",
+          "passed": true,
+          "profile": "model_library_v1",
+          "project_id": "p_0a192318",
+          "run_id": 1,
+          "seconds": 0.06833196399384178,
+          "snapshot_unchanged": true,
+          "task_id": "t_41f5ba72"
+        },
+        {
+          "kind": "accepted",
+          "project_id": "p_0a192318",
+          "task_id": "t_41f5ba72",
+          "verified_run": 1
+        }
+      ]
+    },
+    {
+      "id": "t_f8a22627",
+      "title": "Decidir si ampliar la indexación a 3MF",
+      "kind": "decision",
+      "capability": "User decision",
+      "status": "blocked",
+      "state": "decision",
+      "parents": [
+        "t_41f5ba72"
+      ],
+      "runs": [],
+      "artifacts": [],
+      "controller_evidence": []
+    },
+    {
+      "id": "t_281f9c8f",
+      "title": "Añadir CLI documentada y pruebas de comandos",
+      "kind": "engineering",
+      "capability": "Codex Engineering",
+      "status": "done",
+      "state": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 3,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1793968144,
+          "ended_at": 1793968227,
+          "kind": "execution",
+          "summary": "CLI local documentada implementada y verificada. Añadidos los subcomandos index/tag/note/search y pruebas sintéticas de integración; API ModelLibrary preservada. `python3 -m unittest -v`: 6 pruebas OK. Solicito revisión; no se completó automáticamente.",
+          "metadata_truncated": false,
+          "metadata": {
+            "tests": "python3 -m unittest -v — 6 tests passed",
+            "artifacts": [
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/catalogue.py",
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/test_catalogue.py",
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/README.md"
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "status": "completed",
+          "outcome": "completed",
+          "started_at": 1793968349,
+          "ended_at": 1793968349,
+          "kind": "state_transition",
+          "summary": "User accepted independently verified artifacts",
+          "metadata_truncated": false,
+          "metadata": {
+            "verification": {
+              "exit_code": 0,
+              "files": {
+                "README.md": "77e7f42f51e73addcc8eae42b592dceacb6cbe7df2e09f0274e3d0c16344f028",
+                "catalogue.py": "a4d0894703d7f943127d50573fe763f44255be2d11a85341c8f326919b94e2e0",
+                "test_catalogue.py": "ace3f785fdfc48c46e239ab0312c36945e2aae626f5ea52d226a6b70023593d3"
+              },
+              "kind": "verification",
+              "output": "ARGOS_ACCEPTANCE: indexing, idempotency, tags, notes, search, persistence, preservation passed\nARGOS_CLI_ACCEPTANCE: index, tag, note, search, persistence and documentation passed\n",
+              "passed": true,
+              "profile": "model_library_v2",
+              "project_id": "p_0a192318",
+              "run_id": 3,
+              "seconds": 0.41727728699333966,
+              "snapshot_unchanged": true,
+              "task_id": "t_281f9c8f"
+            }
+          }
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "catalogue.py",
+          "sha256_now": "a4d0894703d7f943127d50573fe763f44255be2d11a85341c8f326919b94e2e0",
+          "bytes": 7388,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "test_catalogue.py",
+          "sha256_now": "ace3f785fdfc48c46e239ab0312c36945e2aae626f5ea52d226a6b70023593d3",
+          "bytes": 4474,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "README.md",
+          "sha256_now": "77e7f42f51e73addcc8eae42b592dceacb6cbe7df2e09f0274e3d0c16344f028",
+          "bytes": 2381,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ],
+      "controller_evidence": [
+        {
+          "exit_code": 0,
+          "files": {
+            "README.md": "77e7f42f51e73addcc8eae42b592dceacb6cbe7df2e09f0274e3d0c16344f028",
+            "catalogue.py": "a4d0894703d7f943127d50573fe763f44255be2d11a85341c8f326919b94e2e0",
+            "test_catalogue.py": "ace3f785fdfc48c46e239ab0312c36945e2aae626f5ea52d226a6b70023593d3"
+          },
+          "kind": "verification",
+          "output": "ARGOS_ACCEPTANCE: indexing, idempotency, tags, notes, search, persistence, preservation passed\nARGOS_CLI_ACCEPTANCE: index, tag, note, search, persistence and documentation passed\n",
+          "passed": true,
+          "profile": "model_library_v2",
+          "project_id": "p_0a192318",
+          "run_id": 3,
+          "seconds": 0.41727728699333966,
+          "snapshot_unchanged": true,
+          "task_id": "t_281f9c8f"
+        },
+        {
+          "kind": "accepted",
+          "project_id": "p_0a192318",
+          "task_id": "t_281f9c8f",
+          "verified_run": 3
+        }
+      ]
+    },
+    {
+      "id": "t_0ff5d829",
+      "title": "Investigación independiente: sqlite3 y pathlib",
+      "kind": "auxiliary",
+      "capability": "research.documentation",
+      "status": "done",
+      "state": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 1,
+          "kind": "execution",
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793967007,
+          "ended_at": 1793967008,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "sources": [
+                {
+                  "untrusted_source_text": true,
+                  "topic": "sqlite3",
+                  "url": "https://docs.python.org/3/library/sqlite3.html",
+                  "media_type": "text/html",
+                  "sha256": "c5caf842173cabd7582bc3a8c5445922a17cc47c6aad2472ef94e9a9df5ba8dc",
+                  "retrieved_at": 1793967008.4406528,
+                  "bytes": 316235
+                },
+                {
+                  "untrusted_source_text": true,
+                  "topic": "pathlib",
+                  "url": "https://docs.python.org/3/library/pathlib.html",
+                  "media_type": "text/html",
+                  "sha256": "6a901370b870d78d46b394b87a6fb29850bcae77fd7261f4683cf2fe54111092",
+                  "retrieved_at": 1793967008.607825,
+                  "bytes": 271233
+                }
+              ],
+              "scope": "Official API availability observed; design decisions require General interpretation or user review"
+            },
+            "verification": {
+              "verification": "bounded public HTTPS fetch; no credentials or project contents sent"
+            },
+            "wall_seconds": 0.39459963599801995,
+            "capability": "research.documentation",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ],
+      "artifacts": [],
+      "controller_evidence": []
+    },
+    {
+      "id": "t_9275d0bf",
+      "title": "Conteo de archivos por extensión",
+      "kind": "auxiliary",
+      "capability": "files.types",
+      "status": "done",
+      "state": "done",
+      "parents": [
+        "t_c1635ffb"
+      ],
+      "runs": [
+        {
+          "id": 3,
+          "kind": "execution",
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793968153,
+          "ended_at": 1793968153,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "counts": {
+                ".md": 1,
+                ".py": 2
+              }
+            },
+            "verification": {
+              "verification": "deterministic aggregation of recorded inventory"
+            },
+            "wall_seconds": 0.000459483009763062,
+            "capability": "files.types",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ],
+      "artifacts": [],
+      "controller_evidence": []
+    },
+    {
+      "id": "t_c1635ffb",
+      "title": "Inventario actual de archivos del proyecto",
+      "kind": "auxiliary",
+      "capability": "files.inventory",
+      "status": "done",
+      "state": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 2,
+          "kind": "execution",
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793968151,
+          "ended_at": 1793968152,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "files": [
+                {
+                  "name": "README.md",
+                  "bytes": 1208,
+                  "mtime_ns": 1793967098770584300
+                },
+                {
+                  "name": "catalogue.py",
+                  "bytes": 5503,
+                  "mtime_ns": 1793967070142299600
+                },
+                {
+                  "name": "test_catalogue.py",
+                  "bytes": 2800,
+                  "mtime_ns": 1793967088927486200
+                }
+              ]
+            },
+            "verification": {
+              "verification": "read-only metadata observed now"
+            },
+            "wall_seconds": 0.0005820860096719116,
+            "capability": "files.inventory",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ],
+      "artifacts": [],
+      "controller_evidence": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "natural idea created exactly one authorized project",
+      "ok": true
+    },
+    {
+      "name": "General created and dispatched Engineering",
+      "ok": true
+    },
+    {
+      "name": "General persisted an actual dependency",
+      "ok": true
+    },
+    {
+      "name": "General delegated research",
+      "ok": true
+    },
+    {
+      "name": "foreground application discovery remains responsive",
+      "ok": true
+    },
+    {
+      "name": "closing panel does not start another attempt",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "project recovered after complete application restart",
+      "ok": true
+    },
+    {
+      "name": "Engineering reached review",
+      "ok": true
+    },
+    {
+      "name": "independent acceptance passes",
+      "ok": true
+    },
+    {
+      "name": "user acceptance stored natively",
+      "ok": true
+    },
+    {
+      "name": "continuation keeps one project and one Engineering attempt",
+      "ok": true
+    },
+    {
+      "name": "no renderer exceptions",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "observed artifact opens through the scope-checked viewer",
+      "ok": true
+    },
+    {
+      "name": "pending decision remains discoverable after restart",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "observed artifact opens through the scope-checked viewer",
+      "ok": true
+    },
+    {
+      "name": "pending decision remains discoverable after restart",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "scoped CLI follow-up dispatched",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "project recovered after complete application restart",
+      "ok": true
+    },
+    {
+      "name": "Engineering reached review",
+      "ok": true
+    },
+    {
+      "name": "independent acceptance passes",
+      "ok": true
+    },
+    {
+      "name": "user acceptance stored natively",
+      "ok": true
+    },
+    {
+      "name": "continuation keeps one project and one Engineering attempt",
+      "ok": true
+    },
+    {
+      "name": "no renderer exceptions",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "observed artifact opens through the scope-checked viewer",
+      "ok": true
+    },
+    {
+      "name": "pending decision remains discoverable after restart",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "observed artifact opens through the scope-checked viewer",
+      "ok": true
+    },
+    {
+      "name": "pending decision remains discoverable after restart",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "observed artifact opens through the scope-checked viewer",
+      "ok": true
+    },
+    {
+      "name": "pending decision remains discoverable after restart",
+      "ok": true
+    },
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "observed artifact opens through the scope-checked viewer",
+      "ok": true
+    },
+    {
+      "name": "selected native task reaches General through the application",
+      "ok": true
+    },
+    {
+      "name": "pending decision remains discoverable after restart",
+      "ok": true
+    }
+  ],
+  "foreground_apps_ms": 4.845538999987184,
+  "foreground_conversation_ms": 5966.120198999997,
+  "engineering_during_foreground": "running",
+  "initial_workflow": [
+    {
+      "id": "t_41f5ba72",
+      "title": "Implementar prototipo local STL/OBJ",
+      "kind": "engineering",
+      "status": "running",
+      "parents": [],
+      "runs": [
+        {
+          "id": 1,
+          "status": "running",
+          "outcome": null,
+          "started_at": 1793967013,
+          "ended_at": null,
+          "summary": "",
+          "metadata_truncated": false,
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "id": "t_f8a22627",
+      "title": "Decidir si ampliar la indexación a 3MF",
+      "kind": "decision",
+      "status": "blocked",
+      "parents": [
+        "t_41f5ba72"
+      ],
+      "runs": []
+    },
+    {
+      "id": "t_0ff5d829",
+      "title": "Investigación independiente: sqlite3 y pathlib",
+      "kind": "auxiliary",
+      "status": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 1,
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793967007,
+          "ended_at": 1793967008,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "sources": [
+                {
+                  "untrusted_source_text": true,
+                  "topic": "sqlite3",
+                  "url": "https://docs.python.org/3/library/sqlite3.html",
+                  "media_type": "text/html",
+                  "sha256": "c5caf842173cabd7582bc3a8c5445922a17cc47c6aad2472ef94e9a9df5ba8dc",
+                  "retrieved_at": 1793967008.4406528,
+                  "bytes": 316235
+                },
+                {
+                  "untrusted_source_text": true,
+                  "topic": "pathlib",
+                  "url": "https://docs.python.org/3/library/pathlib.html",
+                  "media_type": "text/html",
+                  "sha256": "6a901370b870d78d46b394b87a6fb29850bcae77fd7261f4683cf2fe54111092",
+                  "retrieved_at": 1793967008.607825,
+                  "bytes": 271233
+                }
+              ],
+              "scope": "Official API availability observed; design decisions require General interpretation or user review"
+            },
+            "verification": {
+              "verification": "bounded public HTTPS fetch; no credentials or project contents sent"
+            },
+            "wall_seconds": 0.39459963599801995,
+            "capability": "research.documentation",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ]
+    }
+  ],
+  "followup_workflow": [
+    {
+      "id": "t_41f5ba72",
+      "title": "Implementar prototipo local STL/OBJ",
+      "kind": "engineering",
+      "status": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 1,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1793967013,
+          "ended_at": 1793967114,
+          "kind": "execution",
+          "summary": "Implementé el catálogo local SQLite para STL/OBJ, documentación y pruebas estándar. Verificación: `python3 -m unittest -v` ejecutó 4 pruebas con resultado OK; `py_compile` también terminó con código 0. Artefactos: catalogue.py, test_catalogue.py, README.md.",
+          "metadata_truncated": false,
+          "metadata": {
+            "files": [
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/catalogue.py",
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/test_catalogue.py",
+              "/tmp/argos-reliability-v2-repositories/biblioteca-3d-de-prueba/README.md"
+            ],
+            "tests": "python3 -m unittest -v: 4 passed; python3 -m py_compile catalogue.py test_catalogue.py: passed"
+          }
+        },
+        {
+          "id": 2,
+          "status": "completed",
+          "outcome": "completed",
+          "started_at": 1793967205,
+          "ended_at": 1793967205,
+          "kind": "state_transition",
+          "summary": "User accepted independently verified artifacts",
+          "metadata_truncated": false,
+          "metadata": {
+            "verification": {
+              "exit_code": 0,
+              "files": {
+                "README.md": "7cc21a4ca8957c2c6ddb28f42a616aa1caed7932066fd56e8e457fddf1c1dc36",
+                "catalogue.py": "002271568f9b346bef675b4a6746da3c35900410ce077f72f95e416c8bd32a93",
+                "test_catalogue.py": "e6126ae6c03f7c725dd03c065aac79309c063dd973e841b705acd3780903aa67"
+              },
+              "kind": "verification",
+              "output": "ARGOS_ACCEPTANCE: indexing, idempotency, tags, notes, search, persistence, preservation passed\n",
+              "passed": true,
+              "profile": "model_library_v1",
+              "project_id": "p_0a192318",
+              "run_id": 1,
+              "seconds": 0.06833196399384178,
+              "snapshot_unchanged": true,
+              "task_id": "t_41f5ba72"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t_f8a22627",
+      "title": "Decidir si ampliar la indexación a 3MF",
+      "kind": "decision",
+      "status": "blocked",
+      "parents": [
+        "t_41f5ba72"
+      ],
+      "runs": []
+    },
+    {
+      "id": "t_281f9c8f",
+      "title": "Añadir CLI documentada y pruebas de comandos",
+      "kind": "engineering",
+      "status": "running",
+      "parents": [],
+      "runs": [
+        {
+          "id": 3,
+          "status": "running",
+          "outcome": null,
+          "started_at": 1793968144,
+          "ended_at": null,
+          "kind": "execution",
+          "summary": "",
+          "metadata_truncated": false,
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "id": "t_0ff5d829",
+      "title": "Investigación independiente: sqlite3 y pathlib",
+      "kind": "auxiliary",
+      "status": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 1,
+          "kind": "execution",
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793967007,
+          "ended_at": 1793967008,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "sources": [
+                {
+                  "untrusted_source_text": true,
+                  "topic": "sqlite3",
+                  "url": "https://docs.python.org/3/library/sqlite3.html",
+                  "media_type": "text/html",
+                  "sha256": "c5caf842173cabd7582bc3a8c5445922a17cc47c6aad2472ef94e9a9df5ba8dc",
+                  "retrieved_at": 1793967008.4406528,
+                  "bytes": 316235
+                },
+                {
+                  "untrusted_source_text": true,
+                  "topic": "pathlib",
+                  "url": "https://docs.python.org/3/library/pathlib.html",
+                  "media_type": "text/html",
+                  "sha256": "6a901370b870d78d46b394b87a6fb29850bcae77fd7261f4683cf2fe54111092",
+                  "retrieved_at": 1793967008.607825,
+                  "bytes": 271233
+                }
+              ],
+              "scope": "Official API availability observed; design decisions require General interpretation or user review"
+            },
+            "verification": {
+              "verification": "bounded public HTTPS fetch; no credentials or project contents sent"
+            },
+            "wall_seconds": 0.39459963599801995,
+            "capability": "research.documentation",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ]
+    },
+    {
+      "id": "t_9275d0bf",
+      "title": "Conteo de archivos por extensión",
+      "kind": "auxiliary",
+      "status": "done",
+      "parents": [
+        "t_c1635ffb"
+      ],
+      "runs": [
+        {
+          "id": 3,
+          "kind": "execution",
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793968153,
+          "ended_at": 1793968153,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "counts": {
+                ".md": 1,
+                ".py": 2
+              }
+            },
+            "verification": {
+              "verification": "deterministic aggregation of recorded inventory"
+            },
+            "wall_seconds": 0.000459483009763062,
+            "capability": "files.types",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ]
+    },
+    {
+      "id": "t_c1635ffb",
+      "title": "Inventario actual de archivos del proyecto",
+      "kind": "auxiliary",
+      "status": "done",
+      "parents": [],
+      "runs": [
+        {
+          "id": 2,
+          "kind": "execution",
+          "status": "done",
+          "outcome": "completed",
+          "started_at": 1793968151,
+          "ended_at": 1793968152,
+          "summary": "Deterministic bounded capability verified",
+          "metadata": {
+            "result": {
+              "files": [
+                {
+                  "name": "README.md",
+                  "bytes": 1208,
+                  "mtime_ns": 1793967098770584300
+                },
+                {
+                  "name": "catalogue.py",
+                  "bytes": 5503,
+                  "mtime_ns": 1793967070142299600
+                },
+                {
+                  "name": "test_catalogue.py",
+                  "bytes": 2800,
+                  "mtime_ns": 1793967088927486200
+                }
+              ]
+            },
+            "verification": {
+              "verification": "read-only metadata observed now"
+            },
+            "wall_seconds": 0.0005820860096719116,
+            "capability": "files.inventory",
+            "project_revision": "5d6802510072e769422092d77eb02f458e15e8afd036e4dd35b48a4e81a99eac"
+          }
+        }
+      ]
+    }
+  ],
+  "independent_unittest": {
+    "profile": "python_unittest",
+    "passed": true,
+    "exit_code": 0,
+    "output": "test_index_tag_note_and_search_commands (test_catalogue.CatalogueCliTests.test_index_tag_note_and_search_commands) ... ok\ntest_search_outputs_empty_json_array_when_unmatched (test_catalogue.CatalogueCliTests.test_search_outputs_empty_json_array_when_unmatched) ... ok\ntest_indexes_stl_and_obj_idempotently_without_changing_sources (test_catalogue.ModelLibraryTests.test_indexes_stl_and_obj_idempotently_without_changing_sources) ... ok\ntest_metadata_survives_close_and_reopen (test_catalogue.ModelLibraryTests.test_metadata_survives_close_and_reopen) ... ok\ntest_rejects_unknown_model_for_metadata (test_catalogue.ModelLibraryTests.test_rejects_unknown_model_for_metadata) ... ok\ntest_searches_filename_tags_and_notes (test_catalogue.ModelLibraryTests.test_searches_filename_tags_and_notes) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.464s\n\nOK\n",
+    "seconds": 0.5706448020064272,
+    "files": {
+      "README.md": "77e7f42f51e73addcc8eae42b592dceacb6cbe7df2e09f0274e3d0c16344f028",
+      "catalogue.py": "a4d0894703d7f943127d50573fe763f44255be2d11a85341c8f326919b94e2e0",
+      "test_catalogue.py": "ace3f785fdfc48c46e239ab0312c36945e2aae626f5ea52d226a6b70023593d3"
+    },
+    "snapshot_unchanged": true
+  },
+  "cli_gap_detected": {
+    "profile": "model_library_v2",
+    "passed": false,
+    "exit_code": 1,
+    "output": "Traceback (most recent call last):\n  File \"<string>\", line 27, in <module>\n    rows=json.loads(cli('search','quick'));assert len(rows)==1 and 'fixture' in rows[0]['tags'], 'CLI tags and search'\n  File \"/usr/lib/python3.14/json/__init__.py\", line 352, in loads\n    return _default_decoder.decode(s)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^\n  File \"/usr/lib/python3.14/json/decoder.py\", line 345, in decode\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\n               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.14/json/decoder.py\", line 363, in raw_decode\n    raise JSONDecodeError(\"Expecting value\", s, err.value) from None\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)\nARGOS_ACCEPTANCE: indexing, idempotency, tags, notes, search, persistence, preservation passed\n",
+    "seconds": 0.21718863499700092,
+    "files": {
+      "README.md": "7cc21a4ca8957c2c6ddb28f42a616aa1caed7932066fd56e8e457fddf1c1dc36",
+      "catalogue.py": "002271568f9b346bef675b4a6746da3c35900410ce077f72f95e416c8bd32a93",
+      "test_catalogue.py": "e6126ae6c03f7c725dd03c065aac79309c063dd973e841b705acd3780903aa67"
+    },
+    "snapshot_unchanged": true
+  },
+  "recovered_ui_failures": [
+    "duplicate Project Map panels",
+    "orb overlaps panel controls",
+    "pointer interception during two-panel automation; restart and final two-panel test passed"
+  ],
+  "manual_experience_not_certified": true,
+  "selected_task_reply": "Has seleccionado **«Añadir CLI documentada y pruebas de comandos»**. El nodo figura como completado.",
+  "desktop_scroll_verified_zero": true
+}

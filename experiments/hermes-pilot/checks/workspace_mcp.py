@@ -34,6 +34,10 @@ for line in sys.stdin:
    except (OSError,ValueError):availability={}
    if availability.get('result',{}).get('enabled'):
     from project_tool import TOOL
+    if not availability.get('result',{}).get('project_map'):
+     import copy
+     TOOL=copy.deepcopy(TOOL)
+     TOOL['inputSchema']['properties']['action']['enum']=[a for a in TOOL['inputSchema']['properties']['action']['enum'] if a not in {'map','open_map'}]
     selected.append(TOOL)
     try:
      with socket.socket(socket.AF_UNIX) as s:

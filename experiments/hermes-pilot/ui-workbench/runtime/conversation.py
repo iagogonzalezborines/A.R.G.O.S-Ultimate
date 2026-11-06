@@ -28,6 +28,14 @@ from argos.language import voice_invocation,normalized,choose_language
 from .speech_pipeline import SpeechPipeline
 from .speech_settings import SpeechSettings
 
+def presentation_context(windows):
+ focus=[w for w in windows if w.get('focused')][:1]
+ maps=[w for w in windows if w.get('kind')=='project']
+ related=maps if focus and focus[0].get('kind')=='conversation' and len(maps)==1 else []
+ selected=focus+related+[w for w in windows if w.get('selected_path') and w not in focus]
+ return [{k:w[k] for k in ('id','kind','title','path','selected_path','url','focused','project','task_id') if k in w} for w in selected[:2]]
+
+
 class WorkerStartupError(RuntimeError):
  def __init__(self,component,detail):
   self.component=component;super().__init__(component+': '+detail)
@@ -89,13 +97,15 @@ class Worker:
     await self.process.wait()
 
 class Conversation:
- def __init__(self,emit,*,no_capture=False,mute=False,session_id='argos-workspace-default',workspace=None):
+ def __init__(self,emit,*,no_capture=False,mute=False,text_only=False,session_id='argos-workspace-default',workspace=None):
+  self.text_only=text_only;no_capture=no_capture or text_only
   self.emit=emit;self.no_capture=no_capture;self.mute=mute;self.sid=session_id;self.workspace=workspace
   if not re.fullmatch(r'[a-zA-Z0-9-]{1,80}',session_id):raise ValueError('Invalid native session ID')
   self.audio_root=ROOT/'state/audio'/session_id
   self.speech_settings=SpeechSettings(ROOT/'private'/('voice-settings.json' if not no_capture else 'qa-voice-settings-'+session_id+'.json'))
   self.status={'phase':'preparing','ready':False,'listening':False,'dialogue_open':False,'microphone':MICROPHONE,'model':'gpt-6-luna','voice':'Qwen + Peter · Referencia','session_id':session_id,'echo_cancellation':False,'output_muted':False}
-  self.status['output_muted']=not self.speech_settings.enabled()
+  self.status['output_muted']=text_only or not self.speech_settings.enabled()
+  self.status['text_only']=text_only
   self.loop=asyncio.new_event_loop();self.thread=threading.Thread(target=self.run,daemon=True)
   self.generation=0;self.language='en';self.record=None;self.player=None;self.echo=EchoCancellation();self.closed=False;self.last_answer='';self.speaking=False;self.turn_running=False;self.tasks=[]
  def start(self):self.thread.start()
@@ -126,14 +136,16 @@ class Conversation:
    self.state(components={**self.status.get('components',{}),name:value},**({'codex_ready':value=='ready'} if name=='codex' else {}))
    labels={'codex':'Codex','recognition':'reconocimiento','speech':'voz'}
    if value!='ready':self.emit({'type':'voice.caption','text':'Preparando '+labels[name]+(' · compilando audio local' if value=='compiling' else '…')})
-  initializers=[asyncio.create_task(worker.start(stage)) for worker in (self.stt,self.tts,self.model)]
+  workers=(self.model,) if self.text_only else (self.stt,self.tts,self.model)
+  initializers=[asyncio.create_task(worker.start(stage)) for worker in workers]
   try:
    initialized=await asyncio.gather(*initializers)
-   self.status['api_mode']=initialized[2].get('api_mode');self.status['codex_ready']=initialized[2].get('codex_ready',False)
-   self.status['startup_seconds']={worker.name:r['startup_seconds'] for worker,r in zip((self.stt,self.tts,self.model),initialized)}
-   self.status['voice_streaming']=initialized[1].get('streaming',False)
-   self.status['speech_engine_pin']=initialized[1].get('engine_pin')
-   self.status['recognition_model']=initialized[0].get('model');self.status['recognition_device']=initialized[0].get('device')
+   self.status['api_mode']=initialized[-1].get('api_mode');self.status['codex_ready']=initialized[-1].get('codex_ready',False)
+   self.status['startup_seconds']={worker.name:r['startup_seconds'] for worker,r in zip(workers,initialized)}
+   if not self.text_only:
+    self.status['voice_streaming']=initialized[1].get('streaming',False)
+    self.status['speech_engine_pin']=initialized[1].get('engine_pin')
+    self.status['recognition_model']=initialized[0].get('model');self.status['recognition_device']=initialized[0].get('device')
    self.state('standby',ready=True)
    self.tasks.append(asyncio.create_task(self.turns()))
    if not self.no_capture:await self.listen(True)
@@ -201,6 +213,8 @@ class Conversation:
    audio,generation=await self.queue.get()
    try:
     if generation!=self.generation:continue
+    if isinstance(audio,str):
+     await self.accept(audio,generation=generation,direct=True);continue
     self.state('transcribing')
     result=await self.stt.call({'pcm':base64.b64encode(audio).decode(),'previous_language':self.language})
     if generation!=self.generation:continue
@@ -316,7 +330,7 @@ class Conversation:
      delivered=True;stage_times['report_displayed_seconds']=time.monotonic()-started
      await pipeline.result(packet['speech'])
   try:
-   snapshot=[{k:w[k] for k in ('id','kind','title','path','selected_path','url','focused') if k in w} for w in ([w for w in self.workspace.windows if w.get('focused') or w.get('selected_path')][:2] if self.workspace else [])]
+   snapshot=presentation_context(self.workspace.windows if self.workspace else [])
    result=await self.model.call({'text':text,'workspace':snapshot},on_event=event)
    self.turn_running=False
    if generation!=self.generation:
@@ -414,7 +428,16 @@ class Conversation:
    if getattr(self,'tts_active',False):self.tts.interrupt()
    if self.turn_running:self.model.interrupt()
    await self.stop_player();self.state('listening' if self.status['listening'] else 'off')
+  elif op=='text':
+   if not self.status['ready']:raise ValueError('La conversación todavía se está preparando')
+   text=values.get('text')
+   if not isinstance(text,str) or not 0<len(text.strip())<=12000:raise ValueError('Invalid text')
+   from maintenance.controller import clean
+   if clean(text)!=text:raise ValueError('No envíes credenciales en la conversación')
+   if self.queue.full():raise ValueError('Hay peticiones pendientes; espera a que termine una')
+   self.queue.put_nowait((text,self.generation))
   elif op=='output':
+   if self.text_only and values.get('enabled'):raise ValueError('La voz no está iniciada en esta sesión de texto')
    self.speech_settings.save(bool(values.get('enabled')))
    self.status['output_muted']=not bool(values.get('enabled'))
    if self.status['output_muted']:

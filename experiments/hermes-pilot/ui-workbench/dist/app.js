@@ -1,3 +1,4 @@
+import {renderProjectMap} from './project-map.js';
 import {renderProgress,updateProgress} from './progress.js';
 import {renderMaintenance} from './maintenance.js';
 import {renderFiles,renderDocument,renderChange,renderStorage} from './files.js';
@@ -12,9 +13,15 @@ function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.classNa
 function caption(text){$('#subtitle-text').textContent=text}
 function toast(text){$('#toast').textContent=text;$('#toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3000)}
 function placement(){const panels=manager.windows.size>0;root.dataset.phase=panels?'working':processOpening?'expanding':'idle';orb.setPhase(processOpening?'expanding':'idle')}
-function state(value){voice=value;const labels={preparing:'PREPARANDO',standby:'ESPERANDO «ARGOS»',listening:'ESCUCHANDO',transcribing:'RECONOCIENDO',thinking:'PENSANDO',synthesizing:'PREPARANDO VOZ',speaking:'HABLANDO',off:'MICRÓFONO APAGADO',error:'REQUIERE ATENCIÓN'};$('#core-state').textContent=labels[value.phase]||'EN REPOSO';$('#workspace-status').textContent=labels[value.phase]||'ESPACIO ACTIVO';$('#microphone').setAttribute('aria-pressed',String(value.listening));$('#microphone').title=value.listening?'Silenciar '+value.microphone:'Activar micrófono';$('#microphone').setAttribute('aria-label',$('#microphone').title);$('#microphone').disabled=!value.ready;root.dataset.voicePhase=value.phase;const speaker=$('#voice-output');speaker.setAttribute('aria-pressed',String(!value.output_muted));speaker.title=value.output_muted?'Activar voz':'Silenciar voz';speaker.setAttribute('aria-label',speaker.title);$('#mute-voice').firstChild.textContent=value.output_muted?'Activar voz ':'Silenciar voz ';if(value.error)caption(value.error);placement();for(const w of manager.windows.values())if(w.kind==='agents')renderAgents(w)}
+function state(value){voice=value;const labels={preparing:'PREPARANDO',standby:'ESPERANDO «ARGOS»',listening:'ESCUCHANDO',transcribing:'RECONOCIENDO',thinking:'PENSANDO',synthesizing:'PREPARANDO VOZ',speaking:'HABLANDO',off:'MICRÓFONO APAGADO',error:'REQUIERE ATENCIÓN'};if(value.text_only){labels.standby=labels.off='CONVERSACIÓN POR TEXTO'}$('#core-state').textContent=labels[value.phase]||'EN REPOSO';$('#workspace-status').textContent=labels[value.phase]||'ESPACIO ACTIVO';$('#microphone').setAttribute('aria-pressed',String(value.listening));$('#microphone').title=value.listening?'Silenciar '+value.microphone:'Activar micrófono';$('#microphone').setAttribute('aria-label',$('#microphone').title);$('#microphone').disabled=!value.ready||value.text_only;root.dataset.voicePhase=value.phase;const speaker=$('#voice-output');speaker.disabled=!!value.text_only;$('#mute-voice').disabled=!!value.text_only;speaker.setAttribute('aria-pressed',String(!value.output_muted));speaker.title=value.output_muted?'Activar voz':'Silenciar voz';speaker.setAttribute('aria-label',speaker.title);$('#mute-voice').firstChild.textContent=value.output_muted?'Activar voz ':'Silenciar voz ';if(value.error)caption(value.error);placement();for(const w of manager.windows.values())if(w.kind==='agents')renderAgents(w)}
 function renderAgents(w){w.body.replaceChildren();const pad=make('div','panel-pad');pad.innerHTML='<div class="eyebrow-blue">ARGOS / SESIÓN ACTUAL</div><div class="agents-diagram"><div class="agents-line"></div><div class="agent-node root">ARGOS<small>VOZ Y WORKSPACE</small></div><div class="agent-node a">HERMES<small>CONVERSACIÓN</small></div><div class="agent-node b">CODEX<small>INFERENCIA LIGERA</small></div></div>';for(const [name,value] of [['Conversación',voice.ready?'CONECTADA':'PREPARANDO'],['Codex',voice.codex_ready?'LISTO':voice.components?.codex==='starting'?'INICIANDO':'PENDIENTE'],['Modelo',voice.model||'gpt-6-luna'],['Voz',voice.voice||'Qwen + Peter'],['Workspace','CONECTADO'],['Archivos','LECTURA / CAMBIOS REVISADOS'],['Micrófono',voice.listening?'ACTIVO':'APAGADO']]){const line=make('div','agent-status');line.append(make('span','',name),make('b','',value));pad.append(line)}pad.append(make('div','prepared','La sesión y el historial pertenecen a Hermes. Las herramientas de proyectos, PC, diseño y fabricación se conectan por capacidades; no se simulan tareas.'));w.body.append(pad)}
 function render(w){
+ if(w.kind==='project')return renderProjectMap(w,{make,manager});
+ if(w.kind==='conversation'){
+  const form=make('form','panel-pad conversation-form'),input=make('textarea'),send=make('button','','Enviar'),answer=make('p','note-body',lastAnswer||'Escribe una petición para ARGOS.'),status=make('p');input.setAttribute('aria-label','Mensaje para ARGOS');input.placeholder='¿Qué hacemos?';input.maxLength=12000;send.type='submit';answer.setAttribute('aria-live','polite');answer.classList.add('conversation-answer');form.append(input,send,status,answer);w.body.append(form);
+  form.onsubmit=async e=>{e.preventDefault();if(!input.value.trim())return;send.disabled=true;try{await window.argosDesktop.voice({op:'text',text:input.value});input.value='';status.textContent='Petición recibida.'}catch(e){status.textContent=e.message}finally{send.disabled=false}};return;
+ }
+
  if(w.kind==='maintenance')return renderMaintenance(w,{make,manager,toast});
  if(w.kind==='storage')return renderStorage(w,{make,manager,toast});
  if(w.kind==='files')return renderFiles(w,{make,manager,openPanel,toast});
@@ -32,7 +39,7 @@ function render(w){
  }
 }
 const manager=new WindowManager($('#desktop'),{render,onChange:windows=>{$('#window-count').textContent=String(windows.length).padStart(2,'0')+' VENTANAS';placement()},onSound:kind=>sound.chime(kind)});
-function openPanel(kind,options={},actor='user'){return manager.open({id:options.id||kind,kind,title:{summary:'Contexto de conversación',sources:'Fuentes',browser:'Navegador',video:'Vídeo',files:'Archivos',storage:'Almacenamiento',agents:'Agentes',note:'Observación',progress:'Estado'}[kind]||kind,...options},{actor})}
+function openPanel(kind,options={},actor='user'){return manager.open({id:options.id||(kind==='project'?'project-map':kind),kind,title:{project:'Proyectos',conversation:'Conversar por texto',summary:'Contexto de conversación',sources:'Fuentes',browser:'Navegador',video:'Vídeo',files:'Archivos',storage:'Almacenamiento',agents:'Agentes',note:'Observación',progress:'Estado'}[kind]||kind,...options},{actor})}
 function closeMenu(){$('#core-menu').hidden=true;manager.suspend(false)}
 $('#core-button').onclick=()=>{const menu=$('#core-menu');menu.hidden=!menu.hidden;manager.suspend(!menu.hidden)};
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#core-menu')&&!e.target.closest('#core-button'))closeMenu()});
@@ -43,12 +50,12 @@ async function voiceCommand(payload){if(!window.argosDesktop)return;try{return a
 $('#microphone').onclick=()=>voiceCommand({op:'listen',enabled:!voice.listening});$('#interrupt-voice').onclick=()=>{voiceCommand({op:'interrupt'});closeMenu()};
 function soundButton(){const b=$('#sound');b.setAttribute('aria-pressed',String(sound.enabled));b.title=sound.enabled?'Silenciar efectos de sonido':'Activar efectos de sonido';b.setAttribute('aria-label',b.title)}
 $('#sound').onclick=async()=>{sound.toggle();await sound.unlock();soundButton();if(sound.enabled)sound.chime()};soundButton();function toggleVoice(){voiceCommand({op:'output',enabled:voice.output_muted});closeMenu()}$('#mute-voice').onclick=toggleVoice;$('#voice-output').onclick=toggleVoice;
-document.addEventListener('keydown',e=>{if(e.target.matches('input'))return;if(e.key==='Escape'){voiceCommand({op:'interrupt'});closeMenu()}if(e.altKey&&e.key.toLowerCase()==='a'){e.preventDefault();manager.arrange()}if(e.key==='F11'){e.preventDefault();$('#fullscreen').click()}});
+document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.key==='Escape'){voiceCommand({op:'interrupt'});closeMenu()}if(e.altKey&&e.key.toLowerCase()==='a'){e.preventDefault();manager.arrange()}if(e.key==='F11'){e.preventDefault();$('#fullscreen').click()}});
 async function runtimeEvent(event){
  if(event.type==='voice.state'){state(event);return}
  if(event.type==='voice.transcript'){streamText='';caption('Tú · '+event.text);return}
  if(event.type==='voice.delta'){streamText+=event.text;caption(streamText);return}
- if(event.type==='voice.answer'){lastAnswer=event.text;caption(event.text);return}
+ if(event.type==='voice.answer'){lastAnswer=event.text;caption(event.text);document.querySelectorAll('.conversation-answer').forEach(el=>el.textContent=event.text);return}
  if(event.type==='voice.caption'){caption(event.text);return}
  if(event.type==='voice.level'){orb.setEnergy(event.level);sound.bars.forEach((bar,i)=>bar.style.height=(3+event.level*17*(.3+.7*Math.sin((i+1)*Math.PI/14)))+'px');return}
  if(['process.started','process.update','process.source','process.completed','process.cancelled','process.failed'].includes(event.type)){

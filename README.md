@@ -1,5 +1,7 @@
 # ARGOS · Linux 0.3
 
+Último avance del piloto: [Project Map, fiabilidad, calidad local y biblioteca 3D verificada](experiments/hermes-pilot/reports/reliability-2026-11-06.md). Incluye evidencia de Electron/Codex, instalación y relevo para casa.
+
 Asistente con Core Python/SQLite, tareas en segundo plano, conversación y tareas con perfiles Codex explícitos,
 investigación web, operaciones del PC y voz local. La consola muestra solo una esfera
 ASCII; los detalles se consultan desde otra terminal y las aprobaciones también admiten voz. Esta es la

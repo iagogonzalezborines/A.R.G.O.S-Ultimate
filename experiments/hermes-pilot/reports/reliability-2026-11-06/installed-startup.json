@@ -1,0 +1,18 @@
+{
+  "checks": [
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "projects and text entry discoverable in installed app",
+      "ok": true
+    },
+    {
+      "name": "installed Projects and Map enabled",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "mode": "text-only, no capture, muted Electron"
+}

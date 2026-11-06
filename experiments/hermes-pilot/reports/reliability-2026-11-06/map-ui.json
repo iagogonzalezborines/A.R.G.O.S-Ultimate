@@ -1,0 +1,74 @@
+{
+  "checks": [
+    {
+      "name": "map discoverable and empty state",
+      "ok": true
+    },
+    {
+      "name": "native decision saved from UI",
+      "ok": true
+    },
+    {
+      "name": "edit task persists actual native brief",
+      "ok": true
+    },
+    {
+      "name": "native cancellation from UI",
+      "ok": true
+    },
+    {
+      "name": "close/reopen restores project and state",
+      "ok": true
+    },
+    {
+      "name": "acceptance disabled before verification",
+      "ok": true
+    },
+    {
+      "name": "failed verification keeps acceptance disabled",
+      "ok": true
+    },
+    {
+      "name": "verification enables acceptance",
+      "ok": true
+    },
+    {
+      "name": "rejection produces native blocked state",
+      "ok": true
+    },
+    {
+      "name": "invalid action explains failure without changing state",
+      "ok": true
+    },
+    {
+      "name": "retry grant does not replay work",
+      "ok": true
+    },
+    {
+      "name": "selected task/project are exposed as bounded conversation context",
+      "ok": true
+    },
+    {
+      "name": "narrow layout has no horizontal overflow",
+      "ok": true
+    },
+    {
+      "name": "existing native HTTPS browser loads",
+      "ok": true
+    },
+    {
+      "name": "closing browser preserves Project Map",
+      "ok": true
+    },
+    {
+      "name": "desktop remains fixed while panels scroll",
+      "ok": true
+    },
+    {
+      "name": "no renderer exceptions",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "last": "ARGOS\n▦\n♪\n⛶\n×\n01 /Proyectos\n−\n□\n×\nSelecciona proyecto\nMap Fixture\nActualizar\n\nEstado nativo actualizado\n\nMap Fixture · Objetivo\nFormatos de archivo\nCompletada\nUser decision\nCrear índice\nCancelada\nCodex Engineering\n↑ Formatos de archivo\nRevisión controlada\nCancelada\nCodex Engineering\nRevisión controlada\n\nCancelada\n\nComprobar controles con un registro nativo de prueba\n\nCriterios\n[\n  \"Prueba de interacción\"\n]\nEjecución y revisiones\nEjecución · registro 2 · review · review_requested\nCambio de estado · registro 3 · blocked · blocked\nVerificación del controlador\nPruebas fallidas\nPruebas superadas\nRevisión rechazada\nReintento autorizado\nArtefactos observados\n\nSin archivos declarados y observados.\n\nEventos nativos\nARGOS\nMICRÓFONO APAGADO\nARGOS\nPreparando conversación…\nMICRÓFONO APAGADO\n01 VENTANAS\n00:00\n13:48:09\nCambio aplicado."
+}

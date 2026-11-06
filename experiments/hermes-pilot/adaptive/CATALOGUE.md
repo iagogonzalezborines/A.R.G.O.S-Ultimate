@@ -1,6 +1,8 @@
 # Catálogo de capacidades — 6 de noviembre de 2026
 
-Solo están conectadas a la red experimental `text.normalize`, `local.extract`, `files.inventory` y `files.types`, además de Engineering mediante la herramienta Projects existente. El catálogo describe candidatos; **no los anuncia como herramientas ejecutables**. Estado y medidas reales: [informe](../reports/adaptive-network-2026-11-06.md). Instalación selectiva: [procedimiento](SETUP.md).
+Están implementadas `text.normalize`, `local.extract`, `files.inventory`, `files.types` y `research.documentation` (lectura acotada de documentación oficial), además de Engineering mediante la herramienta Projects existente. El catálogo describe candidatos; **no los anuncia como herramientas ejecutables**. Estado y medidas reales: [informe](../reports/adaptive-network-2026-11-06.md). Instalación selectiva: [procedimiento](SETUP.md).
+
+Estado posterior: [fiabilidad, Project Map, calidad y proyecto real](../reports/reliability-2026-11-06.md). En esta instalación se activaron Projects/Map y las funciones acotadas; la inferencia local permanece opcional y no disponible sin configuración revisada.
 
 ## Modelos locales
 
@@ -8,7 +10,7 @@ Todos se ejecutan localmente, sin cuenta de inferencia, con coste de hardware. L
 
 | Modelo y fuentes primarias | Uso propuesto y licencia | Instalación seleccionable y recursos | Integración, riesgo y estado |
 |---|---|---|---|
-| [Qwen3 0.6B](https://huggingface.co/Qwen/Qwen3-0.6B), [Ollama](https://ollama.com/library/qwen3:0.6b) | Extracción breve/JSON; Apache-2.0 | `ollama pull qwen3:0.6b`; GGUF Q4_K_M, 523 MB; reserva 2 GiB | Experimental probado; schema validado, semántica en revisión. No herramientas ni lectura de archivos por el modelo. Digest fijado en manifest |
+| [Qwen3 0.6B](https://huggingface.co/Qwen/Qwen3-0.6B), [Ollama](https://ollama.com/library/qwen3:0.6b) | Extracción breve/JSON; Apache-2.0 | `ollama pull qwen3:0.6b`; GGUF Q4_K_M, 523 MB; reserva 2 GiB | Extracción literal: 6/6 casos; total semántico: 9/18. Solo borradores con revisión humana; modelo/digest requieren perfil medido. No herramientas ni lectura de archivos por el modelo. Digest fijado en manifest |
 | [Gemma 3 270M IT](https://huggingface.co/google/gemma-3-270m-it), [Ollama](https://ollama.com/library/gemma3:270m) | Texto muy pequeño; términos Gemma | `ollama pull gemma3:270m`; GGUF Q8_0, 292 MB; reserva inicial 2 GiB | Candidato; no es visión. Evaluar calidad antes de cambiar el modelo probado |
 | [Qwen3.5 0.8B](https://huggingface.co/Qwen/Qwen3.5-0.8B), [Ollama](https://ollama.com/library/qwen3.5:0.8b) | Modelo compacto multimodal; Apache-2.0 | `ollama pull qwen3.5:0.8b`; distribución Ollama; reservar 3 GiB inicialmente | Candidato. El adaptador actual admite texto; imágenes requieren contrato y límites propios. Compatibilidad del pin local pendiente |
 | [Qwen3 1.7B](https://huggingface.co/Qwen/Qwen3-1.7B), [Ollama](https://ollama.com/library/qwen3:1.7b) | Más capacidad para extracción/síntesis; Apache-2.0 | `ollama pull qwen3:1.7b`; GGUF; reservar 4 GiB inicialmente | Candidato para casa; mismo contrato JSON, nueva evaluación de precisión/latencia/digest |
@@ -25,7 +27,7 @@ Cambiar de modelo significa revisar `model`, `digest`, contexto, hilos, GPU y pr
 | [llama.cpp server](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) ([MIT](https://github.com/ggml-org/llama.cpp/blob/master/LICENSE)) | Alternativa GGUF CPU/GPU; controlar contexto/hilos | Release o compilación fijada, sin cuenta; Linux/Windows/macOS | No instalado: no hay ventaja medida que justifique duplicar Ollama |
 | Hermes Agent, pin del [bloque A](../reports/restoration-2026-11-06.md) | Projects/Kanban/claims/Engineering nativos; Python, MIT | Preparación de A y entorno nativo; login Codex independiente; piloto Linux validado | Autoridad operativa actual. Reutilizar sus eventos/dispatcher, nunca duplicar sus tablas en ARGOS |
 | [OpenClaw Workboard](https://docs.openclaw.ai/plugins/workboard), [Codex harness](https://docs.openclaw.ai/plugins/codex-harness-reference) | Runtime candidato, tablero, subagentes; Node + plugin Codex, MIT; más procesos y Docker en esta prueba | npm con pin 2026.11.1; plugin `@openclaw/codex` separado; cuenta Codex independiente; Linux probado, otras plataformas pendientes | Experimental aislado. Creación, ejecución, CAS y persistencia observados. No promover sin paridad A/B, revisión confiable y adaptación de interfaz/voz |
-| ARGOS Broker/Policy/Context | Autorización/evidencia, sin modelo adicional para enrutar; coste pequeño de controlador | Código existente de este repositorio; no nueva cuenta | Mantener como frontera confiable. Registro de cuatro implementaciones, feature flag cerrado por defecto; no es otro runtime |
+| ARGOS Broker/Policy/Context | Autorización/evidencia, sin modelo adicional para enrutar; coste pequeño de controlador | Código existente de este repositorio; no nueva cuenta | Mantener como frontera confiable. Registro de cinco implementaciones, activación explícita con feature flags; no es otro runtime |
 
 ## Inteligencia online
 

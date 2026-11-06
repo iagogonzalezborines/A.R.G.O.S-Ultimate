@@ -23,6 +23,11 @@ with tempfile.TemporaryDirectory(prefix='argos-project-review-') as temporary:
     broker.serve()
     host=server.ThreadingHTTPServer(('127.0.0.1',42722),server.Handler)
     host.workspace=broker;host.voice=None
+    token=P/'ui-workbench/private/presentation.token'
+    token.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+    if not token.exists():
+        import secrets
+        token.write_text(secrets.token_urlsafe(32));token.chmod(0o600)
     host.token=(P/'ui-workbench/private/presentation.token').read_text().strip()
     thread=threading.Thread(target=host.serve_forever,daemon=True);thread.start()
     try:

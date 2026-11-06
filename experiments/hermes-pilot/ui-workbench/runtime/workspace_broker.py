@@ -5,6 +5,7 @@ import hashlib
 import json
 import mimetypes
 import os
+import re
 from pathlib import Path
 import secrets
 import socket
@@ -19,7 +20,7 @@ from .apps import Apps
 
 ROOT=Path(__file__).resolve().parents[1]
 SOCKET=ROOT.parent/'private/workspace.sock'
-KINDS={'summary','note','sources','progress','browser','video','agents','files','document','change','storage','maintenance'}
+KINDS={'project','conversation','summary','note','sources','progress','browser','video','agents','files','document','change','storage','maintenance'}
 DENIED={'node_modules','__pycache__','credentials','secrets','venv','env','qwen-env'}
 
 def public_url(value):
@@ -266,8 +267,10 @@ class WorkspaceBroker:
   if not isinstance(windows,list) or len(windows)>40:raise ValueError('Invalid workspace snapshot')
   clean=[]
   for w in windows:
-   if not isinstance(w,dict) or set(w)-{'id','kind','title','x','y','width','height','minimized','maximized','actor','path','selected_path','url','focused'}:raise ValueError('Invalid window state')
+   if not isinstance(w,dict) or set(w)-{'id','kind','title','x','y','width','height','minimized','maximized','actor','path','selected_path','url','focused','project','task_id'}:raise ValueError('Invalid window state')
    if not isinstance(w.get('id'),str) or w.get('kind') not in KINDS:raise ValueError('Invalid window state')
+   for field in ('project','task_id'):
+    if field in w and (w.get('kind')!='project' or not isinstance(w[field],str) or not re.fullmatch('[A-Za-z0-9_-]{1,80}',w[field])):raise ValueError('Invalid project observation')
    clean.append(w)
   with self.condition:
    self.windows=clean;self.connected_at=time.monotonic()

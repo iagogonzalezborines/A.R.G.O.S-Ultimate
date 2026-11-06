@@ -24,7 +24,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(destination, *, microphone=None, register=False, projects=None):
+def prepare(destination, *, microphone=None, register=False, projects=None, project_map=None, adaptive=None):
     destination = Path(destination).expanduser().resolve()
     if destination == REPO or destination.is_relative_to(REPO):
         raise ValueError('Install outside the source repository')
@@ -101,6 +101,13 @@ def prepare(destination, *, microphone=None, register=False, projects=None):
         {str(p.relative_to(SOURCE)): digest(p) for p in paths}, indent=2) + '\n')
     if projects is not None:
         configure_projects(destination, projects)
+    if adaptive is not None:
+        configure_projects(destination, adaptive, capability='adaptive')
+    if project_map is not None:
+        settings=json.loads(config_path.read_text())
+        if project_map and not settings.get('projects_enabled'):raise ValueError('Enable Projects before Project Map')
+        settings['project_map_enabled']=bool(project_map)
+        config_path.write_text(json.dumps(settings,indent=2)+'\n')
     if register:
         register_launcher(destination)
     return {'installation': str(destination), 'source_files': len(paths),
@@ -109,7 +116,7 @@ def prepare(destination, *, microphone=None, register=False, projects=None):
             'authentication_present': (destination / 'state/codex/auth.json').is_file()}
 
 
-def configure_projects(destination, enabled):
+def configure_projects(destination, enabled, *, capability="projects"):
     """Explicit feature activation; native execution still requires a reviewed project scope."""
     if enabled:
         sys.path.insert(0, str(destination))
@@ -117,6 +124,8 @@ def configure_projects(destination, enabled):
         verify_pin(destination)
     config_path = destination / 'installation.json'
     config = json.loads(config_path.read_text())
+    if capability not in {'projects','adaptive'}:raise ValueError('Unknown integration')
+    if capability=='adaptive' and enabled and not config.get('projects_enabled'):raise ValueError('Enable Projects first')
     config.setdefault('pilot_root', str(destination))
     config.setdefault('project_state', str(destination / 'state/projects'))
     config.setdefault('project_roots', [str(Path(config['user_home']) / 'Proyectos')])
@@ -124,19 +133,20 @@ def configure_projects(destination, enabled):
     source = codex.read_text()
     parsed = tomllib.loads(source)
     names = parsed['mcp_servers']['argos-workspace']['enabled_tools']
-    names = list(dict.fromkeys([*names, 'projects'])) if enabled else [n for n in names if n != 'projects']
+    names = list(dict.fromkeys([*names, capability])) if enabled else [n for n in names if n != capability]
     pattern = r'(?ms)(^\[mcp_servers\.argos-workspace\]\s*\n)(.*?)(?=^\[|\Z)'
     match = re.search(pattern, source)
     if not match or not re.search(r'^enabled_tools\s*=\s*\[[^\n]*\]\s*$', match[2], re.M):
         raise ValueError('Review the existing MCP tools configuration before activation')
     body = re.sub(r'^enabled_tools[^\n]*', 'enabled_tools='+json.dumps(names), match[2], flags=re.M)
     source = source[:match.start(2)] + body + source[match.end(2):]
-    section = '[mcp_servers.argos-workspace.tools.projects]'
+    section = '[mcp_servers.argos-workspace.tools.'+capability+']'
     if enabled and section not in source:
         source += '\n'+section+'\napproval_mode="approve"\n'
-    if enabled and tomllib.loads(source)['mcp_servers']['argos-workspace']['tools']['projects'].get('approval_mode') != 'approve':
+    if enabled and tomllib.loads(source)['mcp_servers']['argos-workspace']['tools'][capability].get('approval_mode') != 'approve':
         raise ValueError('Review the projects tool approval mode before activation')
-    config['projects_enabled'] = bool(enabled)
+    config[capability+'_enabled'] = bool(enabled)
+    if capability=='adaptive':config.setdefault('adaptive',{'local':{},'min_available_bytes':2*1024**3})
     # Write transport config first: an interrupted enable remains denied by the Broker flag.
     codex.write_text(source)
     config_path.write_text(json.dumps(config, indent=2)+'\n')
@@ -146,9 +156,9 @@ def register_launcher(destination):
     """A separate menu entry; leaves older ARGOS launchers and autostart intact."""
     executable = destination / 'bin/argos-hermes'
     executable.write_text(
-        '#!/usr/bin/python3\nimport os\n'
+        '#!/usr/bin/python3\nimport os,sys\n'
         'os.execv("/usr/bin/python3", ["/usr/bin/python3", '
-        + repr(str(destination / 'ui-workbench/launch.py')) + '])\n')
+        + repr(str(destination / 'ui-workbench/launch.py')) + '] + sys.argv[1:])\n')
     executable.chmod(0o700)
     applications = Path.home() / '.local/share/applications'
     applications.mkdir(parents=True, exist_ok=True)
@@ -171,5 +181,7 @@ if __name__ == '__main__':
     parser.add_argument('--microphone', help='Exact PipeWire input name selected for this installation')
     parser.add_argument('--register', action='store_true', help='Install the separate ARGOS (Hermes) menu launcher')
     parser.add_argument('--projects', choices=['on','off'], help='Explicitly enable or disable the installed native project integration; never starts a worker')
+    parser.add_argument('--project-map', choices=['on','off'], help='Enable the validated native Project Map panel; no worker starts')
+    parser.add_argument('--adaptive', choices=['on','off'], help='Enable bounded native capabilities; local inference stays unavailable without its reviewed private configuration')
     args = parser.parse_args()
-    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on'), indent=2))
+    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on', project_map=None if args.project_map is None else args.project_map=='on', adaptive=None if args.adaptive is None else args.adaptive=='on'), indent=2))

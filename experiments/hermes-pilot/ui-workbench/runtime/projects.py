@@ -43,7 +43,7 @@ class Projects:
             raise ValueError('Invalid project arguments')
         action = args.get('action')
         if action == 'availability' and set(args)=={'action'}:
-            return {'enabled':self.enabled}
+            return {'enabled':self.enabled,'project_map':self.enabled and self.config.get('project_map_enabled') is True}
         if not self.enabled:
             raise PermissionError('Persistent Projects is disabled in this installation')
         if action == 'propose':
@@ -78,6 +78,16 @@ class Projects:
                 return {'status':'applied','project':result}
         if action == 'create':
             raise PermissionError('Use a concrete scope proposal; the agent cannot authorize its own project')
+        if action=='open_map':
+            if set(args)-{'action','project'}:raise ValueError('Invalid map request')
+            if self.config.get('project_map_enabled') is not True:raise PermissionError('Project Map is unavailable')
+            project=args.get('project','')
+            if project:project=self.native({'action':'resolve','project':project})['id']
+            self.publish({'type':'window.open','id':'project-map','kind':'project','title':'Proyectos','text':project})
+            return {'status':'requested','project':project}
+        if action in {'lifecycle','map_action'}:
+            if not user:raise PermissionError('Task decisions require the trusted user surface')
+            return self.native(args,authorized=True)
         return self.native(args)
 
     def review(self, ident):

@@ -17,6 +17,8 @@ def stop(process):
   except subprocess.TimeoutExpired:process.kill();process.wait()
 
 def main():
+ import argparse
+ parser=argparse.ArgumentParser();parser.add_argument('--text-only',action='store_true',help='Use the existing conversation without starting microphone or synthesis workers');args=parser.parse_args()
  home=ROOT/'state/home';home.mkdir(parents=True,exist_ok=True,mode=0o700)
  env={'HOME':str(home),'PATH':'/usr/bin:/bin','LANG':'C.UTF-8','ARGOS_UI_PLATFORM':'x11','XDG_CONFIG_HOME':str(ROOT/'state/config'),'XDG_CACHE_HOME':str(ROOT/'state/cache'),'XDG_DATA_HOME':str(ROOT/'state/data'),'XDG_STATE_HOME':str(ROOT/'state/state')}
  for key in ['DISPLAY','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS']:
@@ -47,7 +49,7 @@ def main():
     if maintenance.load('pending.json'):
      (maintenance.private/'pending.json').unlink();maintenance.audit('stale_update_discarded')
    if not ready():
-    server_log=(ROOT/'reports/conversation-live.log').open('a');server=subprocess.Popen([sys.executable,str(ROOT/'server.py'),'--voice'],stdout=server_log,stderr=subprocess.STDOUT)
+    server_log=(ROOT/'reports/conversation-live.log').open('a');server=subprocess.Popen([sys.executable,str(ROOT/'server.py'),'--text-only' if args.text_only else '--voice'],stdout=server_log,stderr=subprocess.STDOUT)
     for _ in range(40):
      if ready():break
      if server.poll() is not None:break

@@ -1,0 +1,23 @@
+{
+  "core_unittest": 353,
+  "projects_lifecycle": 20,
+  "project_map_native": 3,
+  "adaptive_native": 7,
+  "quality_profiles": 3,
+  "files": 25,
+  "storage_clipboard": 21,
+  "research_boundaries": 17,
+  "startup_lifecycle": 10,
+  "maintenance_boundaries": 26,
+  "maintenance_auto_review": 8,
+  "browser_address_guard": 13,
+  "map_ui": 17,
+  "map_disabled_ui": 1,
+  "generated_app_unittest": 6,
+  "generated_app_api_cli_acceptance": true,
+  "text_ingress": true,
+  "pcm_null_sink": true,
+  "installed_startup": true,
+  "installed_source_manifest_matched": true,
+  "selected_task_context_real_general": true
+}

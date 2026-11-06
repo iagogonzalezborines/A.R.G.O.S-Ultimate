@@ -1,0 +1,49 @@
+{
+  "dataset": "argos-semantic-v1",
+  "model": "qwen3:0.6b",
+  "digest": "7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435",
+  "profiles": {
+    "classification": {
+      "passed": 0,
+      "total": 2,
+      "eligible": false,
+      "scope": "read-only draft; human semantic review still required"
+    },
+    "dependencies": {
+      "passed": 1,
+      "total": 2,
+      "eligible": false,
+      "scope": "read-only draft; human semantic review still required"
+    },
+    "literal_items": {
+      "passed": 6,
+      "total": 6,
+      "eligible": true,
+      "scope": "read-only draft; human semantic review still required"
+    },
+    "objective": {
+      "passed": 0,
+      "total": 2,
+      "eligible": false,
+      "scope": "read-only draft; human semantic review still required"
+    },
+    "requirements": {
+      "passed": 1,
+      "total": 2,
+      "eligible": false,
+      "scope": "read-only draft; human semantic review still required"
+    },
+    "summary": {
+      "passed": 1,
+      "total": 2,
+      "eligible": false,
+      "scope": "read-only draft; human semantic review still required"
+    },
+    "workflow": {
+      "passed": 0,
+      "total": 2,
+      "eligible": false,
+      "scope": "read-only draft; human semantic review still required"
+    }
+  }
+}

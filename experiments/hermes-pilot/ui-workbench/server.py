@@ -14,7 +14,7 @@ from urllib.parse import urlsplit, unquote
 ROOT=Path(__file__).resolve().parent
 DIST=ROOT/'dist'
 ALLOWED_HOSTS={'science.nasa.gov','www.nasa.gov','en.wikipedia.org','es.wikipedia.org','www.swpc.noaa.gov'}
-KINDS={'progress','summary','sources','browser','video','agents','note','files','document','change','storage','maintenance'}
+KINDS={'project','conversation','progress','summary','sources','browser','video','agents','note','files','document','change','storage','maintenance'}
 events=collections.deque(maxlen=128)
 changed=threading.Condition()
 sequence=0
@@ -58,7 +58,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.authorized():return self.send_error(401)
             return self.reply(200,dict(self.server.voice.status) if self.server.voice else {'ready':False,'phase':'off','listening':False})
         if path=='/':self.path='/index.html'
-        elif path not in {'/index.html','/style.css','/app.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json'} and not path.startswith('/assets/'):
+        elif path not in {'/index.html','/style.css','/app.js','/project-map.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json'} and not path.startswith('/assets/'):
             return self.send_error(404)
         decoded=unquote(path)
         if '..' in decoded.split('/') or not (DIST/decoded.lstrip('/')).resolve().is_relative_to(DIST):return self.send_error(404)
@@ -82,7 +82,9 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
     def list_directory(self,path):self.send_error(404)
     def reply(self,status,data):
-        body=json.dumps(data,ensure_ascii=False).encode();self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+        try:
+            body=json.dumps(data,ensure_ascii=False).encode();self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+        except (BrokenPipeError,ConnectionResetError):pass
     def do_POST(self):
         global sequence
         if self.path not in {'/api/presentation','/api/voice','/api/workspace','/api/capability','/api/diagnostic'}:return self.send_error(404)
@@ -104,10 +106,12 @@ class Handler(SimpleHTTPRequestHandler):
                 if not self.server.voice:raise ValueError('Voice unavailable')
                 if not isinstance(body,dict) or set(body)-{'op','enabled','text','language'}:raise ValueError('Invalid voice fields')
                 op=body.get('op')
-                if op not in {'listen','interrupt','output','test-text','test-speech','test-tts'}:raise ValueError('Unknown voice command')
+                if op not in {'text','listen','interrupt','output','test-text','test-speech','test-tts'}:raise ValueError('Unknown voice command')
                 if op in {'listen','output'} and type(body.get('enabled')) is not bool:raise ValueError('Invalid voice control')
                 if op in {'test-text','test-speech','test-tts'} and (not self.server.voice.no_capture or not isinstance(body.get('text'),str) or not 0<len(body['text'])<=12000):raise ValueError('Test entry disabled')
+                if op=='text' and (not isinstance(body.get('text'),str) or not 0<len(body['text'].strip())<=12000):raise ValueError('Invalid text')
                 future=self.server.voice.post(**body)
+                if op=='text':return self.reply(202,future.result(timeout=5))
                 if op in {'test-text','test-speech','test-tts'}:return self.reply(200,future.result(timeout=240))
                 return self.reply(202,{'accepted':True})
             intent=validate(body)
@@ -152,7 +156,7 @@ class Handler(SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--port',type=int,default=42720);parser.add_argument('--voice',action='store_true');parser.add_argument('--no-capture',action='store_true');parser.add_argument('--mute-playback',action='store_true');parser.add_argument('--session',default='argos-workspace-default');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--port',type=int,default=42720);parser.add_argument('--voice',action='store_true');parser.add_argument('--text-only',action='store_true');parser.add_argument('--no-capture',action='store_true');parser.add_argument('--mute-playback',action='store_true');parser.add_argument('--session',default='argos-workspace-default');args=parser.parse_args()
     private=ROOT/'private';private.mkdir(exist_ok=True,mode=0o700)
     tokenfile=private/'presentation.token'
     if not tokenfile.exists():tokenfile.write_text(secrets.token_urlsafe(32));tokenfile.chmod(0o600)
@@ -169,9 +173,9 @@ if __name__=='__main__':
     threading.excepthook=thread_error
     server.workspace.serve()
     server.voice=None
-    if args.voice:
+    if args.voice or args.text_only:
         from runtime.conversation import Conversation
-        server.voice=Conversation(publish,no_capture=args.no_capture,mute=args.mute_playback,session_id=args.session,workspace=server.workspace);server.voice.start()
+        server.voice=Conversation(publish,text_only=args.text_only,no_capture=args.no_capture,mute=args.mute_playback,session_id=args.session,workspace=server.workspace);server.voice.start()
     (ROOT/'server.json').write_text(json.dumps({'url':f'http://127.0.0.1:{args.port}','port':args.port}))
     print(f'ARGOS workspace: http://127.0.0.1:{args.port}',flush=True)
     import signal

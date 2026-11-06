@@ -33,8 +33,8 @@ def view(conn,task):
     value=data(task)
     result={'id':task.id,'project_id':task.project_id,'title':task.title,'capability':value['capability'],
             'status':task.status,'parents':kb.parent_ids(conn,task.id),'run_id':task.current_run_id}
-    result['revision']=digest([task.body,task.status,task.current_run_id,result['parents']])
-    result['runs']=[{'id':r.id,'status':r.status,'outcome':r.outcome,'started_at':r.started_at,'ended_at':r.ended_at,'metadata':clean(r.metadata or {})} for r in kb.list_runs(conn,task.id)[-5:]]
+    result['revision']=digest([task.body,task.status,task.current_run_id,result['parents'],[r.id for r in kb.list_runs(conn,task.id)],[e.id for e in kb.list_events(conn,task.id)]])
+    result['runs']=[{'id':r.id,'kind':'execution' if r.claim_lock else 'state_transition','status':r.status,'outcome':r.outcome,'started_at':r.started_at,'ended_at':r.ended_at,'summary':clean(r.summary or '')[:1000],'metadata':clean(r.metadata or {})} for r in kb.list_runs(conn,task.id)[-5:]]
     return result
 
 
@@ -58,12 +58,17 @@ def tick(conn,config_path,config):
     # Recovery parks an interrupted task; it never replays even a read-only model call.
     for task in kb.list_tasks(conn):
         if task.status in {'ready','running'} and task.current_run_id is None and kb.list_runs(conn,task.id):
-            kb.block_task(conn,task.id,reason='Prior attempt requires inspection; no automatic replay',kind='needs_input')
+            from projects.lifecycle import permit
+            try:permit(conn,task,config)
+            except PermissionError:kb.block_task(conn,task.id,reason='Prior attempt requires inspection; no automatic replay',kind='needs_input')
     # Native global board cap is shared by every project/session of this adapter.
     # Interrupted effects never retry automatically: each auxiliary task has max_retries=0.
     def spawn(task,workspace,board=None):
+        from projects.lifecycle import safe_dispatch
+        safe_dispatch()
         data(task)
-        if len(kb.list_runs(conn,task.id))>1:raise PermissionError('A previous attempt requires explicit reconciliation')
+        from projects.lifecycle import permit
+        permit(conn,task,config,claimed=True)
         child=subprocess.Popen([str(P/'env/bin/python'),str(Path(__file__)),str(config_path),task.id,str(task.current_run_id)],
             stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
             env=dict(os.environ),start_new_session=True)
@@ -74,7 +79,7 @@ def tick(conn,config_path,config):
         enough=int(values['MemAvailable'].split()[0])*1024>=config['adaptive'].get('min_available_bytes',2*1024**3)
     if not enough and not any(t.current_run_id for t in kb.list_tasks(conn)):
         try:Local(config['adaptive']['local']).release()
-        except (OSError,ValueError,PermissionError):pass
+        except (OSError,ValueError,PermissionError,KeyError):pass
     # Hermes max_in_progress is host-wide, including Engineering on other boards.
     dispatch_once(conn,board=BOARD,spawn_fn=spawn,max_spawn=1 if enough else 0,max_in_progress=2,
                   max_in_progress_per_profile=1,failure_limit=1)
@@ -155,6 +160,10 @@ def worker(config_path,ident,run_id):
             project=projects.get_project(registry,task.project_id);adapter.authorize(project)
             selected_task(conn,project,ident)
             if task.status!='running' or task.current_run_id!=run_id:return
+            from projects.lifecycle import safe_dispatch
+            safe_dispatch()
+            from projects.lifecycle import permit
+            permit(conn,task,config,claimed=True)
             def interrupt(*_):raise InterruptedError('Capability execution interrupted')
             signal.signal(signal.SIGTERM,interrupt);signal.signal(signal.SIGALRM,interrupt);signal.alarm(115)
             started=time.monotonic()

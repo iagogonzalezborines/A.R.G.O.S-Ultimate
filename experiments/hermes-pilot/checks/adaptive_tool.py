@@ -6,7 +6,7 @@ NODE={'type':'object','additionalProperties':False,'required':['id','title','cap
 TOOL={'name':'adaptive','description':'Experimental bounded capability network. catalog reports actually available tools/models. '
       'submit creates a persistent native task and returns immediately. items with format=lines uses deterministic code; '
       'format=prose uses the reviewed small local model and leaves semantics in review. No routing model call. '
-      'files.inventory reads only project root metadata; files.types needs one inventory parent. workflow persists a validated '
+      'research.documentation fetches official Python sqlite3/pathlib documentation with timestamps and hashes, no project data sent. files.inventory reads only project root metadata; files.types needs one inventory parent. workflow persists a validated '
       'DAG of those capabilities. canvas exports JSON Canvas from actual task states. status reads evidence; tick explicitly '
       'admits queued work after restart/pressure. cancel requires current task revision. No installations, external accounts '
       'or unrestricted agents. Resolve the project and revision with projects first.',
