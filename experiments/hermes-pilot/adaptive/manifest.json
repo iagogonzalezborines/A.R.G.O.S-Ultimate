@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "experimental": true,
+  "hermes_revision": "0073fa98cfcf61c066a919df4b336924720f8463",
+  "codex_version": "0.164.0-alpha.11.1",
+  "ollama_version": "0.40.7",
+  "openclaw_version": "2026.11.1",
+  "openclaw_codex_plugin_version": "2026.11.1",
+  "openclaw_docker_image": "node@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392",
+  "local": {
+    "url": "http://127.0.0.1:11554",
+    "model": "qwen3:0.6b",
+    "digest": "7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435",
+    "keep_alive": "30s",
+    "options": {"num_ctx": 2048, "num_predict": 512, "num_thread": 2, "num_gpu": 0}
+  },
+  "budgets": {"total_native_tasks": 2, "engineering_writers": 1, "auxiliary_tasks": 1, "min_available_bytes": 2147483648},
+  "providers": {"codex_subscription": "independent_login", "gemini": "disabled", "openrouter": "disabled"},
+  "voice": {"inherit_existing_profile": true, "device": "select_on_target", "cuda": "validate_on_target"},
+  "platforms": {"linux": "tested", "windows": "adapter_and_security_validation_required"}
+}

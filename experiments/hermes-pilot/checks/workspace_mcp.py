@@ -35,11 +35,18 @@ for line in sys.stdin:
    if availability.get('result',{}).get('enabled'):
     from project_tool import TOOL
     selected.append(TOOL)
+    try:
+     with socket.socket(socket.AF_UNIX) as s:
+      s.settimeout(2);s.connect('/run/argos-workspace.sock');s.sendall(b'{"tool":"adaptive","arguments":{"operation":"availability"}}\n');adaptive=json.loads(s.makefile('rb').readline(4096))
+     if adaptive.get('result',{}).get('enabled'):
+      from adaptive_tool import TOOL as ADAPTIVE
+      selected.append(ADAPTIVE)
+    except (OSError,ValueError):pass
    result={'tools':selected}
   elif method=='tools/call':
-   if params.get('name') not in {'workspace','files','storage','media','development','apps','projects'}:raise ValueError('Unknown tool')
+   if params.get('name') not in {'workspace','files','storage','media','development','apps','projects','adaptive'}:raise ValueError('Unknown tool')
    with socket.socket(socket.AF_UNIX) as s:
-    s.settimeout(60 if params['name']=='projects' else 65 if params['name']=='media' else 35 if params['name']=='workspace' else 12);s.connect('/run/argos-workspace.sock');s.sendall((json.dumps({'tool':params['name'],'arguments':params.get('arguments',{})})+'\n').encode());data=s.makefile('rb').readline(2097153)
+    s.settimeout(60 if params['name'] in {'projects','adaptive'} else 65 if params['name']=='media' else 35 if params['name']=='workspace' else 12);s.connect('/run/argos-workspace.sock');s.sendall((json.dumps({'tool':params['name'],'arguments':params.get('arguments',{})})+'\n').encode());data=s.makefile('rb').readline(2097153)
    response=json.loads(data)
    value=response.get('result') if response['ok'] else {'error':response.get('error')};image=value.pop('data_url',None) if isinstance(value,dict) else None
    content=[{'type':'text','text':json.dumps(value,ensure_ascii=False)}]

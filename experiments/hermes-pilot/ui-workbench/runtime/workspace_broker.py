@@ -371,6 +371,9 @@ class WorkspaceBroker:
   tool=request.get('tool');a=request.get('arguments',{})
   if not isinstance(a,dict):raise ValueError('Invalid arguments')
   if tool=='projects':return self.projects.request(a,user=user)
+  if tool=='adaptive':
+   if a=={'operation':'availability'}:return {'enabled':self.projects.enabled and self.projects.config.get('adaptive_enabled') is True}
+   return self.projects.request({**a,'action':'adaptive'},user=user)
   if tool=='development':
    if not self.development:raise ValueError('Development capability is not attached')
    if a.get('action')=='show':

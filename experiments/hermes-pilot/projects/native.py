@@ -271,7 +271,7 @@ class Adapter:
         siblings = [t for t in kanban.list_tasks(conn) if t.id != task.id and t.status == 'ready']
         if siblings:
             raise ValueError('Another ready native task requires reconciliation before this dispatch')
-        result = dispatch_once(conn, board=project.board_slug, max_spawn=1, max_in_progress=1,
+        result = dispatch_once(conn, board=project.board_slug, max_spawn=1, max_in_progress=2 if self.config.get('adaptive_enabled') is True else 1,
                                max_in_progress_per_profile=1, failure_limit=2)
         current = self.task_view(conn, self.task(conn, project, task.id), True)
         current['dispatch'] = 'native_claimed' if current['current_run_id'] else 'not_started'
@@ -279,6 +279,11 @@ class Adapter:
 
     def request(self, args, authorized=False):
         action = args.get('action')
+        if action == 'adaptive':
+            allowed={'action','operation','project','expected_revision','capability','title','payload','parents','task_id','task_revision','nodes'}
+            if set(args)-allowed:raise ValueError('Unexpected adaptive fields')
+            from adaptive.native import request
+            return request(self,args,sys.argv[1])
         fields = {'create': {'name','slug','path','brief','register'}, 'prepare': {'name','slug','path','brief','register'}, 'list': set(), 'activity': set(), 'resolve': {'project'},
                   'update': {'project','expected_revision','brief'}, 'tasks': {'project'},
                   'task': {'project','task_id'},
