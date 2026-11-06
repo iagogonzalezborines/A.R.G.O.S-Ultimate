@@ -6,9 +6,10 @@ ASCII; los detalles se consultan desde otra terminal y las aprobaciones también
 reconstrucción Linux, no una recuperación del código Windows perdido.
 
 El piloto gráfico independiente de Hermes está restaurado en este equipo como
-**ARGOS (Hermes)**. La prueba aislada del bloque A pasa con la reparación nativa
-documentada; Projects sigue desactivado. Véase el [estado del 6 de noviembre](experiments/hermes-pilot/reports/restoration-2026-11-06.md),
-incluidos los límites de voz por CPU y la extensión firmada de Firefox pendiente.
+**ARGOS (Hermes)**. El [bloque B de proyectos persistentes](experiments/hermes-pilot/reports/block-b-2026-11-06.md)
+está implementado y habilitado en el piloto, con Hermes Projects/Kanban y Engineering
+aislado del bloque A. C y D siguen pendientes. La latencia de este equipo no es
+un criterio de aceptación; la extensión firmada de Firefox aún debe trasladarse.
 
 ## Reproducir vídeos en Firefox
 

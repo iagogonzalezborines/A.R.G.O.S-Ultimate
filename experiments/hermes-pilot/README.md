@@ -4,9 +4,10 @@ Source and reviewed evidence exported from the separate local pilot on 2026-11-0
 
 The desktop pilot includes the electric-blue workspace/window manager, bilingual hands-free conversation, streaming speech adapters, incremental research, files/storage, app launch, Firefox media integration and reviewed maintenance tooling. Sources are preserved here so that the work is versioned independently of the installation under `~/.local/share/argos-hermes-pilot`.
 
-**2026-11-06: the pilot is installed locally and the isolated Stage A proof passes with a tested native persistence patch.** Persistent Project Intelligence remains off; B–D have not started. The signed Firefox extension is still on the other computer, and retaining the existing voice models on CPU introduces substantial latency. The original November 5 reports remain historical evidence.
+**2026-11-06: Block B is implemented and enabled in the local pilot after the verified Stage A repair.** Native Projects/Kanban, reviewed folder scope, persistent briefs and isolated Engineering are connected through the existing Broker. C–D remain pending. The signed Firefox extension is still on the other computer; local CPU latency is not an acceptance gate for this development machine. The original November 5 reports remain historical evidence.
 
-- [Current installation, Stage A result and remaining limitations](reports/restoration-2026-11-06.md)
+- [Current Block B integration, tests and limitations](reports/block-b-2026-11-06.md)
+- [Restoration and Stage A verification](reports/restoration-2026-11-06.md)
 - [November 5 Stage A recovery blocker](reports/project-intelligence-stage-a-recovery.md)
 - [Original Stage A evidence](reports/project-intelligence-stage-a.md)
 - [Project intelligence architecture](reports/project-intelligence-proposal.md)
@@ -24,6 +25,7 @@ The desktop pilot includes the electric-blue workspace/window manager, bilingual
 | `maintenance/` | Existing isolated candidate, review, install and rollback controller sources |
 | `integrations/firefox-media/` | Readable ARGOS Media Bridge 0.1.4 source; signing/install state is not exported |
 | `project-intelligence/` | Disposable Stage A harnesses, synthetic fixtures, sanitized evidence, original proposal and tested upstream patch |
+| `projects/` | Thin native project adapter, fixed worker scope and explicit Block B checks |
 | `config-templates/` | Nonsecret configuration and first-party plugin templates; not active runtime state |
 | `voice-tests/` | Audition harnesses, selected-voice metadata, public reference provenance and dependency lock; no audio or model weights |
 

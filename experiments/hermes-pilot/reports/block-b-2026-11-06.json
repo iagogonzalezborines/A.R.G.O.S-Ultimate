@@ -1,0 +1,252 @@
+{
+  "date": "2026-11-06",
+  "block": "B",
+  "block_a_prerequisite": "verified-2026-11-06.json; same pin and launch-policy mechanism",
+  "live": {
+    "checks": {
+      "natural_request_prepared_scope": true,
+      "native_project_created_after_trusted_review": true,
+      "later_conversation_resolved_native_project": true,
+      "natural_update_persisted": true,
+      "natural_task_created": true,
+      "native_dispatch_has_run_evidence": true,
+      "native_review_after_broker_restart": true,
+      "independent_generated_fixture_tests": true,
+      "artifact_paths_and_hashes_observed": true,
+      "duplicate_dispatch_does_not_replay": true
+    },
+    "project_id": "p_94e90b0c",
+    "task_id": "t_5db488d3",
+    "native_status": "review",
+    "runs": [
+      {
+        "id": 1,
+        "status": "review",
+        "outcome": "review_requested",
+        "started_at": 1793956839,
+        "ended_at": 1793956868,
+        "summary": "Implemented UTF-8 append_note and a unittest verifying two appends preserve both lines. unittest passed (1 test); fixture_notes.py compiled successfully with py_compile.",
+        "metadata_truncated": false,
+        "metadata": {
+          "verification": {
+            "unittest": "passed: 1 test",
+            "compile": "passed"
+          },
+          "artifacts": [
+            "/tmp/argos-block-b-live-yre2ogv5/repositories/fixture-notes/fixture_notes.py",
+            "/tmp/argos-block-b-live-yre2ogv5/repositories/fixture-notes/test_fixture_notes.py"
+          ]
+        }
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "fixture_notes.py",
+        "sha256_now": "1cd772c1f59243eea7445bbe1d6ec75c3e8bf972f45a9db8fb8c657e0115e932",
+        "bytes": 359,
+        "reported_by_run": 1,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "test_fixture_notes.py",
+        "sha256_now": "2862e79636a06197fe03966658267dcaf013a32079abde276db9c3dca4765c37",
+        "bytes": 543,
+        "reported_by_run": 1,
+        "verification": "current file observed; run claims are not independent test verification"
+      }
+    ],
+    "independent_test": {
+      "exit_code": 0,
+      "output": "test_appends_lines_without_replacing_existing_notes (test_fixture_notes.AppendNoteTests.test_appends_lines_without_replacing_existing_notes) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n",
+      "sandbox": "maintenance.validation_sandbox",
+      "controller_assertions": "Controller preservation and UTF-8 checks passed"
+    },
+    "general_turns": 4,
+    "conversation_restart": true,
+    "broker_restart_during_work": true
+  },
+  "native_restart": {
+    "records_unchanged_after_native_restart": true,
+    "projects": 1,
+    "runs": 1,
+    "no_open_runs": true,
+    "record_digest": "ae57b3c5a226020701dc174302b8b6a436aba394ecb466ab07a4c9642de1474a",
+    "proof_owner_stopped": true,
+    "derived_auth_removed": [
+      "auth.json",
+      "profiles/engineering-p_94e90b0c/auth.json",
+      "argos-workers/p_94e90b0c/codex/auth.json"
+    ]
+  },
+  "security": {
+    "native_review": true,
+    "scope_passed": true,
+    "canaries_and_probe_unchanged": true,
+    "no_outside_effect": true,
+    "inside_patch_created": true
+  },
+  "scope_checks": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "read denied: kanban.db",
+        "ok": true
+      },
+      {
+        "name": "read denied: sibling-canary.txt",
+        "ok": true
+      },
+      {
+        "name": "read denied: controller",
+        "ok": true
+      },
+      {
+        "name": "read denied: credential",
+        "ok": true
+      },
+      {
+        "name": "read denied: ide",
+        "ok": true
+      },
+      {
+        "name": "read denied: argos",
+        "ok": true
+      },
+      {
+        "name": "outside write denied",
+        "ok": true
+      },
+      {
+        "name": "outside write denied",
+        "ok": true
+      },
+      {
+        "name": "outside write denied",
+        "ok": true
+      },
+      {
+        "name": "symlink denied",
+        "ok": true
+      },
+      {
+        "name": "proc escape denied",
+        "ok": true
+      },
+      {
+        "name": "proc escape denied",
+        "ok": true
+      },
+      {
+        "name": "child scope inherited",
+        "ok": true
+      },
+      {
+        "name": "network denied",
+        "ok": true
+      },
+      {
+        "name": "network denied",
+        "ok": true
+      },
+      {
+        "name": "network denied",
+        "ok": true
+      },
+      {
+        "name": "authorized write/read",
+        "ok": true
+      }
+    ]
+  },
+  "two_project_native_restart": {
+    "records_unchanged_after_native_restart": true,
+    "projects": 2,
+    "runs": 2,
+    "no_open_runs": true,
+    "record_digest": "801c3075c17def5483582e2b063b1853ada723117aa13894bb3f307a3de70f48",
+    "proof_owner_stopped": true,
+    "derived_auth_removed": [
+      "auth.json",
+      "profiles/engineering-p_93b80679/auth.json",
+      "profiles/engineering-p_16cd8ce8/auth.json",
+      "argos-workers/p_93b80679/codex/auth.json",
+      "argos-workers/p_16cd8ce8/codex/auth.json"
+    ]
+  },
+  "installed_surface": {
+    "inference_calls": 0,
+    "servers": [
+      {
+        "name": "argos-workspace",
+        "tools": [
+          "apps",
+          "development",
+          "files",
+          "media",
+          "projects",
+          "storage",
+          "workspace"
+        ],
+        "error": null
+      }
+    ]
+  },
+  "ui": {
+    "checks": [
+      {
+        "name": "project is not created before the click",
+        "ok": true
+      },
+      {
+        "name": "exact scope is visible",
+        "ok": true
+      },
+      {
+        "name": "trusted UI creates one native project",
+        "ok": true
+      },
+      {
+        "name": "file write still waits for review",
+        "ok": true
+      },
+      {
+        "name": "existing file approval still works",
+        "ok": true
+      },
+      {
+        "name": "no renderer exceptions",
+        "ok": true
+      }
+    ],
+    "errors": []
+  },
+  "regressions": {
+    "core_unittest": 353,
+    "native_project_cases": 7,
+    "files": 25,
+    "storage_clipboard": 21,
+    "research": 17,
+    "startup": 10,
+    "maintenance": 26,
+    "auto_review": 8
+  },
+  "retained_failed_trials": [
+    {
+      "stage": "first live trial",
+      "cause": "projects MCP tool lacked explicit transport approval; no project created"
+    },
+    {
+      "stage": "second live trial",
+      "cause": "model omitted explicit alias from tool arguments; clarified schema and returned structured brief"
+    }
+  ],
+  "installed_projects_enabled": true,
+  "audio": "No capture or speaker playback",
+  "blocks_c_d": "not started",
+  "limits": [
+    "Only explicitly approved visible project roots; no scope expansion through metadata",
+    "Native review is not automatic acceptance or independent verification",
+    "Single Engineering run; bounded local commands without network/install/publish/hardware",
+    "Existing signed Firefox extension still needs transfer; local CPU latency is not an acceptance gate per user"
+  ]
+}

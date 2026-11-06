@@ -26,11 +26,20 @@ for line in sys.stdin:
   if ident is None:continue
   if method=='initialize':result={'protocolVersion':params.get('protocolVersion','2024-11-05'),'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'argos-workspace','version':'1.0.0'},'instructions':'Use these tools for ARGOS workspace and authorized files; do not use the shell to bypass them.'}
   elif method=='ping':result={}
-  elif method=='tools/list':result={'tools':TOOLS}
+  elif method=='tools/list':
+   selected=list(TOOLS)
+   try:
+    with socket.socket(socket.AF_UNIX) as s:
+     s.settimeout(2);s.connect('/run/argos-workspace.sock');s.sendall(b'{"tool":"projects","arguments":{"action":"availability"}}\n');availability=json.loads(s.makefile('rb').readline(4096))
+   except (OSError,ValueError):availability={}
+   if availability.get('result',{}).get('enabled'):
+    from project_tool import TOOL
+    selected.append(TOOL)
+   result={'tools':selected}
   elif method=='tools/call':
-   if params.get('name') not in {'workspace','files','storage','media','development','apps'}:raise ValueError('Unknown tool')
+   if params.get('name') not in {'workspace','files','storage','media','development','apps','projects'}:raise ValueError('Unknown tool')
    with socket.socket(socket.AF_UNIX) as s:
-    s.settimeout(65 if params['name']=='media' else 35 if params['name']=='workspace' else 12);s.connect('/run/argos-workspace.sock');s.sendall((json.dumps({'tool':params['name'],'arguments':params.get('arguments',{})})+'\n').encode());data=s.makefile('rb').readline(2097153)
+    s.settimeout(60 if params['name']=='projects' else 65 if params['name']=='media' else 35 if params['name']=='workspace' else 12);s.connect('/run/argos-workspace.sock');s.sendall((json.dumps({'tool':params['name'],'arguments':params.get('arguments',{})})+'\n').encode());data=s.makefile('rb').readline(2097153)
    response=json.loads(data)
    value=response.get('result') if response['ok'] else {'error':response.get('error')};image=value.pop('data_url',None) if isinstance(value,dict) else None
    content=[{'type':'text','text':json.dumps(value,ensure_ascii=False)}]

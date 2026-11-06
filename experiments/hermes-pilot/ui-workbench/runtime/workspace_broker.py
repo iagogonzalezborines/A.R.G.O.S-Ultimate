@@ -257,6 +257,8 @@ class Files:
 class WorkspaceBroker:
  def __init__(self,publish,validate,*,socket_path=SOCKET,files=None):
   self.publish=publish;self.validate=validate;self.storage=Storage();self.files=files or Files(storage=self.storage,progress=publish);self.condition=threading.Condition();self.windows=[];self.pending={};self.connected_at=0;self.socket_path=Path(socket_path);self.closed=False;self.epoch=0;self.research_epoch=None;self.development=None;self.apps=Apps();self.research_sources={};self.research_opened=set();self.research_found={};self.research_lock=threading.RLock()
+  from .projects import Projects
+  self.projects=Projects(lambda intent:self.intent(intent,wait=False))
  def begin_turn(self):
   # Transient display permission only. Native Hermes owns the actual turn/task.
   with self.condition:self.research_epoch=self.epoch;self.research_sources={};self.research_opened=set();self.research_found={}
@@ -368,6 +370,7 @@ class WorkspaceBroker:
   if not isinstance(request,dict) or set(request)-{'tool','arguments'}:raise ValueError('Invalid tool request')
   tool=request.get('tool');a=request.get('arguments',{})
   if not isinstance(a,dict):raise ValueError('Invalid arguments')
+  if tool=='projects':return self.projects.request(a,user=user)
   if tool=='development':
    if not self.development:raise ValueError('Development capability is not attached')
    if a.get('action')=='show':

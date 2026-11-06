@@ -8,6 +8,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import sys
+import tomllib
 from pathlib import Path
 import shutil
 import subprocess
@@ -21,7 +24,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(destination, *, microphone=None, register=False):
+def prepare(destination, *, microphone=None, register=False, projects=None):
     destination = Path(destination).expanduser().resolve()
     if destination == REPO or destination.is_relative_to(REPO):
         raise ValueError('Install outside the source repository')
@@ -66,7 +69,9 @@ def prepare(destination, *, microphone=None, register=False):
     config_path = destination / 'installation.json'
     if not config_path.exists():
         config = {'user_home': str(Path.home()), 'operational_root': str(REPO),
-                  'hermes_revision': PIN, 'projects_enabled': False}
+                  'hermes_revision': PIN, 'projects_enabled': False,
+                  'pilot_root': str(destination), 'project_state': str(destination / 'state/projects'),
+                  'project_roots': [str(Path.home() / 'Proyectos')]}
         if microphone:
             config['microphone'] = microphone
         config_path.write_text(json.dumps(config, indent=2) + '\n')
@@ -94,12 +99,47 @@ def prepare(destination, *, microphone=None, register=False):
                 shutil.copy2(source, target)
     manifest_path.write_text(json.dumps(
         {str(p.relative_to(SOURCE)): digest(p) for p in paths}, indent=2) + '\n')
+    if projects is not None:
+        configure_projects(destination, projects)
     if register:
         register_launcher(destination)
     return {'installation': str(destination), 'source_files': len(paths),
-            'launched': False, 'projects_enabled': False,
+            'launched': False, 'projects_enabled': json.loads(config_path.read_text()).get('projects_enabled', False),
             'launcher_registered': register,
             'authentication_present': (destination / 'state/codex/auth.json').is_file()}
+
+
+def configure_projects(destination, enabled):
+    """Explicit feature activation; native execution still requires a reviewed project scope."""
+    if enabled:
+        sys.path.insert(0, str(destination))
+        from projects.worker import verify_pin
+        verify_pin(destination)
+    config_path = destination / 'installation.json'
+    config = json.loads(config_path.read_text())
+    config.setdefault('pilot_root', str(destination))
+    config.setdefault('project_state', str(destination / 'state/projects'))
+    config.setdefault('project_roots', [str(Path(config['user_home']) / 'Proyectos')])
+    codex = destination / 'state/codex/config.toml'
+    source = codex.read_text()
+    parsed = tomllib.loads(source)
+    names = parsed['mcp_servers']['argos-workspace']['enabled_tools']
+    names = list(dict.fromkeys([*names, 'projects'])) if enabled else [n for n in names if n != 'projects']
+    pattern = r'(?ms)(^\[mcp_servers\.argos-workspace\]\s*\n)(.*?)(?=^\[|\Z)'
+    match = re.search(pattern, source)
+    if not match or not re.search(r'^enabled_tools\s*=\s*\[[^\n]*\]\s*$', match[2], re.M):
+        raise ValueError('Review the existing MCP tools configuration before activation')
+    body = re.sub(r'^enabled_tools[^\n]*', 'enabled_tools='+json.dumps(names), match[2], flags=re.M)
+    source = source[:match.start(2)] + body + source[match.end(2):]
+    section = '[mcp_servers.argos-workspace.tools.projects]'
+    if enabled and section not in source:
+        source += '\n'+section+'\napproval_mode="approve"\n'
+    if enabled and tomllib.loads(source)['mcp_servers']['argos-workspace']['tools']['projects'].get('approval_mode') != 'approve':
+        raise ValueError('Review the projects tool approval mode before activation')
+    config['projects_enabled'] = bool(enabled)
+    # Write transport config first: an interrupted enable remains denied by the Broker flag.
+    codex.write_text(source)
+    config_path.write_text(json.dumps(config, indent=2)+'\n')
 
 
 def register_launcher(destination):
@@ -130,5 +170,6 @@ if __name__ == '__main__':
                         default=Path.home() / '.local/share/argos-hermes-pilot')
     parser.add_argument('--microphone', help='Exact PipeWire input name selected for this installation')
     parser.add_argument('--register', action='store_true', help='Install the separate ARGOS (Hermes) menu launcher')
+    parser.add_argument('--projects', choices=['on','off'], help='Explicitly enable or disable the installed native project integration; never starts a worker')
     args = parser.parse_args()
-    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register), indent=2))
+    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on'), indent=2))

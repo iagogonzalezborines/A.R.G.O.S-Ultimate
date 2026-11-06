@@ -5,4 +5,7 @@ web_search="live"
 [mcp_servers.argos-workspace]
 command="/home/tyrant/.local/share/argos-hermes-pilot/env/bin/python"
 args=["/home/tyrant/.local/share/argos-hermes-pilot/checks/workspace_mcp.py"]
-enabled_tools=["workspace", "files", "storage", "media", "development", "apps"]
+enabled_tools=["workspace", "files", "storage", "media", "development", "apps", "projects"]
+
+[mcp_servers.argos-workspace.tools.projects]
+approval_mode="approve"
