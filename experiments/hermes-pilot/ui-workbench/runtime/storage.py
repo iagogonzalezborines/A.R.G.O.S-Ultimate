@@ -6,6 +6,8 @@ import subprocess
 import threading
 import time
 
+from .machine import USER_HOME
+
 class Storage:
  def __init__(self):self.lock=threading.Lock();self.cached=None;self.observed=0
  def inspect(self,*,refresh=True):
@@ -36,7 +38,7 @@ class Storage:
   for volume in self.volumes():
    for mount in volume['mountpoints']:
     path=Path(mount)
-    if any(path.is_relative_to(base) and path!=Path(base) for base in ['/run/media/tyrant','/media','/mnt']) and path.is_dir() and os.access(path,os.R_OK|os.X_OK):roots['Disco '+volume['name']]=path;break
+    if any(path.is_relative_to(base) and path!=Path(base) for base in ['/run/media/'+USER_HOME.name,'/media','/mnt']) and path.is_dir() and os.access(path,os.R_OK|os.X_OK):roots['Disco '+volume['name']]=path;break
   return roots
  def browse(self,device):
   selected=next((n for n in self.volumes() if n['device']==device or n['name']==device),None)
@@ -44,5 +46,5 @@ class Storage:
   if not selected['mounted']:raise ValueError('This partition is not mounted. It is visible in storage information, but its files are unavailable until mounted.')
   for path in self.roots().values():
    if str(path) in selected['mountpoints']:return str(path)
-  if '/' in selected['mountpoints'] or '/home' in selected['mountpoints']:return '/home/tyrant'
+  if '/' in selected['mountpoints'] or '/home' in selected['mountpoints']:return str(USER_HOME)
   raise PermissionError('This is a system partition, not an enabled file-browsing location.')

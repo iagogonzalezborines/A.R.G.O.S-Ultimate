@@ -1,0 +1,98 @@
+diff --git a/hermes_state_worker_context.py b/hermes_state_worker_context.py
+index e59b9dd223..52d81dbeba 100644
+--- a/hermes_state_worker_context.py
++++ b/hermes_state_worker_context.py
+@@ -10,7 +10,8 @@ from hermes_state_runtime import RuntimeStoreError
+ # model_config sidecars a worker may patch: every key the agent persists via
+ # ``patch_session_model_config`` (``_anthropic_rejected_thinking``: main's rejected-signature
+ # fingerprints, agent/anthropic_thinking_replay.py) or a compaction ``model_config_patch``.
+-SIDECAR_KEYS = frozenset({'_usage_anchor', '_proactive_prune_rearm_tokens', '_anthropic_rejected_thinking'})
++SIDECAR_KEYS = frozenset({'_usage_anchor', '_proactive_prune_rearm_tokens', '_anthropic_rejected_thinking',
++                          'codex_thread_id'})
+ 
+ 
+ def worker_context(db, conn, session_id, payload):
+@@ -39,6 +40,12 @@ def worker_prompt(db, conn, session_id, payload):
+ def worker_sidecars(db, conn, session_id, payload):
+     if set(payload) != {'patch'} or not isinstance(payload['patch'], dict) or set(payload['patch']) - SIDECAR_KEYS:
+         raise RuntimeStoreError('invalid_params')
++    # The native Codex transport publishes its thread binding only after transcript commit.
++    # Keep this operation session-scoped and reject malformed/unbounded values.
++    if 'codex_thread_id' in payload['patch']:
++        thread_id = payload['patch']['codex_thread_id']
++        if thread_id is not None and not (isinstance(thread_id, str) and 0 < len(thread_id) <= 256):
++            raise RuntimeStoreError('invalid_params')
+     merged = db._merge_model_config_json(conn, session_id, payload['patch'], on_missing='raise')
+     conn.execute('UPDATE sessions SET model_config=? WHERE id=?', (merged, session_id))
+     return {'value': None}
+--- /dev/null
++++ b/tests/hermes_state/test_runtime_worker_codex_binding.py
+@@ -0,0 +1,68 @@
++"""Codex's native thread binding must traverse the managed receipt contract."""
++import pytest
++
++from agent.runtime_session_store import RuntimeSessionStore, WorkerPersistenceError
++from hermes_state import SessionDB
++from hermes_state_runtime import (
++    RuntimeStoreError, begin_runtime_epoch, mutate_worker_execution,
++    register_worker_execution,
++)
++
++
++def test_codex_binding_survives_lost_ack_reopen_and_clear(tmp_path):
++    path = tmp_path / 'state.db'
++    db = SessionDB(path)
++    db.create_session('owned', 'subagent', model_config={'_delegate_from': 'parent'})
++    db.create_session('foreign', 'cli')
++    epoch = begin_runtime_epoch(db, instance_id='fixture')
++    scope = dict(epoch=epoch, execution_id='worker', session_id='owned', generation=0)
++    register_worker_execution(db, **scope, kind='child', adoption_secret='test-secret')
++    store = RuntimeSessionStore(lambda method, **p: mutate_worker_execution(db, **p), scope, tmp_path / 'outbox')
++    try:
++        store.patch_session_model_config('owned', {'codex_thread_id': 'synthetic-thread'})
++        assert db.get_session_model_config_value('owned', 'codex_thread_id') == 'synthetic-thread'
++        with pytest.raises(WorkerPersistenceError, match='permission_denied'):
++            store.patch_session_model_config('foreign', {'codex_thread_id': 'stolen'})
++        original = store.rpc
++        def lost_ack(method, **params):
++            original(method, **params)
++            raise TimeoutError('lost-ack')
++        store.rpc = lost_ack
++        with pytest.raises(TimeoutError, match='lost-ack'):
++            store.patch_session_model_config('owned', {'codex_thread_id': 'next-thread'})
++        store.rpc = original
++        assert len(store.retry_pending()) == 1
++        assert not store.journal['pending']
++        db.close()
++        db = SessionDB(path)
++        assert db.get_session_model_config_value('owned', 'codex_thread_id') == 'next-thread'
++        assert db.get_session_model_config_value('owned', '_delegate_from') == 'parent'
++        assert db.get_session_model_config_value('foreign', 'codex_thread_id') is None
++        store.patch_session_model_config('owned', {'codex_thread_id': None})
++        assert db.get_session_model_config_value('owned', 'codex_thread_id') is None
++        begin_runtime_epoch(db, instance_id='restarted')
++        with pytest.raises(RuntimeStoreError, match='stale_epoch'):
++            mutate_worker_execution(db, **scope, sequence=store.journal['next_sequence'],
++                                    operation='session.sidecars', payload={'patch': {'codex_thread_id': 'stale'}})
++    finally:
++        store.close()
++        db.close()
++
++
++@pytest.mark.parametrize('patch', [
++    {'codex_thread_id': ''}, {'codex_thread_id': 'x' * 257},
++    {'codex_thread_id': True}, {'codex_thread_id': 1}, {'codex_thread_id': []},
++    {'codex_thread_id': {}}, {'codex_thread_id': 'ok', '_delegate_from': 'foreign'},
++])
++def test_invalid_codex_binding_is_atomic_and_keeps_schema_closed(tmp_path, patch):
++    db = SessionDB(tmp_path / 'state.db')
++    try:
++        db.create_session('owned', 'subagent', model_config={'codex_thread_id': 'original'})
++        epoch = begin_runtime_epoch(db, instance_id='fixture')
++        scope = dict(epoch=epoch, execution_id='worker', session_id='owned', generation=0)
++        register_worker_execution(db, **scope, kind='child', adoption_secret='test-secret')
++        with pytest.raises(RuntimeStoreError, match='invalid_params'):
++            mutate_worker_execution(db, **scope, sequence=1, operation='session.sidecars', payload={'patch': patch})
++        assert db.get_session_model_config_value('owned', 'codex_thread_id') == 'original'
++    finally:
++        db.close()

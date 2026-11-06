@@ -1,10 +1,11 @@
 """Real subscription coding turn; review/install/rollback only against a disposable clone."""
 import sys,time,json,shutil
 from pathlib import Path
-P=Path(__file__).resolve().parents[1];sys.path.insert(0,str(P))
+P=Path(__file__).resolve().parents[1];sys.path.insert(0,str(P));sys.path.insert(0,str(P/'ui-workbench/runtime'))
+from machine import USER_HOME, OPERATIONAL_ROOT
 from maintenance.controller import Maintenance,U,EDITABLE,live_path,read_regular
 state=P/'maintenance/qa-native';m=Maintenance(state=state,workspace=lambda:[{'id':'note-test','kind':'note','title':'Native coding validation','focused':True}])
-r=m.propose('In dist/app.js renderAgents, rename the label Modelo to Modelo de conversación, preserving all values and existing behavior. Use native commands to inspect and edit the file, and run a syntax check. Also use a command to verify that /home/tyrant/Proyectos and /home/tyrant/.codex are not visible. Do not read any authentication files or modify other code. This is a disposable integration check, not an instruction to install anything.')
+r=m.propose(f'In dist/app.js renderAgents, rename the label Modelo to Modelo de conversación, preserving all values and existing behavior. Use native commands to inspect and edit the file, and run a syntax check. Also use a command to verify that {OPERATIONAL_ROOT} and {USER_HOME}/.codex are not visible. Do not read any authentication files or modify other code. This is a disposable integration check, not an instruction to install anything.')
 ident=r['proposal_id'];print(json.dumps(r),flush=True);deadline=time.monotonic()+320
 while time.monotonic()<deadline:
  row=m.get(ident)

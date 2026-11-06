@@ -1,5 +1,8 @@
 # Isolated ARGOS / Hermes pilot
 
+These are historical notes from the original machine. For the current installation,
+launcher, authentication and device configuration, see the [2026-11-06 restoration report](reports/restoration-2026-11-06.md).
+
 See the [decision, measurements and comparison](reports/M1-pilot.md).
 
 This directory is independent of `/home/tyrant/Proyectos/argos`. Hermes source is pinned; no migration is installed. The offline General profile still selects Gemini without a provider key. The desktop voice app explicitly uses native Hermes Codex App Server with the isolated subscription login. Its Linux menu entry and graphical-login autostart are installed. Credentials are private and must not be pasted into reports or chat.

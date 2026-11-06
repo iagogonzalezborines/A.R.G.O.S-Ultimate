@@ -6,8 +6,8 @@ from runtime.conversation import Conversation
 ROOT=Path(__file__).resolve().parent
 async def main(sink):
  host=Conversation(lambda e:None,no_capture=True,session_id='argos-pcm-output-check');host.echo=SimpleNamespace(active=True,sink=sink)
- probe=json.loads((ROOT/'reports/streaming-voice/probe.json').read_text())['rows'][-1]
- with wave.open(probe['sample'],'rb') as w:rate=w.getframerate();pcm=w.readframes(w.getnframes());seconds=w.getnframes()/rate
+ rate=24000;seconds=.8;pcm=b'\x00\x00'*round(rate*seconds)
+ probe={'chunks':[{'at':i*.1,'audio_seconds':.1} for i in range(8)]}
  began=time.monotonic();stream=await host.start_pcm(rate,host.generation);offset=0;first=probe['chunks'][0]['at']
  for chunk in probe['chunks']:
   await asyncio.sleep(max(0,chunk['at']-first-(time.monotonic()-began)));count=round(chunk['audio_seconds']*rate)*2;await host.write_pcm(stream,pcm[offset:offset+count]);offset+=count

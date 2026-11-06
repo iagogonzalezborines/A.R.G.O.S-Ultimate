@@ -5,6 +5,11 @@ investigación web, operaciones del PC y voz local. La consola muestra solo una 
 ASCII; los detalles se consultan desde otra terminal y las aprobaciones también admiten voz. Esta es la
 reconstrucción Linux, no una recuperación del código Windows perdido.
 
+El piloto gráfico independiente de Hermes está restaurado en este equipo como
+**ARGOS (Hermes)**. La prueba aislada del bloque A pasa con la reparación nativa
+documentada; Projects sigue desactivado. Véase el [estado del 6 de noviembre](experiments/hermes-pilot/reports/restoration-2026-11-06.md),
+incluidos los límites de voz por CPU y la extensión firmada de Firefox pendiente.
+
 ## Reproducir vídeos en Firefox
 
 «Play AC/DC Thunderstruck through Firefox» puede usar `browser.play`: busca en

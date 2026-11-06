@@ -43,10 +43,12 @@ def visible(name):
  low=name.lower()
  return not name.startswith('.') and name not in DENIED and not any(x in low for x in ('secret','credential','api_key','apikey','private_key','password','access_token','auth_token')) and not low.endswith(('.pem','.key','.p12','.pfx','.kdbx'))
 
+from .machine import USER_HOME, PROTECTED_ROOTS
+
 class Files:
  def __init__(self,roots=None,storage=None,progress=None):
   scratch=ROOT.parent/'workspaces/files';scratch.mkdir(exist_ok=True,mode=0o700)
-  self.roots=roots or {n:p for n,p in [('Proyectos',Path('/home/tyrant/Proyectos')),('Descargas',Path('/home/tyrant/Descargas')),('Documentos',Path('/home/tyrant/Documentos')),('Escritorio',Path('/home/tyrant/Escritorio')),('ARGOS',scratch),('Personal',Path('/home/tyrant'))] if p.is_dir()}
+  self.roots=roots or {n:p for n,p in [('Proyectos',USER_HOME/'Proyectos'),('Descargas',USER_HOME/'Descargas'),('Documentos',USER_HOME/'Documentos'),('Escritorio',USER_HOME/'Escritorio'),('ARGOS',scratch),('Personal',USER_HOME)] if p.is_dir()}
   self.base_roots=dict(self.roots);self.storage=storage if roots is None else None
   self.lock=threading.RLock();self.proposals={};self.clipboard=None;self.stopping=threading.Event();self.progress=progress or (lambda event:None)
  def refresh_roots(self):
@@ -54,7 +56,7 @@ class Files:
  def resolve(self,value):
   self.refresh_roots()
   if not isinstance(value,str) or len(value)>2048 or '\x00' in value:raise ValueError('Invalid path')
-  value=value.replace('~/','/home/tyrant/',1) if value.startswith('~/') else value
+  value=value.replace('~/',str(USER_HOME)+'/',1) if value.startswith('~/') else value
   if value in self.roots:return self.roots[value],[]
   for alias,root in self.roots.items():
    for prefix in (alias+'/',str(root)+'/'):
@@ -128,8 +130,12 @@ class Files:
   finally:os.close(fd)
  def writable(self,path):
   root,parts=self.resolve(path);full=root.joinpath(*parts)
-  protected=Path('/home/tyrant/Proyectos/argos')
-  if full==protected or full.is_relative_to(protected):raise PermissionError('Operational ARGOS is protected')
+  scratch=ROOT.parent/'workspaces/files'
+  for protected in PROTECTED_ROOTS:
+   if full==protected or full.is_relative_to(protected):
+    # The named ARGOS files workspace remains writable; controller files do not.
+    if protected==ROOT.parent.resolve() and (full==scratch or full.is_relative_to(scratch)):continue
+    raise PermissionError('Operational ARGOS and pilot controller are protected')
   return full
  def fingerprint(self,path):
   fd,name,_=self.parent(path)

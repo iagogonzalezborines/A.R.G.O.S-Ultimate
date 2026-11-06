@@ -1,0 +1,278 @@
+{
+  "checks": {
+    "canaries_unchanged": true,
+    "no_forbidden_markers": true,
+    "probe_unchanged": true,
+    "scope_passed": true,
+    "outside_patch_denied": true,
+    "inside_patch_succeeded": true,
+    "effect_hash_unchanged": true,
+    "effect_mtime_unchanged": true,
+    "no_open_runs": true,
+    "interrupted_task_reached_review": true,
+    "native_review_recorded": true,
+    "unittest": true,
+    "compile": true,
+    "project_config_write_denied": true,
+    "records_unchanged_after_restart": true,
+    "tested_patch_applies_to_pin": true
+  },
+  "tasks": [
+    {
+      "id": "t_117fd29e",
+      "title": "Secure native Engineering development and review proof",
+      "status": "blocked",
+      "current_run_id": null
+    },
+    {
+      "id": "t_c04684af",
+      "title": "Disposable interruption and effect reconciliation proof",
+      "status": "review",
+      "current_run_id": null
+    },
+    {
+      "id": "t_e05d5d9c",
+      "title": "Disposable interruption and effect reconciliation proof",
+      "status": "review",
+      "current_run_id": null
+    },
+    {
+      "id": "t_80456bbb",
+      "title": "Built-in patch isolation negative test",
+      "status": "review",
+      "current_run_id": null
+    }
+  ],
+  "runs": [
+    {
+      "id": 1,
+      "task_id": "t_117fd29e",
+      "status": "crashed",
+      "outcome": "crashed"
+    },
+    {
+      "id": 2,
+      "task_id": "t_117fd29e",
+      "status": "review",
+      "outcome": "review_requested"
+    },
+    {
+      "id": 3,
+      "task_id": "t_117fd29e",
+      "status": "crashed",
+      "outcome": "crashed"
+    },
+    {
+      "id": 4,
+      "task_id": "t_c04684af",
+      "status": "crashed",
+      "outcome": "crashed"
+    },
+    {
+      "id": 5,
+      "task_id": "t_c04684af",
+      "status": "review",
+      "outcome": "review_requested"
+    },
+    {
+      "id": 6,
+      "task_id": "t_e05d5d9c",
+      "status": "crashed",
+      "outcome": "crashed"
+    },
+    {
+      "id": 7,
+      "task_id": "t_e05d5d9c",
+      "status": "review",
+      "outcome": "review_requested"
+    },
+    {
+      "id": 8,
+      "task_id": "t_80456bbb",
+      "status": "review",
+      "outcome": "review_requested"
+    }
+  ],
+  "all_listed_checks_passed": true,
+  "source_patch": "upstream-tested-change-2026-11-06.diff",
+  "limitations": [
+    "No production Projects integration; B-D not implemented",
+    "First proof had an unwanted review dispatch before correcting the harness configuration; retained in history",
+    "Finite scope tests, not universal sandbox certification"
+  ],
+  "date": "2026-11-06",
+  "source_patch_sha256": "3c71e473a2b6c5030a579fe20b4a23843fac3ea3a7f119eff454af395a12fd3c",
+  "restart": {
+    "records_unchanged": true,
+    "sha256": "612fd2ac3623df3b4f0ea63885998a8e0f37752706152436d0fdd0d0109174cb",
+    "counts": {
+      "tasks": 4,
+      "task_runs": 8,
+      "task_events": 68
+    }
+  },
+  "interruption_observed": {
+    "task_id": "t_e05d5d9c",
+    "run_id": 6,
+    "status_before": "running",
+    "sha256": "5d9c731e3621649a5f8a2232b354faf74f027f08d997290f30b97fe720df3575",
+    "mtime_ns": 1793952926123128181,
+    "size": 13,
+    "native_stop_requested": true
+  },
+  "effect_after_recovery": {
+    "sha256": "5d9c731e3621649a5f8a2232b354faf74f027f08d997290f30b97fe720df3575",
+    "mtime_ns": 1793952926123128181,
+    "size": 13
+  },
+  "cleanup": {
+    "proof_auth_copies_removed": [
+      "native/auth.json",
+      "native/profiles/engineering/auth.json",
+      "codex/auth.json"
+    ],
+    "pilot_codex_login_preserved": true,
+    "pilot_hermes_login_preserved": true,
+    "qa_host_stop_requested": true,
+    "operational_source_files": 47,
+    "operational_source_unchanged": true,
+    "no_proof_or_qa_processes": true,
+    "test_ports_closed": true
+  },
+  "no_inference_scope_probe": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "repository write/read",
+        "ok": true,
+        "errno": null
+      },
+      {
+        "name": "board database read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "board synthetic secret read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "Hermes synthetic credential read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "Codex synthetic credential read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "controller read denied",
+        "ok": true,
+        "errno": 2
+      },
+      {
+        "name": "other-project read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "operational-argos read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "ide read denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "board write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "Hermes write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "Codex write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "controller write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "other-project write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "operational-argos write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "ide write denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "symlink escape denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "/proc/1/root escape denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "/proc/1/root escape denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "/proc/self/root escape denied",
+        "ok": true,
+        "errno": 13
+      },
+      {
+        "name": "child interpreter inherits read boundary",
+        "ok": true,
+        "errno": null
+      },
+      {
+        "name": "IPv4 TCP network denied",
+        "ok": true,
+        "errno": 1
+      },
+      {
+        "name": "IPv6 TCP network denied",
+        "ok": true,
+        "errno": 1
+      },
+      {
+        "name": "UDP network denied",
+        "ok": true,
+        "errno": 1
+      },
+      {
+        "name": "synthetic credential environment stripped",
+        "ok": true,
+        "errno": null
+      }
+    ],
+    "probe_sha256": "bb63f15e9f407049c941d42ec5cbf1c66eaeea6fbc7891158e3063f06a4c5e1e",
+    "effective": {
+      "default_permissions": "argos-proof",
+      "sandbox_mode": null,
+      "sandbox_workspace_write": null
+    }
+  }
+}

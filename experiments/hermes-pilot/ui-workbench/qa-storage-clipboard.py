@@ -1,6 +1,7 @@
 """Scoped clipboard/large-file copy and live read-only storage checks."""
 import hashlib,json,tempfile
 from pathlib import Path
+from runtime.machine import USER_HOME
 from runtime.workspace_broker import Files,WorkspaceBroker
 from runtime.storage import Storage
 from server import validate
@@ -24,5 +25,5 @@ with tempfile.TemporaryDirectory(prefix='argos-clipboard-') as d:
  volumes=s.volumes();unmounted=[n for n in volumes if not n['mounted'] and n['type']=='part'];mounted=[n for n in volumes if n['mounted']]
  check('unmounted free space remains unknown',all(n['available_bytes'] is None for n in unmounted));check('mounted filesystem free space observed',any(n['available_bytes'] is not None for n in mounted))
  if unmounted:reject('unmounted partition is not pretended browsable',lambda:s.browse(unmounted[0]['device']))
- check('root filesystem browsing maps to personal files',any('/' in n['mountpoints'] and s.browse(n['device'])=='/home/tyrant' for n in mounted));reject('unknown device rejected',lambda:s.browse('/dev/not-a-device'))
+ check('root filesystem browsing maps to personal files',any('/' in n['mountpoints'] and s.browse(n['device'])==str(USER_HOME) for n in mounted));reject('unknown device rejected',lambda:s.browse('/dev/not-a-device'))
 report={'checks':checks,'scope':'Disposable synthetic copies; read-only real storage inspection. No mounting, formatting or partition changes.'};Path(__file__).with_name('reports').joinpath('storage-clipboard-checks.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({'passed':all(x['ok'] for x in checks),'checks':len(checks)}))

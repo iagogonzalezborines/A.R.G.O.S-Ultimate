@@ -6,6 +6,7 @@ reads=[('board database',s['db']),('board synthetic secret',str(Path(s['db']).pa
 for name in ['other-project','operational-argos','ide']:
  f=H/'private'/name/'canary.txt';f.parent.mkdir(parents=True,exist_ok=True);f.write_text('SYNTHETIC_'+name+'\n');reads.append((name,str(f)))
 writes=[('board',str(Path(s['db']).parent)),('Hermes',s['engineering']),('Codex',str(H/'codex')),('controller',str(H/'private/controller')),*[(name,str(H/'private'/name)) for name in ['other-project','operational-argos','ide']]]
+(H/'private/controller').mkdir(parents=True,exist_ok=True)
 probe='''import errno,hashlib,json,os,pathlib,socket,subprocess,sys
 ROOT=pathlib.Path(__file__).resolve().parent
 ROWS=[]

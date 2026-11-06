@@ -2,6 +2,7 @@
 import base64,contextlib,hashlib,json,os,queue,re,sys,threading,time,uuid
 from collections import OrderedDict
 from pathlib import Path
+from machine import SPEECH_DEVICE
 output=sys.stdout
 ROOT=Path(__file__).resolve().parents[1];VOICE=ROOT.parent/'voice-tests/2026-11-05'
 ENGINE_PIN='b8db6ff1cebc0d6554cf0977045850bcc796b383'
@@ -17,21 +18,22 @@ with contextlib.redirect_stdout(sys.stderr):
  import torch,soundfile as sf
  from qwen_tts import Qwen3TTSModel
  torch.set_num_threads(2);torch.set_float32_matmul_precision('high')
- model=Qwen3TTSModel.from_pretrained(str(VOICE/'models/qwen-base'),device_map='cuda:0',dtype=torch.bfloat16,attn_implementation='sdpa')
+ model=Qwen3TTSModel.from_pretrained(str(VOICE/'models/qwen-base'),device_map='cuda:0' if SPEECH_DEVICE=='cuda' else 'cpu',dtype=torch.bfloat16 if SPEECH_DEVICE=='cuda' else torch.float32,attn_implementation='sdpa')
  prompt=model.create_voice_clone_prompt(ref_audio=str(VOICE/'peter-original.wav'),ref_text=json.loads((VOICE/'peter-reference-transcript.json').read_text())['text'])
- model.enable_streaming_optimizations(decode_window_frames=64,use_compile=True,use_cuda_graphs=True,compile_codebook_predictor=True)
+ model.enable_streaming_optimizations(decode_window_frames=64,use_compile=SPEECH_DEVICE=='cuda',use_cuda_graphs=SPEECH_DEVICE=='cuda',compile_codebook_predictor=SPEECH_DEVICE=='cuda')
  AUDIO.mkdir(parents=True,exist_ok=True,mode=0o700);CACHE.mkdir(parents=True,exist_ok=True,mode=0o700)
  cache_version=hashlib.sha256((VOICE/'models/qwen-base/config.json').read_bytes()+(VOICE/'peter-reference-transcript.json').read_bytes()+(VOICE/'peter-original.wav').read_bytes()+ENGINE_PIN.encode()).hexdigest()
  def cached_file(text,language):return CACHE/(hashlib.sha256((cache_version+'\0'+language+'\0'+' '.join(text.replace('’',"'").split())).encode()).hexdigest()+'.wav')
  def generate(text,language):
   torch.manual_seed(61);torch.cuda.manual_seed_all(61)
   return model.stream_generate_voice_clone(text=text,language='Spanish' if language=='es' else 'English',voice_clone_prompt=prompt,emit_every_frames=8,decode_window_frames=64,overlap_samples=256,first_chunk_emit_every=6,first_chunk_decode_window=48,first_chunk_frames=36,max_frames=4096)
- if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':print(json.dumps({'event':'startup.stage','stage':'compiling','component':'speech'}),file=output,flush=True)
+ if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':print(json.dumps({'event':'startup.stage','stage':'compiling' if SPEECH_DEVICE=='cuda' else 'warming','component':'speech'}),file=output,flush=True)
  # Compile both decoder phases before microphone readiness, never in a spoken turn.
  with torch.inference_mode():
-  for text,language in [("The workspace is clear. Your files are unchanged. I'm ready for the next task.",'en'),('El espacio está despejado. Tus archivos siguen intactos. Estoy listo para la siguiente tarea.','es')]:
+  warmup=[("The workspace is clear. Your files are unchanged. I'm ready for the next task.",'en'),('El espacio está despejado. Tus archivos siguen intactos. Estoy listo para la siguiente tarea.','es')] if SPEECH_DEVICE=='cuda' else [('Ready.','en')]
+  for text,language in warmup:
    for _audio,_rate in generate(text,language):pass
-print(json.dumps({'ready':True,'streaming':True,'engine_pin':ENGINE_PIN}),file=output,flush=True)
+print(json.dumps({'ready':True,'streaming':True,'engine_pin':ENGINE_PIN,'device':SPEECH_DEVICE}),file=output,flush=True)
 requests=queue.Queue(maxsize=4);cancelled=threading.Event()
 def incoming():
  for line in sys.stdin:

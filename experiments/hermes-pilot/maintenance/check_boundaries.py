@@ -1,7 +1,8 @@
 """Finite update transaction, OS containment, secret redaction and recovery tests."""
 import sys,tempfile,json,shutil,subprocess,os
 from pathlib import Path
-P=Path(__file__).resolve().parents[1];sys.path.insert(0,str(P))
+P=Path(__file__).resolve().parents[1];sys.path.insert(0,str(P));sys.path.insert(0,str(P/'ui-workbench/runtime'))
+from machine import USER_HOME, OPERATIONAL_ROOT
 from maintenance.controller import *
 checks=[]
 def check(name,condition):checks.append({'name':name,'ok':bool(condition)});assert condition,name
@@ -44,7 +45,8 @@ with tempfile.TemporaryDirectory(prefix='argos-update-') as d:
  check('incident retention bounded to 100',len(m.load('incidents.json'))==100)
  # No credentials, host projects, release approval files or broker socket are mounted.
  folder=Path(d)/'sandbox';(folder/'candidate').mkdir(parents=True);(folder/'codex').mkdir();(folder/'request.json').write_text('{}')
- probe="import pathlib,json; paths=['/home/tyrant/Proyectos','/home/tyrant/.codex','/run/argos-workspace.sock','"+str(BASE/'private/pending.json')+"']; assert not any(pathlib.Path(p).exists() for p in paths); pathlib.Path('/workspace/sandbox-marker').write_text('ok'); print('contained')"
+ paths=[str(OPERATIONAL_ROOT),str(USER_HOME/'.codex'),'/run/argos-workspace.sock',str(BASE/'private/pending.json')]
+ probe="import pathlib; paths="+repr(paths)+"; assert not any(pathlib.Path(p).exists() for p in paths); pathlib.Path('/workspace/sandbox-marker').write_text('ok'); print('contained')"
  run=subprocess.run(coding_sandbox(folder,['/usr/bin/python','-c',probe]),capture_output=True,text=True,timeout=15);check('coding outer sandbox hides host projects/IDE/broker/approval files',run.returncode==0)
  probe="import socket; s=socket.socket(); s.settimeout(.1); s.connect(('127.0.0.1',42720))"
  run=subprocess.run(validation_sandbox(folder/'candidate',['/usr/bin/python','-c',probe]),capture_output=True,text=True,timeout=15);check('validation sandbox has no host loopback access',run.returncode!=0)

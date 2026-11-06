@@ -1,8 +1,9 @@
 """Use the already installed narrow Firefox native host; never import browser credentials."""
 import configparser,json,os,re,socket,subprocess,time
 from pathlib import Path
-SOCKET=Path('/home/tyrant/.local/state/argos/firefox.sock')
-PROFILE_BASES=(Path('/home/tyrant/.config/mozilla/firefox'),Path('/home/tyrant/.mozilla/firefox'))
+from .machine import USER_HOME
+SOCKET=USER_HOME/'.local/state/argos/firefox.sock'
+PROFILE_BASES=(USER_HOME/'.config/mozilla/firefox',USER_HOME/'.mozilla/firefox')
 def installation():
  # Read extension registration only. Never inspect cookies, logins or browser history.
  for base in PROFILE_BASES:
@@ -29,7 +30,7 @@ def firefox_running():
 def open_installed_firefox():
  addon=installation()
  if not addon['permanent'] or not addon['enabled'] or firefox_running():return False
- env={'HOME':'/home/tyrant','PATH':'/usr/bin:/bin','LANG':os.environ.get('LANG','C.UTF-8')}
+ env={'HOME':str(USER_HOME),'PATH':'/usr/bin:/bin','LANG':os.environ.get('LANG','C.UTF-8')}
  for key in ['DISPLAY','WAYLAND_DISPLAY','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS','XDG_CONFIG_HOME','XDG_SESSION_TYPE','MOZ_ENABLE_WAYLAND']:
   if os.environ.get(key):env[key]=os.environ[key]
  subprocess.Popen(['/usr/bin/firefox'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)

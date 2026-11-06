@@ -38,4 +38,11 @@ elif op=='snapshot':
 elif op=='status':
  with connect_closing(board=s['board']) as c:
   t=kb.get_task(c,s['task_id']);print(json.dumps({'task':vars(t),'runs':[dict(r) for r in c.execute('SELECT id,status,outcome,worker_pid,error,summary FROM task_runs WHERE task_id=?',(t.id,))],'events':[dict(r) for r in c.execute('SELECT id,kind,run_id,payload FROM task_events WHERE task_id=? ORDER BY id DESC LIMIT 15',(t.id,))]},default=str),flush=True)
+elif op in {'trial-prepare','trial-status','trial-dispatch','trial-reconcile','trial-unblock','interrupt'}:
+ import runpy
+ from hermes_constants import get_hermes_home
+ if Path(get_hermes_home()).resolve()!=Path(s['root']).resolve():raise SystemExit('Wrong disposable owner')
+ script=H/('interrupt_live.py' if op=='interrupt' else 'recovery_trial.py')
+ sys.argv=[str(script)]+([] if op=='interrupt' else [op.removeprefix('trial-')])
+ runpy.run_path(str(script),run_name='__main__')
 else:raise SystemExit('Unknown test action')

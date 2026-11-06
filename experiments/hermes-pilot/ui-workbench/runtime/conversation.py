@@ -19,7 +19,8 @@ ROOT=Path(__file__).resolve().parents[1]
 PILOT=ROOT.parent
 VOICE=PILOT/'voice-tests/2026-11-05'
 sys.path.insert(0,str(PILOT))
-sys.path.insert(0,'/home/tyrant/Proyectos/argos/src')
+from .machine import ARGOS_SRC, STT_PYTHON, MICROPHONE, SPEECH_DEVICE
+sys.path.insert(0,str(ARGOS_SRC))
 from pilot import sandbox,PYTHON
 from argos.wake import Endpoint
 from argos.echo import EchoCancellation
@@ -93,7 +94,7 @@ class Conversation:
   if not re.fullmatch(r'[a-zA-Z0-9-]{1,80}',session_id):raise ValueError('Invalid native session ID')
   self.audio_root=ROOT/'state/audio'/session_id
   self.speech_settings=SpeechSettings(ROOT/'private'/('voice-settings.json' if not no_capture else 'qa-voice-settings-'+session_id+'.json'))
-  self.status={'phase':'preparing','ready':False,'listening':False,'dialogue_open':False,'microphone':'SteelSeries Arctis Nova 5X','model':'gpt-6-luna','voice':'Qwen + Peter · Referencia','session_id':session_id,'echo_cancellation':False,'output_muted':False}
+  self.status={'phase':'preparing','ready':False,'listening':False,'dialogue_open':False,'microphone':MICROPHONE,'model':'gpt-6-luna','voice':'Qwen + Peter · Referencia','session_id':session_id,'echo_cancellation':False,'output_muted':False}
   self.status['output_muted']=not self.speech_settings.enabled()
   self.loop=asyncio.new_event_loop();self.thread=threading.Thread(target=self.run,daemon=True)
   self.generation=0;self.language='en';self.record=None;self.player=None;self.echo=EchoCancellation();self.closed=False;self.last_answer='';self.speaking=False;self.turn_running=False;self.tasks=[]
@@ -114,8 +115,8 @@ class Conversation:
   env={'HOME':str(VOICE/'home'),'PATH':'/usr/bin:/bin','HF_HOME':str(VOICE/'hf'),'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1','HF_HUB_DISABLE_IMPLICIT_TOKEN':'1','TOKENIZERS_PARALLELISM':'false','ARGOS_STARTUP_EVENTS':'1','PYTHONDONTWRITEBYTECODE':'1','TORCHINDUCTOR_CACHE_DIR':str(PILOT/'cache/torch-streaming')}
   libraries=VOICE/'qwen-env/lib/python3.12/site-packages/nvidia'
   stt_env={**env,'LD_LIBRARY_PATH':':'.join(str(libraries/name/'lib') for name in ['cublas','cudnn','cuda_runtime'])}
-  self.stt=Worker(['/home/tyrant/.local/share/argos/voice-env/bin/python',ROOT/'runtime/stt_worker.py'],stt_env,name='recognition',startup_timeout=60)
-  self.tts=Worker([VOICE/'qwen-env/bin/python',ROOT/'runtime/tts_worker.py',self.sid],env,name='speech',startup_timeout=180)
+  self.stt=Worker([STT_PYTHON,ROOT/'runtime/stt_worker.py'],stt_env,name='recognition',startup_timeout=60)
+  self.tts=Worker([VOICE/'qwen-env/bin/python',ROOT/'runtime/tts_worker.py',self.sid],env,name='speech',startup_timeout=180 if SPEECH_DEVICE=='cuda' else 600)
   cmd=sandbox([PYTHON,PILOT/'checks/desktop_runtime.py',self.sid],network=True)
   cmd[cmd.index('--chdir'):cmd.index('--chdir')]=['--ro-bind',str(PILOT/'private/workspace.sock'),'/run/argos-workspace.sock']
   # Native permission profile + existing read-only fixture and controller deny policy.
@@ -160,11 +161,11 @@ class Conversation:
    self.state('off',listening=False,echo_cancellation=False)
    self.emit({'type':'voice.caption','text':'Microphone off.' if self.language=='en' else 'Micrófono apagado.'});return
   if self.no_capture:self.state('standby',listening=False);return
-  target='alsa_input.usb-SteelSeries_SteelSeries_Arctis_Nova_5X-00.mono-fallback'
+  target=MICROPHONE
   probe=await asyncio.create_subprocess_exec('pactl','-f','json','list','sources','short',stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.DEVNULL)
   data,_=await probe.communicate()
   if target not in {s['name'] for s in json.loads(data)}:
-   self.state('error',listening=False,error='El micrófono SteelSeries no está conectado.');return
+   self.state('error',listening=False,error='El micrófono configurado no está conectado.');return
   await self.echo.start(target)
   source=self.echo.source if self.echo.active else target
   self.record=await asyncio.create_subprocess_exec('pw-record','--target',source,'--raw','--rate=16000','--channels=1','--format=s16','-',stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.DEVNULL)

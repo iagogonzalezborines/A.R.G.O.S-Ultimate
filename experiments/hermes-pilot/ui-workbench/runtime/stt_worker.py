@@ -6,13 +6,14 @@ os.environ['HF_HUB_OFFLINE']='1'
 with contextlib.redirect_stdout(sys.stderr):
  import numpy as np
  from faster_whisper import WhisperModel
- sys.path.insert(0,'/home/tyrant/Proyectos/argos/src')
+ from machine import ARGOS_SRC, SPEECH_DEVICE
+ sys.path.insert(0,str(ARGOS_SRC))
  from argos.language import choose_language
  pin=next(p for p in json.loads((PILOT/'models/stt/pins.json').read_text()) if p['model']=='turbo')
- model=WhisperModel(str(PILOT/'models/stt/turbo'),device='cuda',compute_type='int8_float16',cpu_threads=2,local_files_only=True)
+ model=WhisperModel(str(PILOT/'models/stt/turbo'),device=SPEECH_DEVICE,compute_type='int8_float16' if SPEECH_DEVICE=='cuda' else 'int8',cpu_threads=2,local_files_only=True)
  # Warm before enabling capture; do not spend a user's first turn initializing CUDA.
  list(model.transcribe(np.zeros(16000,dtype=np.float32),language='en',beam_size=3,temperature=0,vad_filter=False)[0])
-print(json.dumps({'ready':True,'model':'large-v3-turbo','device':'cuda','compute_type':'int8_float16','revision':pin['revision']}),file=output,flush=True)
+print(json.dumps({'ready':True,'model':'large-v3-turbo','device':SPEECH_DEVICE,'compute_type':'int8_float16' if SPEECH_DEVICE=='cuda' else 'int8','revision':pin['revision']}),file=output,flush=True)
 for line in sys.stdin:
  try:
   request=json.loads(line);raw=base64.b64decode(request['pcm'],validate=True)

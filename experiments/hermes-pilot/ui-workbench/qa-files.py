@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 from runtime.workspace_broker import Files,WorkspaceBroker,video_url
 from server import validate
+from runtime.machine import OPERATIONAL_ROOT
 
 checks=[]
 def check(name,condition):
@@ -42,6 +43,6 @@ with tempfile.TemporaryDirectory(prefix='argos-files-') as d:
  reject('unknown fields rejected',lambda:b.request({'tool':'files','arguments':{'action':'read','path':'Pruebas/renamed.txt','shell':'anything'}}))
  reject('private media URL rejected',lambda:video_url('http://127.0.0.1/a.mp4'))
  check('YouTube link normalized',video_url('https://youtu.be/dQw4w9WgXcQ?si=abc')=='https://www.youtube.com/watch?v=dQw4w9WgXcQ')
- protected=Files({'Proyectos':Path('/home/tyrant/Proyectos')});reject('operational ARGOS writes excluded',lambda:protected.writable('Proyectos/argos/README.md'))
+ protected=Files({'Proyectos':OPERATIONAL_ROOT.parent});reject('operational ARGOS writes excluded',lambda:protected.writable(str(OPERATIONAL_ROOT/'README.md')))
 report={'checks':checks,'passed':all(c['ok'] for c in checks),'scope':'Disposable synthetic files only; finite boundary checks, not a production security certification'}
 Path(__file__).with_name('reports').joinpath('files-capability-checks.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({'passed':report['passed'],'checks':len(checks)}))

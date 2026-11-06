@@ -20,11 +20,12 @@ function check(name,ok,detail){report.checks.push({name,ok,detail});console.log(
   }
   await app.evaluate(({BrowserWindow},state)=>BrowserWindow.getAllWindows()[0].webContents.send('runtime-event',{type:'voice.state',...state}),previous);
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.send('runtime-event',{type:'process.started',id:'test-process',title:'Proceso de prueba'}));
-  await page.waitForTimeout(150);check('cylinder reserved for process start',await page.locator('#workspace').getAttribute('data-phase')==='expanding');
+  await page.waitForSelector('[data-window="test-process"] progress:not([value])');check('process start displays immediate progress',await page.locator('#workspace').getAttribute('data-phase')==='working');
   await page.waitForTimeout(1400);check('process opens a status window',await page.locator('[data-window="test-process"]').count()===1);await page.evaluate(()=>window.ARGOSWorkspace.clear());
 
   await page.locator('#core-button').click();check('circle opens general controls',await page.locator('#core-menu').isVisible());
   await page.locator('[data-panel="agents"]').click();check('agent panel reports connected conversation',await page.locator('[data-window="agents"]').getByText('CONECTADA',{exact:true}).count()===1);
+  await page.locator('[data-window="agents"] [aria-label="Cerrar"]').click();
   const token=fs.readFileSync(path.join(ROOT,'private/presentation.token'),'utf8').trim();
   const post=async(path,payload)=>{const response=await fetch(BASE+path,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)});return {status:response.status,body:await response.json()}};
   await post('/api/presentation',{type:'window.open',id:'general-note',kind:'note',title:'Prueba de voz y contexto',text:'<script>window.pwned=true</script>'});

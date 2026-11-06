@@ -1,0 +1,100 @@
+{
+  "date": "2026-11-06",
+  "installation": "~/.local/share/argos-hermes-pilot",
+  "launcher": "ARGOS (Hermes)",
+  "operational_unittest": {
+    "passed": 353,
+    "command": "PYTHONPATH=src python -m unittest discover -s tests -v"
+  },
+  "native_hermes_regression": {
+    "passed": 63,
+    "runner": "scripts/run_tests.sh",
+    "files": 9
+  },
+  "pilot_checks": {
+    "files-capability-checks.json": {
+      "passed": 25,
+      "total": 25
+    },
+    "storage-clipboard-checks.json": {
+      "passed": 21,
+      "total": 21
+    },
+    "research-boundaries.json": {
+      "passed": 17,
+      "total": 17
+    },
+    "startup-lifecycle-checks.json": {
+      "passed": 10,
+      "total": 10
+    },
+    "self-development-boundaries.json": {
+      "passed": 26,
+      "total": 26
+    },
+    "self-development-auto-review.json": {
+      "passed": 8,
+      "total": 8
+    },
+    "general-ui-checks.json": {
+      "passed": 20,
+      "total": 20
+    },
+    "speech-settings-ui-checks.json": {
+      "passed": 10,
+      "total": 10
+    },
+    "progressive-ui.json": {
+      "passed": 7,
+      "total": 7
+    }
+  },
+  "pcm_output": {
+    "raw_pcm_playback_passed": true,
+    "source_seconds": 0.8,
+    "actual_player_seconds": 0.8356643190199975,
+    "all_source_bytes_written": true,
+    "eof_drains_audio_tail": true,
+    "interruption_stops_player": true,
+    "playback": "temporary null sink, not speakers"
+  },
+  "conversation_continuity": {
+    "starts_native_codex_before_input": true,
+    "subscription_account_present": true,
+    "zero_startup_model_turns": true,
+    "first_real_turn_works": true,
+    "native_thread_resumes": true,
+    "budget_recalled_after_restart": true
+  },
+  "speech_benchmark": {
+    "elapsed_seconds": 15.51890846597962,
+    "result": {
+      "ok": true,
+      "seconds": 0.6293333333333333,
+      "generation_seconds": 15.506498441012809,
+      "cache_hit": false,
+      "streaming": false
+    },
+    "playback": "muted QA host",
+    "microphone_capture": false
+  },
+  "projects_enabled": false,
+  "firefox_signed_extension": "missing; user confirms it is on the other computer",
+  "hardware": {
+    "gpu": "NVIDIA GT 1030 2 GB",
+    "speech_device": "cpu"
+  },
+  "models": {
+    "conversation": "gpt-6-luna via independent Codex subscription login",
+    "tts": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    "voice": "Peter",
+    "stt": "large-v3-turbo"
+  },
+  "pins": {
+    "hermes": "0073fa98cfcf61c066a919df4b336924720f8463",
+    "streaming_engine": "b8db6ff1cebc0d6554cf0977045850bcc796b383",
+    "qwen": "fd4b254389122332181a7c3db7f27e918eec64e3",
+    "whisper": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf",
+    "peter_reference": "323332d33f997de8394f24a193e1a76df720e01a"
+  }
+}
