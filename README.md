@@ -11,6 +11,10 @@ está implementado y habilitado en el piloto, con Hermes Projects/Kanban y Engin
 aislado del bloque A. C y D siguen pendientes. La latencia de este equipo no es
 un criterio de aceptación; la extensión firmada de Firefox aún debe trasladarse.
 
+El [plan de delegación adaptativa y relevo al equipo de casa](experiments/hermes-pilot/reports/adaptive-network-plan-2026-11-06.md)
+define la comparación Hermes/OpenClaw, los presupuestos de recursos y el siguiente
+hito de concurrencia. Es una propuesta, aún sin implementar; Hermes es sustituible.
+
 ## Reproducir vídeos en Firefox
 
 «Play AC/DC Thunderstruck through Firefox» puede usar `browser.play`: busca en

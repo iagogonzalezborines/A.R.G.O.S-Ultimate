@@ -7,6 +7,7 @@ The desktop pilot includes the electric-blue workspace/window manager, bilingual
 **2026-11-06: Block B is implemented and enabled in the local pilot after the verified Stage A repair.** Native Projects/Kanban, reviewed folder scope, persistent briefs and isolated Engineering are connected through the existing Broker. C–D remain pending. The signed Firefox extension is still on the other computer; local CPU latency is not an acceptance gate for this development machine. The original November 5 reports remain historical evidence.
 
 - [Current Block B integration, tests and limitations](reports/block-b-2026-11-06.md)
+- [Adaptive delegation proposal, Hermes/OpenClaw comparison and home-machine handoff](reports/adaptive-network-plan-2026-11-06.md) — planning only; Hermes may be replaced if the comparison justifies it.
 - [Restoration and Stage A verification](reports/restoration-2026-11-06.md)
 - [November 5 Stage A recovery blocker](reports/project-intelligence-stage-a-recovery.md)
 - [Original Stage A evidence](reports/project-intelligence-stage-a.md)
