@@ -11,9 +11,12 @@ está implementado y habilitado en el piloto, con Hermes Projects/Kanban y Engin
 aislado del bloque A. C y D siguen pendientes. La latencia de este equipo no es
 un criterio de aceptación; la extensión firmada de Firefox aún debe trasladarse.
 
-El [plan de delegación adaptativa y relevo al equipo de casa](experiments/hermes-pilot/reports/adaptive-network-plan-2026-11-06.md)
-define la comparación Hermes/OpenClaw, los presupuestos de recursos y el siguiente
-hito de concurrencia. Es una propuesta, aún sin implementar; Hermes es sustituible.
+La [red adaptativa experimental](experiments/hermes-pilot/reports/adaptive-network-2026-11-06.md)
+ya ejecuta herramientas, Qwen3 0.6B local y Engineering en paralelo sobre tareas nativas,
+con evidencia y exportación de workflows. OpenClaw se probó aisladamente con Codex;
+Hermes sigue operativo mientras no haya paridad A/B. La instalación habitual no se
+ha migrado. [Preparación para casa](experiments/hermes-pilot/adaptive/SETUP.md) y
+[catálogo de capacidades](experiments/hermes-pilot/adaptive/CATALOGUE.md).
 
 ## Reproducir vídeos en Firefox
 

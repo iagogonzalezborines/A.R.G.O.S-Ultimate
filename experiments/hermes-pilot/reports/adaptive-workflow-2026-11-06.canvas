@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {
+      "id": "t_8819a8af",
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 310,
+      "height": 160,
+      "color": "5",
+      "text": "Inventory project root files\nfiles.inventory\nNative status: done"
+    },
+    {
+      "id": "t_9a04ed7f",
+      "type": "text",
+      "x": 340,
+      "y": 0,
+      "width": 310,
+      "height": 160,
+      "color": "5",
+      "text": "Count file extensions\nfiles.types\nNative status: done"
+    },
+    {
+      "id": "t_c9caa30b",
+      "type": "text",
+      "x": 680,
+      "y": 0,
+      "width": 310,
+      "height": 160,
+      "color": "5",
+      "text": "local.extract\nlocal.extract\nNative status: review"
+    }
+  ],
+  "edges": [
+    {
+      "id": "t_8819a8af-t_9a04ed7f",
+      "fromNode": "t_8819a8af",
+      "toNode": "t_9a04ed7f",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ]
+}

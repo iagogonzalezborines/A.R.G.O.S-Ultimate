@@ -1,5 +1,7 @@
 # ARGOS y la delegación adaptativa
 
+**Nota posterior:** este documento conserva la propuesta original. La fase experimental autorizada después está implementada y medida en el [informe de la red adaptativa](adaptive-network-2026-11-06.md); no se ha promovido al piloto habitual.
+
 2026-11-06. **Propuesta de arquitectura y relevo para el equipo de casa. No implementada.** El objetivo es aumentar el trabajo útil sin hacer esperar a la conversación, usando únicamente las capacidades necesarias. La única suscripción disponible es Codex. Hermes es sustituible: OpenClaw se evaluará también como reemplazo completo, no solo como complemento.
 
 ## Punto de partida comprobado

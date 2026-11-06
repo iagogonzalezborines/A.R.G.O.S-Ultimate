@@ -1,0 +1,520 @@
+{
+  "date": "2026-11-06",
+  "operational_promotion": false,
+  "core_changed": false,
+  "audio_played": false,
+  "versions": {
+    "schema": 1,
+    "experimental": true,
+    "hermes_revision": "0073fa98cfcf61c066a919df4b336924720f8463",
+    "codex_version": "0.164.0-alpha.11.1",
+    "ollama_version": "0.40.7",
+    "openclaw_version": "2026.11.1",
+    "openclaw_codex_plugin_version": "2026.11.1",
+    "openclaw_docker_image": "node@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392",
+    "local": {
+      "url": "http://127.0.0.1:11554",
+      "model": "qwen3:0.6b",
+      "digest": "7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435",
+      "keep_alive": "30s",
+      "options": {
+        "num_ctx": 2048,
+        "num_predict": 512,
+        "num_thread": 2,
+        "num_gpu": 0
+      }
+    },
+    "budgets": {
+      "total_native_tasks": 2,
+      "engineering_writers": 1,
+      "auxiliary_tasks": 1,
+      "min_available_bytes": 2147483648
+    },
+    "providers": {
+      "codex_subscription": "independent_login",
+      "gemini": "disabled",
+      "openrouter": "disabled"
+    },
+    "voice": {
+      "inherit_existing_profile": true,
+      "device": "select_on_target",
+      "cuda": "validate_on_target"
+    },
+    "platforms": {
+      "linux": "tested",
+      "windows": "adapter_and_security_validation_required"
+    }
+  },
+  "local": {
+    "model": "qwen3:0.6b",
+    "digest": "7df6b6e09427a769808717c0a93cadc4ae99ed4eb8bf5ca557c90846becea435",
+    "before": [],
+    "samples": [
+      {
+        "label": "cold",
+        "metrics": {
+          "load_duration": 1308825680,
+          "prompt_eval_duration": 553592000,
+          "eval_duration": 447714000,
+          "prompt_eval_count": 62,
+          "eval_count": 15,
+          "wall_seconds": 2.3151487710129004
+        },
+        "result": {
+          "items": [
+            "STL",
+            "OBJ",
+            "3MF"
+          ]
+        },
+        "correct": true,
+        "loaded": [
+          {
+            "name": "qwen3:0.6b",
+            "size": 783663757,
+            "size_vram": 0,
+            "expires_at": "2026-11-06T11:29:31.888868954+01:00"
+          }
+        ]
+      },
+      {
+        "label": "warm",
+        "metrics": {
+          "load_duration": 565826,
+          "prompt_eval_duration": 44581000,
+          "eval_duration": 488032000,
+          "prompt_eval_count": 62,
+          "eval_count": 15,
+          "wall_seconds": 0.5359825849882327
+        },
+        "result": {
+          "items": [
+            "STL",
+            "OBJ",
+            "3MF"
+          ]
+        },
+        "correct": true,
+        "loaded": [
+          {
+            "name": "qwen3:0.6b",
+            "size": 783663757,
+            "size_vram": 0,
+            "expires_at": "2026-11-06T11:29:32.427063047+01:00"
+          }
+        ]
+      },
+      {
+        "label": "warm_repeat",
+        "metrics": {
+          "load_duration": 738791,
+          "prompt_eval_duration": 44725000,
+          "eval_duration": 526325000,
+          "prompt_eval_count": 62,
+          "eval_count": 15,
+          "wall_seconds": 0.5747641079942696
+        },
+        "result": {
+          "items": [
+            "STL",
+            "OBJ",
+            "3MF"
+          ]
+        },
+        "correct": true,
+        "loaded": [
+          {
+            "name": "qwen3:0.6b",
+            "size": 783663757,
+            "size_vram": 0,
+            "expires_at": "2026-11-06T11:29:33.004999159+01:00"
+          }
+        ]
+      }
+    ],
+    "deterministic": {
+      "seconds": 0.0006605999951716512,
+      "valid": true
+    },
+    "release": {
+      "seconds": 0.010376676014857367,
+      "remaining": []
+    }
+  },
+  "local_idle": {
+    "result": {
+      "items": [
+        "STL",
+        "OBJ",
+        "3MF"
+      ]
+    },
+    "initial": [
+      {
+        "name": "qwen3:0.6b",
+        "size": 783663757,
+        "size_vram": 0,
+        "expires_at": "2026-11-06T11:55:02.113740982+01:00"
+      }
+    ],
+    "idle_seconds": 30.04433286501444,
+    "remaining": []
+  },
+  "hermes": {
+    "checks": {
+      "natural_workflow_persisted": true,
+      "engineering_claimed": true,
+      "engineering_review": true,
+      "helper_review": true,
+      "actual_execution_overlap": true,
+      "generated_tests_pass": true,
+      "native_canvas": true,
+      "single_attempts": true
+    },
+    "general_startup_seconds": 1.2771163349971175,
+    "general_model": "gpt-6-luna",
+    "turns": [
+      {
+        "seconds": 3.385159968980588,
+        "speech": "{\"items\":[\"STL\",\"OBJ\",\"3MF\"]}"
+      },
+      {
+        "seconds": 19.11481331899995,
+        "speech": "{\"project\":\"adaptive-live-1793962281\",\"workflow\":\"persisted and executed\",\"inventory\":[\"part.obj\",\"sample.stl\"],\"extension_counts\":{\".obj\":1,\".stl\":1}}"
+      },
+      {
+        "seconds": 1.3072143710160162,
+        "speech": "A file stores data; a folder organizes files and other folders."
+      }
+    ],
+    "foreground_apps_seconds": 0.00014632698730565608,
+    "engineering_after_foreground": "running",
+    "engineering": {
+      "id": "t_0997ceee",
+      "status": "review",
+      "runs": [
+        {
+          "id": 1,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1793962311,
+          "ended_at": 1793962352,
+          "summary": "Implemented UTF-8 append_note helper and a unittest verifying two appends preserve existing content. Unittest passes and module compiles; existing model fixtures were unchanged.",
+          "metadata_truncated": false,
+          "metadata": {
+            "verification": {
+              "unittest": "python3 -m unittest -v: 1 test passed",
+              "compile": "python3 -m py_compile fixture_notes.py: passed",
+              "fixtures_unchanged": "part.obj and sample.stl hashes match"
+            },
+            "artifacts": [
+              "$FIXTURE/fixture_notes.py",
+              "$FIXTURE/test_fixture_notes.py"
+            ]
+          }
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "fixture_notes.py",
+          "sha256_now": "724c12c06c7b50de497b44b08777ffe1a291f3793c5ee093c03f9a9c7406aa4d",
+          "bytes": 396,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "test_fixture_notes.py",
+          "sha256_now": "672f70639e5d80b7bb737f298086e762768a9f4f0ae1a9405536ae23a61c754e",
+          "bytes": 686,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ]
+    },
+    "capabilities": [
+      {
+        "id": "t_8819a8af",
+        "project_id": "p_ed68cc0c",
+        "title": "Inventory project root files",
+        "capability": "files.inventory",
+        "status": "done",
+        "parents": [],
+        "run_id": null,
+        "revision": "e96d60e4ccc6eedf50dcf742191f9a09ef77b379c7db5202dd3aa8776a27b4c3",
+        "runs": [
+          {
+            "id": 6,
+            "status": "done",
+            "outcome": "completed",
+            "started_at": 1793962304,
+            "ended_at": 1793962305,
+            "metadata": {
+              "result": {
+                "files": [
+                  {
+                    "name": "part.obj",
+                    "bytes": 17,
+                    "mtime_ns": 1793962282779311355
+                  },
+                  {
+                    "name": "sample.stl",
+                    "bytes": 17,
+                    "mtime_ns": 1793962282779262615
+                  }
+                ]
+              },
+              "verification": {
+                "verification": "read-only metadata observed now"
+              },
+              "wall_seconds": 0.00033045699819922447,
+              "capability": "files.inventory",
+              "project_revision": "3cf84606df2aa51e027975128e0d6f8971e77552e504a28d320359528222aa97"
+            }
+          }
+        ]
+      },
+      {
+        "id": "t_9a04ed7f",
+        "project_id": "p_ed68cc0c",
+        "title": "Count file extensions",
+        "capability": "files.types",
+        "status": "done",
+        "parents": [
+          "t_8819a8af"
+        ],
+        "run_id": null,
+        "revision": "62a3bf7becaacb012ddd379bbae2d871ad210bdf5ee25b471f7b07555c3f4871",
+        "runs": [
+          {
+            "id": 7,
+            "status": "done",
+            "outcome": "completed",
+            "started_at": 1793962306,
+            "ended_at": 1793962306,
+            "metadata": {
+              "result": {
+                "counts": {
+                  ".obj": 1,
+                  ".stl": 1
+                }
+              },
+              "verification": {
+                "verification": "deterministic aggregation of recorded inventory"
+              },
+              "wall_seconds": 0.0005821250088047236,
+              "capability": "files.types",
+              "project_revision": "3cf84606df2aa51e027975128e0d6f8971e77552e504a28d320359528222aa97"
+            }
+          }
+        ]
+      },
+      {
+        "id": "t_c9caa30b",
+        "project_id": "p_ed68cc0c",
+        "title": "local.extract",
+        "capability": "local.extract",
+        "status": "review",
+        "parents": [],
+        "run_id": null,
+        "revision": "c78715fdde34680b70dc72f646c0224cf352717ad21c6a26b58b03b0259a0a9d",
+        "runs": [
+          {
+            "id": 8,
+            "status": "review",
+            "outcome": "review_requested",
+            "started_at": 1793962312,
+            "ended_at": 1793962316,
+            "metadata": {
+              "result": {
+                "items": [
+                  "STL",
+                  "OBJ",
+                  "3MF"
+                ]
+              },
+              "verification": {
+                "verification": "schema only; semantics need review",
+                "load_duration": 1557435979,
+                "prompt_eval_duration": 636227000,
+                "eval_duration": 704592000,
+                "prompt_eval_count": 63,
+                "eval_count": 15,
+                "wall_seconds": 2.904116295016138
+              },
+              "wall_seconds": 2.914853418013081,
+              "capability": "local.extract",
+              "project_revision": "3cf84606df2aa51e027975128e0d6f8971e77552e504a28d320359528222aa97"
+            }
+          }
+        ]
+      }
+    ],
+    "independent_test": {
+      "exit": 0,
+      "output": "test_two_appends_preserve_existing_utf8_lines (test_fixture_notes.AppendNoteTests.test_two_appends_preserve_existing_utf8_lines) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n"
+    },
+    "total_seconds": 44.894930362701416,
+    "cancel": {
+      "before": "running",
+      "after": "archived",
+      "seconds": 6.568769670993788,
+      "runs": [
+        {
+          "id": 9,
+          "status": "reclaimed",
+          "outcome": "reclaimed",
+          "started_at": 1793962792,
+          "ended_at": 1793962793,
+          "metadata": {}
+        }
+      ],
+      "loaded": []
+    }
+  },
+  "openclaw": {
+    "general": {
+      "answer": [
+        {
+          "text": "{\"items\":[\"STL\",\"OBJ\",\"3MF\"]}",
+          "mediaUrl": null
+        }
+      ],
+      "turn_ms": 11820,
+      "wall_seconds_including_cli": 38.863,
+      "maxrss_children_kib": 1196712
+    },
+    "engineering": {
+      "id": "94311222-96de-411d-9203-e461b35bf82a",
+      "status": "done",
+      "execution": {
+        "id": "94311222-96de-411d-9203-e461b35bf82a:agent-session",
+        "kind": "agent-session",
+        "mode": "autonomous",
+        "status": "review",
+        "engine": "codex",
+        "model": "openai/gpt-6-luna",
+        "sessionKey": "agent:main:subagent:workboard-default-94311222-96de-411d-9203-e461b35bf82a",
+        "runId": "workboard:94311222-96de-411d-9203-e461b35bf82a:1793962518371",
+        "startedAt": 1793962517488,
+        "updatedAt": 1793962551952
+      }
+    },
+    "verification": {
+      "exit": 0,
+      "output": "test_two_appends_preserve_existing_utf8_lines (test_fixture_notes.AppendNoteTests.test_two_appends_preserve_existing_utf8_lines) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n",
+      "artifacts": [
+        {
+          "name": "fixture_notes.py",
+          "sha256": "c5b7cc924d5b7c236d360b24f5ed6eb2a08d0c9329f5593ec6caeb395a857e73"
+        },
+        {
+          "name": "test_fixture_notes.py",
+          "sha256": "1b99ab6bec8bbe4e99445b230ac5021dba5e83972f3230e41513427e9dddafcd"
+        }
+      ]
+    },
+    "runtime_after_owner_stop_same_state": true,
+    "conversation_continuity": {
+      "answer": [
+        {
+          "text": "{\"items\":[\"STL\",\"OBJ\",\"3MF\"]}",
+          "mediaUrl": null
+        }
+      ],
+      "turn_ms": 10588
+    },
+    "stale_update_rejected": true,
+    "dependency_linked": true,
+    "dependent_worker_not_started": true,
+    "invalid_dependency_rejected": true,
+    "container_confinement": {
+      "outside-canary": "ENOENT",
+      "auth.json": "ENOENT",
+      "openclaw.json": "ENOENT",
+      "rootWrite": "EROFS",
+      "network": "ENETUNREACH"
+    },
+    "container_policy": {
+      "image": "sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392",
+      "network": "none",
+      "read_only": true,
+      "memory": 536870912,
+      "nano_cpus": 1000000000,
+      "cap_drop": [
+        "ALL"
+      ],
+      "pids": 64,
+      "state": "running"
+    },
+    "parity_with_blocks_a_b": false
+  },
+  "failures": [
+    {
+      "trial": "native review dispatch default",
+      "native_runs": 43,
+      "effect": "Repeated bounded local inference",
+      "fix": "Reject review_dispatch=true before mutation; fresh native store"
+    },
+    {
+      "trial": "first concurrency",
+      "effect": "Native host-wide cap of one serialized helper behind Engineering",
+      "fix": "Global two, Engineering one and shared auxiliary profile one; actual overlap remeasured"
+    },
+    {
+      "trial": "OpenClaw setup",
+      "effect": "Missing provider plugin, then sandbox tool allowlist blocked heartbeat",
+      "fix": "Pin official Codex plugin and only required scoped protocol tools"
+    },
+    {
+      "trial": "OpenClaw read-only trial",
+      "effect": "Worker blocked with insufficient specification/read-only session",
+      "fix": "Equivalent task text and workspace-write restricted by policy and Docker"
+    },
+    {
+      "trial": "OpenClaw Engineering verification",
+      "effect": "No Python in reused Node image; worker could not run unittest, card done with execution review",
+      "fix": "Independent ARGOS validation passed; no promotion"
+    },
+    {
+      "trial": "OpenClaw local owner",
+      "effect": "agent --local refused while Gateway owned the store",
+      "fix": "Stopped only identified lab owner, retried and recovered context"
+    }
+  ],
+  "regressions": {
+    "core": 353,
+    "native_projects": 7,
+    "adaptive": 7,
+    "files": 25,
+    "storage_clipboard": 21,
+    "research": 17,
+    "startup": 10,
+    "maintenance": 26,
+    "auto_review": 8
+  },
+  "limitations": [
+    "Small sample, no general model-quality benchmark",
+    "Memory pressure uses admission threshold, not physical OOM",
+    "No global voice/GPU/VRAM scheduler",
+    "No full OpenClaw A/B parity or voice/UI adaptation",
+    "No Windows isolation validation",
+    "Semantic review acceptance and Canvas import/editor remain pending"
+  ],
+  "cleanup": {
+    "pending": false,
+    "native_owner_stopped": true,
+    "candidate_gateway_stopped": true,
+    "ollama_server_stopped": true,
+    "candidate_containers_removed": 4,
+    "derived_auth_files_removed": 8,
+    "operational_credentials_preserved": true,
+    "operational_runtime_hashes_unchanged": true,
+    "remaining_lab_processes": 0
+  },
+  "resources": {
+    "local/models": 522661305,
+    "openclaw/node_modules": 543739375,
+    "ollama_idle_rss_bytes": 40685568
+  },
+  "implementation_commit": "43f3813"
+}
