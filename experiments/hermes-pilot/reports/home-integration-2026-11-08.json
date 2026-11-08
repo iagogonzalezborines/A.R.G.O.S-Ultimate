@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "status": "installed_workflow_verified_manual_wake_failed_no_microphone_signal_measured",
+  "status": "installed_workflow_verified_manual_wake_response_confirmed_remaining_acceptance_partial",
   "commits": [
     "d42da20",
     "0a5e34e"
@@ -444,6 +444,26 @@
       "alsa_capture_switch": "on"
     },
     "raw_audio_saved": false,
-    "limitation": "User has not yet confirmed speaking during the physical signal probe. No root cause attributed to hardware, recognition or the wake matcher."
+    "limitation": "User has not yet confirmed speaking during the physical signal probe. No root cause attributed to hardware, recognition or the wake matcher.",
+    "recovery": {
+      "user_confirmed_wake_response": true,
+      "dialogue_open": true,
+      "phase": "listening",
+      "signal_measured": {
+        "physical_rms_max_in_first_five_seconds": 2759.98,
+        "aec_rms_max_in_first_five_seconds": 520.88
+      },
+      "last_real_turn": {
+        "stt_seconds": 0.4369812989998536,
+        "audio_seconds": 2.3,
+        "first_text_seconds": 2.557257985999968,
+        "first_audio_ready_seconds": 3.117283672000667,
+        "playback_simulated": false,
+        "native_compactions": 0
+      },
+      "raw_audio_saved": false,
+      "initial_silence_root_cause": "not established",
+      "spanish_and_interruption_manual_acceptance": "not yet confirmed"
+    }
   }
 }
