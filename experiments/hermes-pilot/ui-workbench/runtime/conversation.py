@@ -27,6 +27,7 @@ from argos.echo import EchoCancellation
 from argos.language import voice_invocation,normalized,choose_language
 from .speech_pipeline import SpeechPipeline
 from .speech_settings import SpeechSettings
+from .startup import StartupTrace,stderr_summary
 
 def presentation_context(windows):
  focus=[w for w in windows if w.get('focused')][:1]
@@ -37,8 +38,8 @@ def presentation_context(windows):
 
 
 class WorkerStartupError(RuntimeError):
- def __init__(self,component,detail):
-  self.component=component;super().__init__(component+': '+detail)
+ def __init__(self,component,detail,diagnostics=None):
+  self.component=component;self.diagnostics=diagnostics or {};super().__init__(component+': '+detail)
 
 class Worker:
  def __init__(self,command,env=None,prefix=b'',*,name='worker',startup_timeout=90):self.command=command;self.env=env;self.prefix=prefix;self.process=None;self.lock=asyncio.Lock();self.name=name;self.startup_timeout=startup_timeout
@@ -51,27 +52,39 @@ class Worker:
     line=line[len(self.prefix):]
    return json.loads(line)
  async def start(self,on_stage=None):
-  started=time.monotonic()
+  started=time.monotonic();self.last_stage='starting';self.stderr_tail=bytearray();self.starting=True;self.stderr_task=None
+  async def drain():
+   while self.process:
+    chunk=await self.process.stderr.read(4096)
+    if not chunk:break
+    if self.starting:self.stderr_tail.extend(chunk);self.stderr_tail[:]=self.stderr_tail[-16000:]
   try:
    if on_stage:await on_stage(self.name,'starting')
    self.process=await asyncio.create_subprocess_exec(*map(str,self.command),env=self.env,
-       stdin=asyncio.subprocess.PIPE,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.DEVNULL,start_new_session=True,limit=2**20)
+       stdin=asyncio.subprocess.PIPE,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE,start_new_session=True,limit=2**20)
+   self.stderr_task=asyncio.create_task(drain())
    async with asyncio.timeout(self.startup_timeout):
     while True:
      ready=await self.read()
      if ready.get('event'):
-      if on_stage and ready['event']=='startup.stage':await on_stage(self.name,ready.get('stage','starting'))
+      if ready['event']=='startup.stage':
+       self.last_stage=ready.get('stage','starting')
+       if on_stage:await on_stage(self.name,self.last_stage)
       continue
      if not ready.get('ready'):raise WorkerStartupError(self.name,ready.get('code','initialization_failed')+' ('+ready.get('category','unknown')+')')
      ready['startup_seconds']=time.monotonic()-started
+     self.starting=False;self.stderr_tail.clear()
      if on_stage:await on_stage(self.name,'ready')
      return ready
   except TimeoutError as error:
-   await self.close();raise WorkerStartupError(self.name,'readiness timed out after '+str(self.startup_timeout)+' seconds') from error
+   diagnostics={'last_stage':self.last_stage,**stderr_summary(self.stderr_tail)}
+   await self.close();raise WorkerStartupError(self.name,'readiness timed out after '+str(self.startup_timeout)+' seconds at '+self.last_stage,diagnostics) from error
   except BaseException as error:
+   diagnostics={'last_stage':self.last_stage,**stderr_summary(self.stderr_tail)}
+   if isinstance(error,WorkerStartupError):error.diagnostics=diagnostics
    await self.close()
    if isinstance(error,(asyncio.CancelledError,WorkerStartupError)):raise
-   raise WorkerStartupError(self.name,type(error).__name__+' during initialization') from error
+   raise WorkerStartupError(self.name,type(error).__name__+' during initialization at '+self.last_stage,diagnostics) from error
  async def call(self,value,on_event=None):
   async with self.lock:
    if not self.process or self.process.returncode is not None:raise RuntimeError('Worker stopped')
@@ -95,6 +108,10 @@ class Worker:
    except TimeoutError:
     with contextlib.suppress(ProcessLookupError):os.killpg(self.process.pid,signal.SIGKILL)
     await self.process.wait()
+  if getattr(self,'stderr_task',None):
+   try:await asyncio.wait_for(asyncio.shield(self.stderr_task),.5)
+   except TimeoutError:
+    self.stderr_task.cancel();await asyncio.gather(self.stderr_task,return_exceptions=True)
 
 class Conversation:
  def __init__(self,emit,*,no_capture=False,mute=False,text_only=False,session_id='argos-workspace-default',workspace=None):
@@ -106,6 +123,8 @@ class Conversation:
   self.status={'phase':'preparing','ready':False,'listening':False,'dialogue_open':False,'microphone':MICROPHONE,'model':'gpt-6-luna','voice':'Qwen + Peter · Referencia','session_id':session_id,'echo_cancellation':False,'output_muted':False}
   self.status['output_muted']=text_only or not self.speech_settings.enabled()
   self.status['text_only']=text_only
+  self.status.update(speech_ready=False,recognition_ready=False)
+  self.startup_trace=StartupTrace(ROOT/'private/startup'/session_id/'latest.json')
   self.loop=asyncio.new_event_loop();self.thread=threading.Thread(target=self.run,daemon=True)
   self.generation=0;self.language='en';self.record=None;self.player=None;self.echo=EchoCancellation();self.closed=False;self.last_answer='';self.speaking=False;self.turn_running=False;self.tasks=[]
  def start(self):self.thread.start()
@@ -131,24 +150,36 @@ class Conversation:
   cmd[cmd.index('--chdir'):cmd.index('--chdir')]=['--ro-bind',str(PILOT/'private/workspace.sock'),'/run/argos-workspace.sock']
   # Native permission profile + existing read-only fixture and controller deny policy.
   cmd[cmd.index('--chdir'):cmd.index('--chdir')]=['--setenv','HERMES_TERMINAL_SECURITY_MODE','approval-required']
+  cmd[cmd.index('--chdir'):cmd.index('--chdir')]=['--setenv','ARGOS_STARTUP_EVENTS','1']
   self.model=Worker(cmd,prefix=b'ARGOS_JSON ',name='codex',startup_timeout=45)
   async def stage(name,value):
+   self.startup_trace.record(name,value)
    self.state(components={**self.status.get('components',{}),name:value},**({'codex_ready':value=='ready'} if name=='codex' else {}))
    labels={'codex':'Codex','recognition':'reconocimiento','speech':'voz'}
    if value!='ready':self.emit({'type':'voice.caption','text':'Preparando '+labels[name]+(' · compilando audio local' if value=='compiling' else '…')})
   workers=(self.model,) if self.text_only else (self.stt,self.tts,self.model)
   initializers=[asyncio.create_task(worker.start(stage)) for worker in workers]
   try:
-   initialized=await asyncio.gather(*initializers)
-   self.status['api_mode']=initialized[-1].get('api_mode');self.status['codex_ready']=initialized[-1].get('codex_ready',False)
-   self.status['startup_seconds']={worker.name:r['startup_seconds'] for worker,r in zip(workers,initialized)}
-   if not self.text_only:
-    self.status['voice_streaming']=initialized[1].get('streaming',False)
-    self.status['speech_engine_pin']=initialized[1].get('engine_pin')
-    self.status['recognition_model']=initialized[0].get('model');self.status['recognition_device']=initialized[0].get('device')
-   self.state('standby',ready=True)
+   model_ready=await initializers[-1]
+   self.status['api_mode']=model_ready.get('api_mode');self.status['codex_ready']=model_ready.get('codex_ready',False)
+   self.status['startup_seconds']={'codex':model_ready['startup_seconds']}
+   self.state('preparing' if not self.text_only else 'standby',ready=True)
    self.tasks.append(asyncio.create_task(self.turns()))
-   if not self.no_capture:await self.listen(True)
+   if not self.text_only:
+    audio=await asyncio.gather(*initializers[:-1],return_exceptions=True)
+    failures=[]
+    for worker,result in zip(workers[:-1],audio):
+     if isinstance(result,BaseException):
+      failures.append(worker.name);self.startup_trace.record(worker.name,'failed',error=result,diagnostics=getattr(result,'diagnostics',None))
+      if self.workspace and self.workspace.development:self.workspace.development.incident('voice.prepare',result)
+     else:
+      self.status['startup_seconds'][worker.name]=result['startup_seconds']
+      if worker.name=='recognition':self.status.update(recognition_ready=True,recognition_model=result.get('model'),recognition_device=result.get('device'))
+      else:self.status.update(speech_ready=True,voice_streaming=result.get('streaming',False),speech_engine_pin=result.get('engine_pin'))
+    self.status['startup_failures']=failures
+   self.state('standby',ready=True,voice_ready=self.status['speech_ready'] and self.status['recognition_ready'])
+   self.startup_trace.record('application','ready' if self.text_only or self.status.get('voice_ready') else 'degraded')
+   if not self.no_capture and self.status['recognition_ready']:await self.listen(True)
   except BaseException as error:
    for task in initializers:
     if not task.done():task.cancel()
@@ -156,6 +187,7 @@ class Conversation:
    await asyncio.gather(self.stt.close(),self.tts.close(),self.model.close(),return_exceptions=True)
    if isinstance(error,asyncio.CancelledError) or self.closed:raise
    component=getattr(error,'component','startup')
+   self.startup_trace.record(component,'failed',error=error,diagnostics=getattr(error,'diagnostics',None))
    if self.workspace and self.workspace.development:self.workspace.development.incident('voice.prepare',error)
    self.state('error',ready=False,codex_ready=False,components={name:('failed' if name==component else 'stopped') for name in ('codex','recognition','speech')},startup_error_component=component,error='No se pudo iniciar '+{'codex':'Codex','recognition':'el reconocimiento','speech':'la voz'}.get(component,'la conversación')+'. Revisa el autolog.')
  async def listen(self,enabled):
@@ -422,6 +454,7 @@ class Conversation:
  async def command(self,op,**values):
   if op=='listen':
    if not self.status['ready']:return {'ok':False,'error':'preparing'}
+   if values.get('enabled') and not self.status.get('recognition_ready'):return {'ok':False,'error':'recognition_unavailable'}
    await self.listen(bool(values.get('enabled')))
   elif op=='interrupt':
    self.generation+=1

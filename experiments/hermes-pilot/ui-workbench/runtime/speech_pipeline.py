@@ -59,7 +59,7 @@ class SpeechPipeline:
     entry=await self.texts.get()
     if entry is None:break
     text,kind=entry
-    if not self.valid() or self.host.status['output_muted']:continue
+    if not self.valid() or self.host.status['output_muted'] or not self.host.status.get('speech_ready',True):continue
     metric={'ordinal':len(self.metrics['chunks'])+1,'kind':kind,'characters':len(text),'synthesis_start_seconds':time.monotonic()-self.start,'duration_seconds':0,'cache_hit':False};self.metrics['chunks'].append(metric)
     if not self.host.speaking:self.host.state('synthesizing')
     async def packet(event):

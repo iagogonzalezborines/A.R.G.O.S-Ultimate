@@ -24,13 +24,21 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(destination, *, microphone=None, register=False, projects=None, project_map=None, adaptive=None):
+def prepare(destination, *, microphone=None, register=False, projects=None, project_map=None, adaptive=None, adopt_legacy=False):
     destination = Path(destination).expanduser().resolve()
     if destination == REPO or destination.is_relative_to(REPO):
         raise ValueError('Install outside the source repository')
     destination.mkdir(parents=True, exist_ok=True, mode=0o700)
     manifest_path = destination / 'installed-source.json'
     previous = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    legacy = {}
+    if adopt_legacy:
+        archive = json.loads((SOURCE / 'snapshot-manifest.json').read_text())
+        legacy = {row['path']: {row['source_sha256'], row['export_sha256']}
+                  for row in archive['files']}
+        # The first export renamed the installed README to LOCAL-NOTES.md.
+        if 'LOCAL-NOTES.md' in legacy:
+            legacy.setdefault('README.md', set()).update(legacy['LOCAL-NOTES.md'])
     # Git supplies the source inventory; no runtime state, credentials, or caches
     # are inferred from the contents of a developer's working directory.
     tracked = subprocess.check_output(
@@ -53,7 +61,10 @@ def prepare(destination, *, microphone=None, register=False, projects=None, proj
     for path in paths:
         relative = str(path.relative_to(SOURCE))
         target = destination / relative
-        if target.exists() and digest(target) not in {digest(path), previous.get(relative)}:
+        accepted = {digest(path), previous.get(relative)}
+        if adopt_legacy and not previous:
+            accepted.update(legacy.get(relative, set()))
+        if target.exists() and digest(target) not in accepted:
             conflicts.append(relative)
     if conflicts:
         raise RuntimeError('Local changes preserved; review before updating: ' + ', '.join(conflicts))
@@ -179,9 +190,10 @@ if __name__ == '__main__':
     parser.add_argument('--destination', type=Path,
                         default=Path.home() / '.local/share/argos-hermes-pilot')
     parser.add_argument('--microphone', help='Exact PipeWire input name selected for this installation')
+    parser.add_argument('--adopt-legacy', action='store_true', help='Adopt only source hashes recorded in the original snapshot; unknown local edits still block the update')
     parser.add_argument('--register', action='store_true', help='Install the separate ARGOS (Hermes) menu launcher')
     parser.add_argument('--projects', choices=['on','off'], help='Explicitly enable or disable the installed native project integration; never starts a worker')
     parser.add_argument('--project-map', choices=['on','off'], help='Enable the validated native Project Map panel; no worker starts')
     parser.add_argument('--adaptive', choices=['on','off'], help='Enable bounded native capabilities; local inference stays unavailable without its reviewed private configuration')
     args = parser.parse_args()
-    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on', project_map=None if args.project_map is None else args.project_map=='on', adaptive=None if args.adaptive is None else args.adaptive=='on'), indent=2))
+    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on', project_map=None if args.project_map is None else args.project_map=='on', adaptive=None if args.adaptive is None else args.adaptive=='on', adopt_legacy=args.adopt_legacy), indent=2))

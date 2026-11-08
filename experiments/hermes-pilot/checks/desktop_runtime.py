@@ -9,17 +9,26 @@ import threading
 import time
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT));output=sys.stdout
-with contextlib.redirect_stdout(sys.stderr):
- from pilot import FIXTURE
- from run_agent import AIAgent
- from hermes_state import SessionDB
- from hermes_cli.runtime_provider import resolve_runtime_provider
- db=SessionDB();sid=sys.argv[1] if len(sys.argv)>1 else 'argos-workspace-default'
- runtime=resolve_runtime_provider(requested='openai-codex',target_model='gpt-6-luna')
-
 write_lock=threading.Lock()
 def emit(event):
  with write_lock:print('ARGOS_JSON '+json.dumps(event,ensure_ascii=False),file=output,flush=True)
+def startup_stage(stage):
+ if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':emit({'event':'startup.stage','stage':stage,'component':'codex'})
+startup_stage('runtime_import')
+try:
+ with contextlib.redirect_stdout(sys.stderr):
+  from pilot import FIXTURE
+  from run_agent import AIAgent
+  from hermes_state import SessionDB
+  from hermes_cli.runtime_provider import resolve_runtime_provider
+  startup_stage('runtime_store')
+  db=SessionDB();sid=sys.argv[1] if len(sys.argv)>1 else 'argos-workspace-default'
+  startup_stage('runtime_provider')
+  runtime=resolve_runtime_provider(requested='openai-codex',target_model='gpt-6-luna')
+except Exception as error:
+ emit({'ready':False,'component':'codex','code':'runtime_initialization_failed','category':type(error).__name__})
+ raise SystemExit(1)
+
 def delta(text):
  # Native Hermes uses None to delimit a tool round; it is not spoken text.
  if isinstance(text,str) and text:emit({'event':'text.delta','text':text})
@@ -50,12 +59,12 @@ def build():
      reasoning_config={'effort':'low'},skip_background_review=True,
      stream_delta_callback=delta,interim_assistant_callback=completed,tool_progress_callback=tool,tool_complete_callback=tool_completed,
      ephemeral_system_prompt=(ROOT/'checks/desktop-voice-contract.txt').read_text())
-if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':emit({'event':'startup.stage','stage':'connecting','component':'codex'})
+startup_stage('hermes_agent')
 with contextlib.redirect_stdout(sys.stderr):agent=build()
 try:
  with contextlib.redirect_stdout(sys.stderr):
   from checks.codex_startup import prepare_codex
-  startup=prepare_codex(agent,db,sid);observe_session(agent,emit)
+  startup=prepare_codex(agent,db,sid,on_stage=startup_stage);observe_session(agent,emit)
 except Exception as error:
  emit({'ready':False,'component':'codex','code':'codex_startup_failed','category':type(error).__name__})
  with contextlib.redirect_stdout(sys.stderr):agent.close();db.close()
@@ -95,7 +104,7 @@ try:
    # The native programmatic API supports per-request agents bound to one DB session.
    # Retire a cancelled transport instead of reusing its cancellation state.
    with contextlib.redirect_stdout(sys.stderr):
-    agent.close();agent=build();startup=prepare_codex(agent,db,sid);observe_session(agent,emit)
+    agent.close();agent=build();startup=prepare_codex(agent,db,sid,on_stage=startup_stage);observe_session(agent,emit)
    cancelled.clear()
   emit(response)
 finally:
