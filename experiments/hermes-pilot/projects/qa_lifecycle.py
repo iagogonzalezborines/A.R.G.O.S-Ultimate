@@ -5,8 +5,9 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+import tempfile
 
-P=Path(__file__).resolve().parents[1];sys.path[:0]=[str(P),str(P/'projects')]
+P=Path(__file__).resolve().parents[1];sys.path[:0]=[str(P),str(P/'projects'),str(P/'source')]
 from qa import NativeProjectTests
 from pilot import environment
 
@@ -66,6 +67,21 @@ class LifecycleTests(NativeProjectTests):
     def test_empty_or_failing_tests_never_accepted(self):
         p,t=self.reviewed();verified=self.decision(p,t,'verify');self.assertFalse(verified['controller_evidence'][-1]['passed'])
         with self.assertRaises(PermissionError):self.decision(p,verified,'accept')
+
+
+class VerificationDocumentationTests(unittest.TestCase):
+    def test_cli_documentation_accepts_readme_or_module_docs_without_running_source(self):
+        from projects.verification import CLI_DOCUMENTATION
+        namespace={};exec(CLI_DOCUMENTATION,namespace)
+        documented=namespace['documented_cli']
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);source=root/'catalogue.py'
+            source.write_text('"""Usage: python catalogue.py --db library.sqlite index MODELS"""\nraise RuntimeError("Do not execute documentation")\n')
+            self.assertTrue(documented(root))
+            source.write_text('option="--db"\n')
+            self.assertFalse(documented(root))
+            (root/'README.md').write_text('Usage: python catalogue.py --db library.sqlite index MODELS\n')
+            self.assertTrue(documented(root))
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

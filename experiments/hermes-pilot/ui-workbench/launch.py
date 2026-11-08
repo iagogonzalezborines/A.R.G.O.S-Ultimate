@@ -4,6 +4,7 @@ import fcntl,json,os,subprocess,sys,time,urllib.request
 ROOT=Path(__file__).resolve().parent;ELECTRON=ROOT.parent/'source/node_modules/electron/dist/electron';URL='http://127.0.0.1:42720'
 sys.path.insert(0,str(ROOT.parent))
 from maintenance.controller import Maintenance
+from runtime.startup import release_ready
 
 def health():
  try:
@@ -65,7 +66,7 @@ def main():
     if server and server.poll() is not None:failed=True;stop(child);break
     if update:
      state=health()
-     if state.get('agent_connected') and state.get('renderer_connected'):
+     if release_ready(state,text_only=args.text_only):
       maintenance.health_ok(update);update=None
      elif time.monotonic()>deadline:failed=True;stop(child);break
     time.sleep(.3)

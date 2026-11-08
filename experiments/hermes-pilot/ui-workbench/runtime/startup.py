@@ -7,6 +7,10 @@ import secrets
 import time
 
 
+def release_ready(state,*,text_only=False):
+    return bool(state.get('agent_connected') and state.get('renderer_connected') and (text_only or state.get('voice_ready')))
+
+
 def stderr_summary(data):
     text=data.decode(errors='replace') if isinstance(data,(bytes,bytearray)) else str(data)
     frames=[{'file':Path(p).name,'line':int(n),'function':f[:80]}

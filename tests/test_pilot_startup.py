@@ -14,10 +14,17 @@ sys.path.insert(0,str(ROOT))
 package=types.ModuleType('argos_startup_tests');package.__path__=[str(ROOT/'ui-workbench/runtime')]
 sys.modules[package.__name__]=package
 runtime=importlib.import_module('argos_startup_tests.conversation')
-from argos_startup_tests.startup import StartupTrace
+from argos_startup_tests.startup import StartupTrace,release_ready
 
 
 class StartupTests(unittest.IsolatedAsyncioTestCase):
+    def test_voice_update_is_not_accepted_when_only_text_has_started(self):
+        state={'agent_connected':True,'renderer_connected':True,'voice_ready':False}
+        self.assertFalse(release_ready(state))
+        self.assertTrue(release_ready(state,text_only=True))
+        self.assertTrue(release_ready({**state,'voice_ready':True}))
+        self.assertFalse(release_ready({**state,'voice_ready':True,'renderer_connected':False}))
+
     async def test_real_timeout_keeps_stage_and_error_type_without_stderr_content(self):
         script="import json,sys,time;print(json.dumps({'event':'startup.stage','stage':'authentication'}),flush=True);print('RuntimeError: token=DO_NOT_STORE private conversation',file=sys.stderr,flush=True);time.sleep(10)"
         worker=runtime.Worker([sys.executable,'-c',script],name='codex',startup_timeout=.2)

@@ -1,4 +1,5 @@
 """Pinned Qwen/Peter continuous PCM adapter; no playback or conversation reasoning."""
+import faulthandler
 import base64,contextlib,hashlib,json,os,queue,re,sys,threading,time,uuid
 from collections import OrderedDict
 from pathlib import Path
@@ -13,12 +14,15 @@ namespace=sys.argv[1] if len(sys.argv)>1 else 'argos-workspace-default'
 if not re.fullmatch(r'[a-zA-Z0-9-]{1,80}',namespace):raise SystemExit('Invalid audio namespace')
 AUDIO=ROOT/'state/audio'/namespace;CACHE=ROOT/'private/speech-cache'
 if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':print(json.dumps({'event':'startup.stage','stage':'loading','component':'speech'}),file=output,flush=True)
+faulthandler.dump_traceback_later(30,repeat=True)
 with contextlib.redirect_stdout(sys.stderr):
  import numpy as np
  import torch,soundfile as sf
  from qwen_tts import Qwen3TTSModel
  torch.set_num_threads(2);torch.set_float32_matmul_precision('high')
+ if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':print(json.dumps({'event':'startup.stage','stage':'model_loading','component':'speech'}),file=output,flush=True)
  model=Qwen3TTSModel.from_pretrained(str(VOICE/'models/qwen-base'),device_map='cuda:0' if SPEECH_DEVICE=='cuda' else 'cpu',dtype=torch.bfloat16 if SPEECH_DEVICE=='cuda' else torch.float32,attn_implementation='sdpa')
+ if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':print(json.dumps({'event':'startup.stage','stage':'voice_reference','component':'speech'}),file=output,flush=True)
  prompt=model.create_voice_clone_prompt(ref_audio=str(VOICE/'peter-original.wav'),ref_text=json.loads((VOICE/'peter-reference-transcript.json').read_text())['text'])
  model.enable_streaming_optimizations(decode_window_frames=64,use_compile=SPEECH_DEVICE=='cuda',use_cuda_graphs=SPEECH_DEVICE=='cuda',compile_codebook_predictor=SPEECH_DEVICE=='cuda')
  AUDIO.mkdir(parents=True,exist_ok=True,mode=0o700);CACHE.mkdir(parents=True,exist_ok=True,mode=0o700)
@@ -33,6 +37,7 @@ with contextlib.redirect_stdout(sys.stderr):
   warmup=[("The workspace is clear. Your files are unchanged. I'm ready for the next task.",'en'),('El espacio está despejado. Tus archivos siguen intactos. Estoy listo para la siguiente tarea.','es')] if SPEECH_DEVICE=='cuda' else [('Ready.','en')]
   for text,language in warmup:
    for _audio,_rate in generate(text,language):pass
+faulthandler.cancel_dump_traceback_later()
 print(json.dumps({'ready':True,'streaming':True,'engine_pin':ENGINE_PIN,'device':SPEECH_DEVICE}),file=output,flush=True)
 requests=queue.Queue(maxsize=4);cancelled=threading.Event()
 def incoming():

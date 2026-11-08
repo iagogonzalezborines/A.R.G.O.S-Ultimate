@@ -14,8 +14,8 @@ async def main(sink):
  await host.finish_pcm(stream,host.generation);elapsed=time.monotonic()-began
  assert offset==len(pcm) and elapsed>=seconds-.08 and elapsed<seconds+2
  assert not host.speaking and stream[0].returncode==0
- stream=await host.start_pcm(rate,host.generation);await host.write_pcm(stream,pcm);await asyncio.sleep(.15);host.generation+=1;await host.stop_player();await host.finish_pcm(stream,host.generation-1);assert not host.speaking
- host.loop.close();report={'raw_pcm_playback_passed':True,'source_seconds':seconds,'actual_player_seconds':elapsed,'all_source_bytes_written':offset==len(pcm),'eof_drains_audio_tail':True,'interruption_stops_player':True,'playback':'temporary null sink, not speakers'};(ROOT/'reports/pcm-output-checks.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
+ stream=await host.start_pcm(rate,host.generation);await host.write_pcm(stream,pcm);await asyncio.sleep(.15);host.generation+=1;interrupt_started=time.monotonic();await host.stop_player();await host.finish_pcm(stream,host.generation-1);interruption_seconds=time.monotonic()-interrupt_started;assert not host.speaking
+ host.loop.close();report={'raw_pcm_playback_passed':True,'source_seconds':seconds,'actual_player_seconds':elapsed,'all_source_bytes_written':offset==len(pcm),'eof_drains_audio_tail':True,'interruption_stops_player':True,'interruption_stop_seconds':interruption_seconds,'playback':'temporary null sink, not speakers'};(ROOT/'reports/pcm-output-checks.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
 sink='argos-qa-stream-output';module=subprocess.check_output(['pactl','load-module','module-null-sink','sink_name='+sink,'rate=24000','channels=1','channel_map=mono'],text=True).strip()
 try:asyncio.run(main(sink))
 finally:subprocess.run(['pactl','unload-module',module],check=True)

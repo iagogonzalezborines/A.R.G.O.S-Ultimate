@@ -123,6 +123,7 @@ class Conversation:
   self.status={'phase':'preparing','ready':False,'listening':False,'dialogue_open':False,'microphone':MICROPHONE,'model':'gpt-6-luna','voice':'Qwen + Peter · Referencia','session_id':session_id,'echo_cancellation':False,'output_muted':False}
   self.status['output_muted']=text_only or not self.speech_settings.enabled()
   self.status['text_only']=text_only
+  self.status.update(playback_simulated=bool(mute),microphone_capture_disabled=bool(no_capture))
   self.status.update(speech_ready=False,recognition_ready=False)
   self.startup_trace=StartupTrace(ROOT/'private/startup'/session_id/'latest.json')
   self.loop=asyncio.new_event_loop();self.thread=threading.Thread(target=self.run,daemon=True)
@@ -486,8 +487,9 @@ class Conversation:
    pcm,_=await converter.communicate();file.unlink(missing_ok=True)
    recognized=await self.stt.call({'pcm':base64.b64encode(pcm).decode(),'previous_language':self.language})
    # Test speech is synthetic and explicitly opted in; never retain microphone standby transcripts.
-   self.emit({'type':'test.recognition','text':recognized.get('text',''),'language':recognized.get('language')})
-   await self.accept(recognized.get('text',''),recognized.get('language'),recognized.get('language_probability',0))
+   recognition={k:recognized[k] for k in ('seconds','decode_passes','audio_seconds') if k in recognized}
+   self.emit({'type':'test.recognition','text':recognized.get('text',''),'language':recognized.get('language'),**recognition})
+   await self.accept(recognized.get('text',''),recognized.get('language'),recognized.get('language_probability',0),recognition=recognition)
   elif op=='test-tts' and self.no_capture:
    result=await self.tts.call({'text':values['text'],'language':values.get('language','en')})
    if result.get('audio_id'):(self.audio_root/f"{result['audio_id']}.wav").unlink(missing_ok=True)

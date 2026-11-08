@@ -1,5 +1,6 @@
 """Thin stdio adapter over native Hermes AIAgent; native DB owns history/thread binding."""
 import contextlib
+import faulthandler
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ def emit(event):
  with write_lock:print('ARGOS_JSON '+json.dumps(event,ensure_ascii=False),file=output,flush=True)
 def startup_stage(stage):
  if os.environ.get('ARGOS_STARTUP_EVENTS')=='1':emit({'event':'startup.stage','stage':stage,'component':'codex'})
+faulthandler.dump_traceback_later(15,repeat=True)
 startup_stage('runtime_import')
 try:
  with contextlib.redirect_stdout(sys.stderr):
@@ -69,6 +71,7 @@ except Exception as error:
  emit({'ready':False,'component':'codex','code':'codex_startup_failed','category':type(error).__name__})
  with contextlib.redirect_stdout(sys.stderr):agent.close();db.close()
  raise SystemExit(1)
+faulthandler.cancel_dump_traceback_later()
 requests=queue.Queue(maxsize=4);cancelled=threading.Event()
 def incoming():
  try:

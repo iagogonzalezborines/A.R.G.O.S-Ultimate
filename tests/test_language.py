@@ -100,6 +100,11 @@ class LanguageSelectionTests(unittest.TestCase):
             self.assertEqual(choose_language(text, "es", "en", .99), "es")
             self.assertEqual(choose_language(text, "en", "es", .99), "en")
 
+    def test_spanish_questions_switch_after_an_english_turn(self):
+        for text in ("¿Cuánto es dos más dos?", "ARGOS, QUANTO ES DOS MASTOS?", "¿Cuál es mayor?"):
+            self.assertEqual(choose_language(text, "en", "en", .99), "es", text)
+        self.assertEqual(choose_language("Is ES a module format?", "en"), "en")
+
     def test_clear_text_and_confident_audio(self):
         self.assertEqual(choose_language("what can you do", "es"), "en")
         self.assertEqual(choose_language("qué puedes hacer", "en"), "es")

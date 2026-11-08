@@ -43,7 +43,7 @@ def choose_language(text, previous="es", detected=None, probability=0.0):
     value = normalized(text)
     words = re.findall(r"[a-z]+", value)
     spanish = set(("hola buenas gracias adios oye habla dime puedes podrias quiero necesito "
-                   "que como cuando donde por favor abre busca cambia responde contesta "
+                   "que como cuando donde cuanto cuanta cuantos cuantas cual cuales es por favor abre busca cambia responde contesta "
                    "lista las los el una un estoy estas esto tengo eso para del "
                    "programacion diseno imprime revisa analiza inspecciona lee leeme escribe archivo "
                    "entiendes hablando hablar espanol ingles sistema ordenador estado proyectos agentes capacidades "

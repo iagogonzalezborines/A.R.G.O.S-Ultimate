@@ -29,7 +29,15 @@ with tempfile.TemporaryDirectory() as d:
 '''
 
 
-MODEL_LIBRARY_V2 = MODEL_LIBRARY + '''
+CLI_DOCUMENTATION = '''
+def documented_cli(root):
+ import ast
+ readme=root/'README.md'
+ documentation=readme.read_text() if readme.is_file() else (ast.get_docstring(ast.parse((root/'catalogue.py').read_text())) or '')
+ return '--db' in documentation
+'''
+
+MODEL_LIBRARY_V2 = MODEL_LIBRARY + CLI_DOCUMENTATION + '''
 import subprocess,sys,json
 with tempfile.TemporaryDirectory() as d:
  root=pathlib.Path(d); models=root/'models';models.mkdir();part=models/'widget.stl';part.write_text('synthetic STL')
@@ -39,7 +47,7 @@ with tempfile.TemporaryDirectory() as d:
  cli('index',str(models));cli('tag',str(part),'fixture','quick');cli('note',str(part),'CLI persistence note')
  rows=json.loads(cli('search','quick'));assert len(rows)==1 and 'fixture' in rows[0]['tags'], 'CLI tags and search'
  rows=json.loads(cli('search','CLI persistence note'));assert len(rows)==1, 'CLI note persistence across processes'
- assert '--db' in pathlib.Path('/workspace/README.md').read_text(), 'documented CLI commands'
+ assert documented_cli(pathlib.Path('/workspace')), 'documented CLI commands in README or module documentation'
  assert part.read_text()=='synthetic STL', 'CLI preserves model file'
  print('ARGOS_CLI_ACCEPTANCE: index, tag, note, search, persistence and documentation passed')
 '''

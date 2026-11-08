@@ -53,7 +53,14 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path=urlsplit(self.path).path
         if path=='/events':return self.stream()
-        if path=='/health':return self.reply(200,{'ready':True,'mode':'argos-app' if self.server.voice else 'presentation-pilot','agent_connected':bool(self.server.voice and self.server.voice.status['ready'] and self.server.voice.status['phase']!='error'),'renderer_connected':bool(self.server.workspace.connected_at and time.monotonic()-self.server.workspace.connected_at<45)})
+        if path=='/health':
+            voice=self.server.voice;status=voice.status if voice else {}
+            conversation_ready=bool(status.get('ready') and status.get('phase')!='error')
+            voice_ready=bool(status.get('voice_ready'))
+            return self.reply(200,{'ready':not voice or (conversation_ready and (status.get('text_only') or voice_ready)),
+                'presentation_ready':True,'mode':'argos-app' if voice else 'presentation-pilot',
+                'agent_connected':conversation_ready,'voice_ready':voice_ready,
+                'renderer_connected':bool(self.server.workspace.connected_at and time.monotonic()-self.server.workspace.connected_at<45)})
         if path=='/voice-state':
             if not self.authorized():return self.send_error(401)
             return self.reply(200,dict(self.server.voice.status) if self.server.voice else {'ready':False,'phase':'off','listening':False})
