@@ -1,0 +1,228 @@
+{
+  "date": "2026-11-08",
+  "broker_namespaces": [
+    {
+      "name": "apps",
+      "operation_field": "action",
+      "model_actions": [
+        "list",
+        "open"
+      ]
+    },
+    {
+      "name": "development",
+      "operation_field": "action",
+      "model_actions": [
+        "status",
+        "show",
+        "propose",
+        "review"
+      ]
+    },
+    {
+      "name": "workspace",
+      "operation_field": "action",
+      "model_actions": [
+        "inspect",
+        "open",
+        "close",
+        "clear",
+        "focus",
+        "minimize",
+        "restore",
+        "maximize",
+        "move",
+        "arrange",
+        "research_sources",
+        "research_result"
+      ]
+    },
+    {
+      "name": "files",
+      "operation_field": "action",
+      "model_actions": [
+        "list",
+        "search",
+        "read",
+        "open",
+        "copy",
+        "paste",
+        "clipboard",
+        "propose"
+      ]
+    },
+    {
+      "name": "storage",
+      "operation_field": "action",
+      "model_actions": [
+        "inspect",
+        "show",
+        "browse"
+      ]
+    },
+    {
+      "name": "media",
+      "operation_field": "action",
+      "model_actions": [
+        "status",
+        "play"
+      ]
+    },
+    {
+      "name": "projects",
+      "operation_field": "action",
+      "model_actions": [
+        "list",
+        "activity",
+        "resolve",
+        "propose",
+        "update",
+        "task_create",
+        "task_update",
+        "dependency",
+        "tasks",
+        "task",
+        "dispatch",
+        "open_map",
+        "map"
+      ]
+    },
+    {
+      "name": "adaptive",
+      "operation_field": "operation",
+      "model_actions": [
+        "catalog",
+        "submit",
+        "status",
+        "tick",
+        "cancel",
+        "workflow",
+        "canvas"
+      ]
+    }
+  ],
+  "adaptive_capabilities": [
+    {
+      "id": "research.documentation",
+      "purpose": "Retrieve official Python sqlite3/pathlib documentation for local app research",
+      "location": "online",
+      "permissions": [
+        "public_documentation_read"
+      ],
+      "resource": "two bounded HTTPS reads",
+      "quality": "retrieval evidence, not a recommendation",
+      "latency": "network dependent",
+      "cost": "none",
+      "parallel": true,
+      "lifecycle": "bounded function",
+      "available": true
+    },
+    {
+      "id": "text.normalize",
+      "purpose": "Normalize an explicit newline list",
+      "location": "local",
+      "permissions": [
+        "provided_text"
+      ],
+      "resource": "tiny",
+      "quality": "exact transformation",
+      "latency": "measured sub-ms on fixture",
+      "cost": "none",
+      "parallel": true,
+      "lifecycle": "function",
+      "available": true
+    },
+    {
+      "id": "local.extract",
+      "purpose": "Extract named items from short prose",
+      "location": "local",
+      "permissions": [
+        "provided_text",
+        "configured_loopback_model"
+      ],
+      "resource": "one model",
+      "quality": "experimental; semantic review required",
+      "latency": "measure cold and warm",
+      "cost": "CPU/RAM",
+      "parallel": false,
+      "lifecycle": "Ollama keep_alive; explicit pressure release",
+      "available": false
+    },
+    {
+      "id": "files.inventory",
+      "purpose": "List visible regular files at the authorized project root",
+      "location": "local",
+      "permissions": [
+        "project_metadata_read"
+      ],
+      "resource": "bounded directory scan",
+      "quality": "observed metadata",
+      "latency": "filesystem dependent",
+      "cost": "none",
+      "parallel": true,
+      "lifecycle": "function",
+      "available": true
+    },
+    {
+      "id": "files.types",
+      "purpose": "Count extensions from an inventory result",
+      "location": "local",
+      "permissions": [
+        "same_project_parent_result"
+      ],
+      "resource": "tiny",
+      "quality": "exact aggregation",
+      "latency": "sub-ms expected, unmeasured",
+      "cost": "none",
+      "parallel": true,
+      "lifecycle": "function",
+      "available": true
+    }
+  ],
+  "installed_launchable_apps": {
+    "applications": [
+      {
+        "id": "firefox",
+        "name": "Firefox"
+      },
+      {
+        "id": "code",
+        "name": "Visual Studio Code"
+      },
+      {
+        "id": "code-oss",
+        "name": "Code OSS"
+      },
+      {
+        "id": "dolphin",
+        "name": "Dolphin"
+      },
+      {
+        "id": "calculator",
+        "name": "Calculadora"
+      },
+      {
+        "id": "discord",
+        "name": "Discord"
+      },
+      {
+        "id": "steam",
+        "name": "Steam"
+      },
+      {
+        "id": "mpv",
+        "name": "mpv"
+      },
+      {
+        "id": "qview",
+        "name": "qView"
+      }
+    ],
+    "browser": "firefox",
+    "arbitrary_commands": false
+  },
+  "notes": [
+    "Registry/schema inventory plus active installation flags; each operation is not a separate agent.",
+    "User-only approval/lifecycle operations are deliberately absent from the model tool schemas."
+  ]
+}
