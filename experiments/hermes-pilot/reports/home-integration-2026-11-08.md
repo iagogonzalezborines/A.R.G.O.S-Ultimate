@@ -89,3 +89,9 @@ La app está entregada y el flujo nativo descrito está probado. Quedan: confirm
 Evidencia local adicional: `reports/home-live/` (JSON y capturas), `reports/reliability-ui/`, `ui-workbench/private/startup/<sesión>/latest.json` y `private/home-integration-resources.json` del piloto. Credenciales, audio, bases, rollouts y logs privados no se añaden a Git. Commits de implementación: `d42da20` y `0a5e34e`.
 
 Aceptación manual breve: decir «Argos» sin Espacio, alternar inglés/español e interrumpir una respuesta; abrir el mapa y pedir continuar Biblioteca 3D Casa; en el siguiente encendido comprobar disponibilidad y, si falla, revisar la etapa de arranque registrada. No autorizar 3MF para esta prueba.
+
+## Seguimiento de la prueba manual: invocación sin respuesta
+
+El usuario notificó que no responde a «Argos» y que veía «preparando voz». El backend estaba realmente listo, con escucha y cancelación de eco activas. Se confirmó un defecto de presentación: el caption de preparación no se sustituía al terminar el arranque. El commit `01e2709` lo corrige; seis comprobaciones del renderer pasan, incluyendo conservar la respuesta al volver a standby y distinguir texto disponible de voz disponible. Esta suite usa un servidor de presentación de fixture, sin micrófono, voz, inferencia ni broker de producción.
+
+Dos mediciones de 25 s recibieron exclusivamente ceros, tanto del SteelSeries físico como de su salida AEC (1248 frames por fuente/medición; RMS máximo 0). PulseAudio mostraba mute desactivado/volumen 100 % y ALSA captura activada. Solo se conservaron contadores, nunca audio. Falta confirmar que el usuario habló durante la medición con el auricular encendido y sin mute físico: estos datos no permiten atribuir una causa al dispositivo, al reconocedor o al detector de «Argos». **La aceptación de voz sigue fallida/pendiente; corregir el caption no demuestra que la invocación funcione.** La app se reinició con la corrección visual.

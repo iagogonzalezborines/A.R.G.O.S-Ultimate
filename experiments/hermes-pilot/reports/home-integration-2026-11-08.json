@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "status": "installed_workflow_verified_boot_failure_not_reproduced_manual_audio_pending",
+  "status": "installed_workflow_verified_manual_wake_failed_no_microphone_signal_measured",
   "commits": [
     "d42da20",
     "0a5e34e"
@@ -428,5 +428,22 @@
     "installed_or_enabled": false,
     "reason": "Main boot failure is not reproduced and physical voice acceptance is still pending; bounded trial remains gated."
   },
-  "evidence_local": "reports/home-live/*.json and *.png; private/startup/<session>/latest.json; private/home-integration-resources.json; private backup. Raw stores, credentials, audio, rollouts and private logs are excluded from Git."
+  "evidence_local": "reports/home-live/*.json and *.png; private/startup/<session>/latest.json; private/home-integration-resources.json; private backup. Raw stores, credentials, audio, rollouts and private logs are excluded from Git.",
+  "manual_voice_followup": {
+    "user_report": "No response to Argos; UI remained preparing voice",
+    "confirmed_source_defect": "Startup caption persisted after voice readiness; fixed in 01e2709",
+    "renderer_checks_passed": 6,
+    "microphone_probes": {
+      "trials": 2,
+      "seconds_each": 25,
+      "physical_and_aec_frames_each": 1248,
+      "max_rms": 0,
+      "nonzero_frames": 0,
+      "pulse_mute": false,
+      "pulse_volume_percent": 100,
+      "alsa_capture_switch": "on"
+    },
+    "raw_audio_saved": false,
+    "limitation": "User has not yet confirmed speaking during the physical signal probe. No root cause attributed to hardware, recognition or the wake matcher."
+  }
 }
