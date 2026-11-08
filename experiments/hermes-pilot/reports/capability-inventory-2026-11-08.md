@@ -108,7 +108,7 @@ El contexto del workspace incluye IDs de ventana, proyecto/tarea y archivo selec
 | Aplicaciones externas | Lanzamiento de apps conocidas | Descubrir/operar controles de apps con observación y permisos por aplicación |
 | Proyectos y programación | Projects/Kanban, Engineering, revisión independiente, artefactos y continuación probados | Proyectos mayores, presupuesto/modelo por tarea, recuperación de más escenarios y app gráfica generada/lanzada de forma acotada |
 | Memoria | Historial/sesiones/hilos nativos y verdad persistente de proyectos | Memoria personal reactiva y skills realmente accesibles desde General, probadas sin duplicar almacenes |
-| Automejora | Propuestas por voz con Codex, revisión, actualización y rollback | Mayor cobertura de diagnóstico; algunas fuentes del runtime quedan fuera del editable de mantenimiento |
+| Automejora | Propuestas por voz con Codex, nuevos módulos JS/CSS/Python revisados, actualización y rollback | Mayor cobertura de diagnóstico; algunas fuentes del runtime quedan fuera del editable de mantenimiento |
 | Diseño 3D | Biblioteca 3D CLI de demostración; inspectores STL/G-code en Core clásico | Especialistas CAD, Blender/FreeCAD/Fusion 360, edición, previsualización y validación de modelos en la app actual |
 | Impresión 3D | Sin conexión operativa de impresora o slicer en el Broker actual | Bambu/otro slicer, perfiles/materiales, slicing, telemetría, simulación y autorización de acciones físicas |
 | Automatización duradera | Trabajo nativo bajo alcance y concurrencia acotada | Agenda/eventos/monitorización autorizada, recuperación ante apagado, presupuestos globales y escalado de modelos medido |
@@ -203,3 +203,5 @@ Que mejore tras los primeros turnos es compatible con calentamiento/reutilizaci�
 7. **Objetivo completo:** diagrama vivo de agentes/capacidades, automatizaciones autorizadas, personalización estructural más amplia y paridad Windows demostrada. Integraciones de correo/agenda/mensajería quedan como módulos posteriores, no servicios conectados hoy.
 
 El siguiente incremento no necesita otro coordinador, otro agente de personalidad ni otro almacén de memoria. Necesita completar y verificar las capacidades concretas que General solicita al Broker.
+
+Seguimiento del mismo día: [corrección del actualizador para módulos nuevos](self-update-new-modules-2026-11-08.md). La creación de nuevos archivos de aplicación ya está validada; los adaptadores del Broker/host siguen fuera del alcance de autoedición. Agent Desktop aún no está integrado.

@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-08",
+  "status": "new_module_updates_validated_agent_desktop_host_integration_still_missing",
+  "original_proposal": "ddff1da05a0870316d258461",
+  "original_failure": "New application files require extending the trusted editable scope; not silently installed",
+  "original_new_file": "dist/agent-desktop.js",
+  "new_modules": {
+    "dist": "flat .js/.css filenames",
+    "runtime": "flat .py filenames",
+    "existing_protected_targets": "denied",
+    "release_scope": "exact diff and hashes; user-only approval; health gate and rollback"
+  },
+  "tests": {
+    "new_file_checks": 30,
+    "existing_boundary_checks": 26,
+    "automatic_diagnosis_checks": 8,
+    "repository_tests": 361
+  },
+  "native_new_module_proof": {
+    "proposal_id": "08d4f2633b6f6282013f52b1",
+    "status": "awaiting_review",
+    "changed_files": [
+      {
+        "path": "runtime/agent_desktop_readiness.py",
+        "before": null,
+        "after": "b8f5c96a824d0a68dca48950ebf73467719e8f33adaa91f86ee2ea34c92af23b",
+        "bytes": 1047
+      }
+    ],
+    "validation": {
+      "ok": true,
+      "python_files": 6,
+      "speech_checks": 3,
+      "javascript": "syntax checked",
+      "limits": "Python syntax, JS syntax and three fixed speech-rendering regressions; feature correctness still requires diff/user review and startup health."
+    },
+    "error": null,
+    "scope": "Real native Codex preparation against installed source; no live application update or desktop action.",
+    "independent_tests": {
+      "exit_code": 0,
+      "output": "test_disabled (test_agent_desktop_readiness.DescribeReadinessTests.test_disabled) ... ok\ntest_enabled_and_available (test_agent_desktop_readiness.DescribeReadinessTests.test_enabled_and_available) ... ok\ntest_malformed_input (test_agent_desktop_readiness.DescribeReadinessTests.test_malformed_input) ... ok\ntest_unavailable (test_agent_desktop_readiness.DescribeReadinessTests.test_unavailable) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+    },
+    "new_file_in_exact_diff": true,
+    "live_module_absent": true,
+    "fixture_rejected_without_install": true,
+    "derived_credential_removed": true
+  },
+  "renderer_transaction_proof": {
+    "checks": [
+      {
+        "name": "new module appears in exact review diff",
+        "ok": true
+      },
+      {
+        "name": "trusted renderer sends exact approval",
+        "ok": true
+      }
+    ],
+    "errors": [],
+    "exact_approval_received": true,
+    "no_hot_write": true,
+    "approved_new_file_installed": true,
+    "approved_module_http_served": true,
+    "unapproved_module_http_denied": true,
+    "rolled_back_module_http_denied": true,
+    "interrupted_health_removed_new_file": true,
+    "scope": "Disposable source/journal only; no production update or desktop action."
+  },
+  "native_host_scope_diagnosis": {
+    "status": "no_change",
+    "summary": "**Diagnosis: Agent Desktop cannot be implemented as a working capability in this self-update candidate.**\n\nThe read-only host context shows no Agent Desktop dispatcher or registered Agent Desktop MCP tool. The MCP adapter in [`/context/checks/workspace_mcp.py`](/context/checks/workspace_mcp.py) registers tools such as `workspace`, `files`, `apps`, and `projects`, but no Agent Desktop tool. The protected Broker in [`/context/ui-workbench/runtime/workspace_broker.py`](/context/ui-workbench/runtime/workspace_broker.py) is the MCP tool-dispatch boundary; it has no Agent Desktop adapter.\n\nElectron preload exposes only the existing UI methods in [`/context/ui-workbench/desktop/preload.cjs`](/context/ui-workbench/desktop/preload.cjs). Its protected main process, [`/context/ui-workbench/desktop/main.cjs`](/context/ui-workbench/desktop/main.cjs), routes a fixed set of IPC operations and has no Agent Desktop host integration.\n\nA trusted host integration would need to add and register the Agent Desktop adapter in the Broker/MCP dispatch path, and expose any required desktop operations through Electron\u2019s main-process IPC and preload boundary. Those host sources are under read-only `/context`, not the editable candidate. No files were changed, and no desktop actions or installations were performed.",
+    "error": null,
+    "changed_files": null,
+    "live_installation_changed": false,
+    "derived_credential_removed": true
+  },
+  "production_agent_desktop_installed": false,
+  "production_desktop_actions_performed": false,
+  "original_failed_proposal_replayed": false,
+  "live_restart": {
+    "health": {
+      "ready": true,
+      "presentation_ready": true,
+      "mode": "argos-app",
+      "agent_connected": true,
+      "voice_ready": true,
+      "renderer_connected": true
+    },
+    "voice": {
+      "ready": true,
+      "phase": "standby",
+      "voice_ready": true,
+      "listening": true
+    },
+    "new_modules": [
+      "dist/*.js",
+      "dist/*.css",
+      "runtime/*.py"
+    ],
+    "context_files": 10,
+    "pending_restart": false,
+    "original_proposal": "failed",
+    "old_denial_explained": true
+  }
+}
