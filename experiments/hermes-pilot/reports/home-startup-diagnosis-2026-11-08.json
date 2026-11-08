@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-08",
+  "status": "recorded_boot_failure_not_reproduced",
+  "root_cause_established": false,
+  "runtime_source_changed": false,
+  "autostart_changed": false,
+  "permissions_changed": false,
+  "voice_or_model_selection_changed": false,
+  "app_restarted": false,
+  "audio_capture_or_playback": false,
+  "model_inference_turns": 0,
+  "incident": {
+    "id": "3158d2ad2ce51aa063bbf847",
+    "component": "voice.prepare",
+    "code": "WorkerStartupError",
+    "message": "codex: readiness timed out after 45 seconds",
+    "frames": [
+      {
+        "file": "conversation.py",
+        "line": 130,
+        "function": "prepare"
+      },
+      {
+        "file": "conversation.py",
+        "line": 61,
+        "function": "start"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "state": "ready",
+      "seconds": 4.979,
+      "inference_turns": 0,
+      "source_modified": false,
+      "live_session_store_modified": false,
+      "startup_events": [
+        {
+          "event": "startup.stage",
+          "stage": "connecting",
+          "component": "codex"
+        },
+        {
+          "ready": true,
+          "codex_ready": true,
+          "startup_seconds": 1.1404929509999988,
+          "model_turns_during_startup": 0
+        }
+      ],
+      "sanitized_stderr": "Codex thread could not be resumed; starting a new one.\n",
+      "case": "copied_history_fresh_codex_home",
+      "isolated_credentials_and_session_copies_removed": true
+    },
+    {
+      "state": "ready",
+      "seconds": 4.306,
+      "inference_turns": 0,
+      "source_modified": false,
+      "live_session_store_modified": false,
+      "startup_events": [
+        {
+          "event": "startup.stage",
+          "stage": "connecting",
+          "component": "codex",
+          "saved_thread_resumed": null
+        },
+        {
+          "ready": true,
+          "codex_ready": true,
+          "startup_seconds": 2.218355439999982,
+          "model_turns_during_startup": 0,
+          "saved_thread_resumed": true
+        }
+      ],
+      "sanitized_stderr": "",
+      "case": "copied_history_and_bound_codex_thread",
+      "isolated_credentials_and_session_copies_removed": true
+    }
+  ],
+  "runtime_file_sha256": {
+    "ui-workbench/runtime/conversation.py": "414c1d4a01ea74240d7e31c470aff9e5b56007227f1a0a9af2ab54e39eca5749",
+    "checks/desktop_runtime.py": "32da0b6823a2dae8556c41249b75235c895174079e55245422a6f852ed6b90b4",
+    "checks/codex_startup.py": "237d3e34bea872514b4a7b6a32ce684a73d366c4d34547d138c329ba585cec48",
+    "maintenance/controller.py": "516d5241a1efc80b7d272b29e96a79b61f737a4e866b95a8d04d889464b21644"
+  },
+  "limits": [
+    "No cold graphical-login replay was performed.",
+    "No historical worker stderr was retained by the installed launch path.",
+    "Full concurrent recognition/synthesis preparation was not reproduced.",
+    "Successful startup now does not explain the recorded 45-second timeout."
+  ]
+}

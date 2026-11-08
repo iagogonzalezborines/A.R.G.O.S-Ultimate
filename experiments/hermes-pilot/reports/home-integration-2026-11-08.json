@@ -1,0 +1,432 @@
+{
+  "date": "2026-11-08",
+  "status": "installed_workflow_verified_boot_failure_not_reproduced_manual_audio_pending",
+  "commits": [
+    "d42da20",
+    "0a5e34e"
+  ],
+  "hardware": {
+    "cpu": "Ryzen 7 5800X",
+    "ram_gib_approx": 32,
+    "gpu": "RTX 4060",
+    "gpu_mib": 8188,
+    "desktop": "Hyprland / Wayland; ARGOS Electron uses XWayland software rendering"
+  },
+  "backup": {
+    "backup_directory": "/home/tyrant/.local/share/argos-home-backups/20261108T130635Z",
+    "archive_bytes": 410868984,
+    "archive_sha256": "80aef7a46e38dc08123ef74a7e6e267c84b3b8781885b595301726a77e5dcf79",
+    "restore_check_passed": true,
+    "members": 22228
+  },
+  "preservation": {
+    "source/hermes_state_worker_context.py": {
+      "unchanged": false
+    },
+    "state/hermes/config.yaml": {
+      "unchanged": true
+    },
+    "state/hermes/auth.json": {
+      "unchanged": true
+    },
+    "state/codex/config.toml": {
+      "unchanged": false
+    },
+    "state/codex/auth.json": {
+      "unchanged": true
+    },
+    "ui-workbench/private/voice-settings.json": {
+      "unchanged": true
+    },
+    "voice-tests/2026-11-05/peter-original.wav": {
+      "unchanged": true
+    },
+    "voice-tests/2026-11-05/peter-reference-transcript.json": {
+      "unchanged": true
+    }
+  },
+  "startup": [
+    {
+      "case": "1",
+      "mode": "voice; no capture; simulated playback",
+      "ready_seconds": {
+        "codex": 7.4237,
+        "recognition": 14.7677,
+        "speech": 149.1004,
+        "application": 149.101
+      }
+    },
+    {
+      "case": "2",
+      "mode": "voice; no capture; simulated playback",
+      "ready_seconds": {
+        "recognition": 1.8695,
+        "codex": 4.7679,
+        "speech": 18.303,
+        "application": 18.3034
+      }
+    },
+    {
+      "case": "3",
+      "mode": "voice; no capture; simulated playback",
+      "ready_seconds": {
+        "recognition": 1.851,
+        "codex": 4.3016,
+        "speech": 18.5336,
+        "application": 18.534
+      }
+    },
+    {
+      "case": "4",
+      "mode": "voice; no capture; simulated playback",
+      "ready_seconds": {
+        "recognition": 1.928,
+        "codex": 4.118,
+        "speech": 18.315,
+        "application": 18.3154
+      }
+    },
+    {
+      "case": "original",
+      "mode": "text-only",
+      "ready_seconds": {
+        "codex": 4.2676,
+        "application": 4.2679
+      }
+    },
+    {
+      "case": "normal-launcher",
+      "mode": "normal desktop; real microphone and playback enabled",
+      "ready_seconds": {
+        "recognition": 1.9795,
+        "codex": 5.1363,
+        "speech": 18.7573,
+        "application": 18.7578
+      }
+    }
+  ],
+  "intentional_configuration_changes": [
+    "Validated Hermes codex_thread_id persistence patch; pinned vendor revision retained",
+    "Explicit Projects/Adaptive MCP allowlist in isolated Codex config",
+    "Native prompt-refresh epoch using supported API; histories/session IDs retained",
+    "New native Projects/Kanban state and derived per-project profiles for the disposable fixture"
+  ],
+  "startup_limitations": [
+    "Process starts, not an OS reboot/login test",
+    "Original 45-second Codex timeout not reproduced; root cause unknown; deadline unchanged",
+    "First Qwen process start 149 s; later starts 18–19 s; no claim that boot storage/resource conditions are reproduced"
+  ],
+  "voice_samples": {
+    "idle": {
+      "count": 3,
+      "samples": [
+        {
+          "first_text_seconds": 1.7845256149998932,
+          "first_audio_ready_seconds": 2.423567915000149,
+          "cache_hits": [
+            false
+          ],
+          "engineering_status_after": null,
+          "provider_usage": {
+            "prompt_tokens": 21435,
+            "completion_tokens": 23,
+            "total_tokens": 21458,
+            "cache_read_tokens": 8064
+          },
+          "native_compactions": 0
+        },
+        {
+          "first_text_seconds": 0.9186465780003346,
+          "first_audio_ready_seconds": 1.4324152470003355,
+          "cache_hits": [
+            false
+          ],
+          "engineering_status_after": null,
+          "provider_usage": {
+            "prompt_tokens": 21525,
+            "completion_tokens": 7,
+            "total_tokens": 21532,
+            "cache_read_tokens": 21248
+          },
+          "native_compactions": 0
+        },
+        {
+          "first_text_seconds": 1.1596265869998206,
+          "first_audio_ready_seconds": 1.8530240009999943,
+          "cache_hits": [
+            false
+          ],
+          "engineering_status_after": null,
+          "provider_usage": {
+            "prompt_tokens": 21601,
+            "completion_tokens": 17,
+            "total_tokens": 21618,
+            "cache_read_tokens": 8064
+          },
+          "native_compactions": 0
+        }
+      ],
+      "median_first_text_seconds": 1.1596265869998206,
+      "median_first_audio_seconds": 1.8530240009999943
+    },
+    "verified-concurrent": {
+      "count": 3,
+      "samples": [
+        {
+          "first_text_seconds": 1.0852909970003566,
+          "first_audio_ready_seconds": 1.6509313950000433,
+          "cache_hits": [
+            false
+          ],
+          "engineering_status_after": "running",
+          "provider_usage": {
+            "prompt_tokens": 45257,
+            "completion_tokens": 15,
+            "total_tokens": 45272,
+            "cache_read_tokens": 44928
+          },
+          "native_compactions": 0
+        },
+        {
+          "first_text_seconds": 1.9360394459999952,
+          "first_audio_ready_seconds": 2.115492690999872,
+          "cache_hits": [
+            true
+          ],
+          "engineering_status_after": "running",
+          "provider_usage": {
+            "prompt_tokens": 45391,
+            "completion_tokens": 7,
+            "total_tokens": 45398,
+            "cache_read_tokens": 45056
+          },
+          "native_compactions": 0
+        },
+        {
+          "first_text_seconds": 0.8515573029999359,
+          "first_audio_ready_seconds": 1.2061018959998364,
+          "cache_hits": [
+            true
+          ],
+          "engineering_status_after": "running",
+          "provider_usage": {
+            "prompt_tokens": 45519,
+            "completion_tokens": 17,
+            "total_tokens": 45536,
+            "cache_read_tokens": 45184
+          },
+          "native_compactions": 0
+        }
+      ],
+      "median_first_text_seconds": 1.0852909970003566,
+      "median_first_audio_seconds": 1.6509313950000433
+    }
+  },
+  "timing_limitations": [
+    "Three short prompts per condition: no statistically reliable p95 or microphone-to-speaker SLA",
+    "Concurrent replay can hit TTS/provider caches; context grew between conditions; no causal performance claim",
+    "Samples labeled concurrent before the explicit retry had a blocked worker and are excluded",
+    "Overlapping QA recovery/recognition run was excluded and recognition rerun sequentially",
+    "Original conversation project query: first text 15.547 s, native turn 16.706 s, no compaction, 179711 prompt tokens including 179200 cached; one observation, no established latency root cause"
+  ],
+  "recognition": {
+    "synthetic_speech": true,
+    "microphone_capture": false,
+    "samples": [
+      {
+        "expected_language": "en",
+        "events": [
+          {
+            "sequence": 125,
+            "type": "test.recognition",
+            "text": "ARGOS, Batman is fictional, is that correct?",
+            "language": "en",
+            "seconds": 0.43040572800009613,
+            "decode_passes": 1,
+            "audio_seconds": 2.9066875
+          },
+          {
+            "sequence": 143,
+            "type": "voice.answer",
+            "text": "Yes—Batman is fictional. The cape remains his most persuasive witness.",
+            "language": "en"
+          }
+        ],
+        "decode": {
+          "seconds": 0.43040572800009613,
+          "decode_passes": 1,
+          "audio_seconds": 2.9066875
+        }
+      },
+      {
+        "expected_language": "es",
+        "events": [
+          {
+            "sequence": 145,
+            "type": "test.recognition",
+            "text": "ARGOS, QUANTO ES DOS MASTOS?",
+            "language": "es",
+            "seconds": 0.4222511369998756,
+            "decode_passes": 1,
+            "audio_seconds": 2.3466875
+          },
+          {
+            "sequence": 155,
+            "type": "voice.answer",
+            "text": "Dos más dos son cuatro.",
+            "language": "es"
+          }
+        ],
+        "decode": {
+          "seconds": 0.4222511369998756,
+          "decode_passes": 1,
+          "audio_seconds": 2.3466875
+        }
+      }
+    ]
+  },
+  "pcm": {
+    "raw_pcm_playback_passed": true,
+    "source_seconds": 0.8,
+    "actual_player_seconds": 0.8274248759998954,
+    "all_source_bytes_written": true,
+    "eof_drains_audio_tail": true,
+    "interruption_stops_player": true,
+    "interruption_stop_seconds": 0.0008193310000024212,
+    "playback": "temporary null sink, not speakers"
+  },
+  "resources": {
+    "sample_count": 1638,
+    "note": "Sum of process RSS includes shared pages, native owner and QA/UI helpers; not unique runtime memory. CPU 100% means one core. GPU values are summed compute-process MiB, excluding other desktop users.",
+    "warm_voice_sample_window": {
+      "count": 16,
+      "rss_sum_gib_median": 5.7739715576171875,
+      "rss_sum_gib_max": 5.835960388183594,
+      "cpu_percent_sum_median": 49.75,
+      "cpu_percent_sum_max": 120.1,
+      "gpu_compute_mib_max": 5710
+    },
+    "engineering_run_window": {
+      "count": 61,
+      "rss_sum_gib_median": 6.872386932373047,
+      "rss_sum_gib_max": 6.955844879150391,
+      "cpu_percent_sum_median": 20.2,
+      "cpu_percent_sum_max": 130.6,
+      "gpu_compute_mib_max": 5756
+    }
+  },
+  "project": {
+    "id": "p_130fb5c4",
+    "name": "Biblioteca 3D Casa",
+    "path": "/home/tyrant/Proyectos/biblioteca-3d-casa",
+    "task_id": "t_94b3c4bf",
+    "status": "done; independently verified; user-surface acceptance",
+    "execution_attempts": [
+      {
+        "id": 1,
+        "status": "blocked",
+        "started_at": 1794144645,
+        "ended_at": 1794144676
+      },
+      {
+        "id": 2,
+        "status": "review",
+        "started_at": 1794144768,
+        "ended_at": 1794144837
+      }
+    ],
+    "pending_decision": "3MF support; not implemented",
+    "verified_artifacts": [
+      {
+        "path": "catalogue.py",
+        "sha256_now": "6ddef30ea874f5c669191ddd003c73ca399c852b35916cceb6afb05b56fe00ea",
+        "bytes": 6837
+      },
+      {
+        "path": "tests/test_catalogue.py",
+        "sha256_now": "ac8298d30ec3d4b9bd745c74b1ac72212c16c03d55f589b83ba9879efbef00dd",
+        "bytes": 2786
+      }
+    ],
+    "recovery": [
+      "same conversation after backend restart",
+      "new conversation argos-home-cross-session",
+      "original pre-update conversation argos-workspace-default; actual Projects MCP calls"
+    ],
+    "notes": [
+      "Initial verbal scope without proposal was a failure, corrected and repeated",
+      "First Engineering attempt blocked on an empty directory/Git assumption; retained, then one explicit trusted retry",
+      "Verifier initially required README.md despite module CLI documentation; accepts either documentation location and still exercises independent API/CLI tests",
+      "UI automation initially clicked through an overlapping conversation panel; harness fixed to focus Project Map before selecting a node"
+    ]
+  },
+  "checks": {
+    "core_unittest": 359,
+    "native_codex_binding_tests": 40,
+    "native_project_lifecycle": 21,
+    "adaptive_native": 7,
+    "ui_map_checks": 17,
+    "file_checks": 25,
+    "storage_clipboard_checks": 21,
+    "research_boundaries": 17,
+    "maintenance_boundaries": 26,
+    "auto_review_checks": 8,
+    "installed_workflow_renderer_errors": 0
+  },
+  "command_boundary": {
+    "scope": "Actual installed per-project launch policy, synthetic owned-task framing; direct command preflight, not a new Kanban execution.",
+    "inference_calls": 0,
+    "passed": true,
+    "canaries_unchanged": true,
+    "effective": {
+      "default_permissions": "argos-proof",
+      "sandbox_mode": null,
+      "sandbox_workspace_write": null
+    },
+    "mcp": [
+      {
+        "name": "hermes-tools",
+        "tools": [
+          "kanban_block",
+          "kanban_heartbeat",
+          "kanban_request_review",
+          "kanban_show",
+          "kanban_comment"
+        ],
+        "error": null
+      }
+    ],
+    "checks": 19
+  },
+  "engineering_native_usage_counters": [
+    {
+      "source": "kanban",
+      "native_api_call_count": 1,
+      "input_tokens": 693,
+      "output_tokens": 78,
+      "cache_read_tokens": 23168
+    },
+    {
+      "source": "kanban",
+      "native_api_call_count": 1,
+      "input_tokens": 628,
+      "output_tokens": 144,
+      "cache_read_tokens": 29312
+    }
+  ],
+  "usage_note": "Native/provider counters, not invoice totals or a subscription-wide hard cap. No paid API provider or billing was enabled.",
+  "firefox": {
+    "connected": true,
+    "permanent": true,
+    "enabled": true,
+    "version": "0.1.4",
+    "signed_state": 2,
+    "playback_retested": false,
+    "note": "Registration and narrow bridge status inspected; no accounts/cookies/history read and no unexpected music playback."
+  },
+  "agent_desktop": {
+    "installed_or_enabled": false,
+    "reason": "Main boot failure is not reproduced and physical voice acceptance is still pending; bounded trial remains gated."
+  },
+  "evidence_local": "reports/home-live/*.json and *.png; private/startup/<session>/latest.json; private/home-integration-resources.json; private backup. Raw stores, credentials, audio, rollouts and private logs are excluded from Git."
+}

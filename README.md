@@ -2,6 +2,8 @@
 
 Último avance del piloto: [Project Map, fiabilidad, calidad local y biblioteca 3D verificada](experiments/hermes-pilot/reports/reliability-2026-11-06.md). Incluye evidencia de Electron/Codex, instalación y relevo para casa.
 
+Actualización de casa del 8 de noviembre: [instalación, voz CUDA, Engineering, recuperación y límites pendientes](experiments/hermes-pilot/reports/home-integration-2026-11-08.md). ARGOS (Hermes) está actualizado y abierto con el SteelSeries; el timeout original durante el inicio de sesión aún no se ha reproducido.
+
 Asistente con Core Python/SQLite, tareas en segundo plano, conversación y tareas con perfiles Codex explícitos,
 investigación web, operaciones del PC y voz local. La consola muestra solo una esfera
 ASCII; los detalles se consultan desde otra terminal y las aprobaciones también admiten voz. Esta es la
@@ -10,8 +12,9 @@ reconstrucción Linux, no una recuperación del código Windows perdido.
 El piloto gráfico independiente de Hermes está restaurado en este equipo como
 **ARGOS (Hermes)**. El [bloque B de proyectos persistentes](experiments/hermes-pilot/reports/block-b-2026-11-06.md)
 está implementado y habilitado en el piloto, con Hermes Projects/Kanban y Engineering
-aislado del bloque A. C y D siguen pendientes. La latencia de este equipo no es
-un criterio de aceptación; la extensión firmada de Firefox aún debe trasladarse.
+aislado del bloque A. El mapa y el ciclo de revisión se han probado en casa con
+una biblioteca 3D por CLI. La app gráfica generada y su lanzamiento acotado siguen
+pendientes. La extensión firmada de Firefox 0.1.4 está instalada y conectada en casa.
 
 La [red adaptativa experimental](experiments/hermes-pilot/reports/adaptive-network-2026-11-06.md)
 ya ejecuta herramientas, Qwen3 0.6B local y Engineering en paralelo sobre tareas nativas,
