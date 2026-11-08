@@ -18,6 +18,35 @@ from argos_startup_tests.startup import StartupTrace,release_ready
 
 
 class StartupTests(unittest.IsolatedAsyncioTestCase):
+    async def test_new_addressed_turn_clears_stale_error_but_standby_audio_does_not(self):
+        events=[]
+        class Model:
+            async def call(self,value,on_event):
+                return {'ok':True,'speech':'Ready.','seconds':.01}
+        with tempfile.TemporaryDirectory() as directory,patch.object(runtime,'ROOT',Path(directory)):
+            (Path(directory)/'reports').mkdir()
+            host=runtime.Conversation(events.append,no_capture=True,session_id='stale-error-test')
+            host.model=Model();host.status.update(ready=True,output_muted=True,error='Previous request failed')
+            try:
+                await host.accept('background speech',direct=False)
+                self.assertEqual(host.status['error'],'Previous request failed')
+                self.assertEqual(events,[])
+                await host.accept('Hello',direct=True)
+                self.assertTrue(any(e.get('phase')=='thinking' and e.get('error') is None for e in events))
+                self.assertTrue(any(e.get('type')=='voice.answer' and e.get('text')=='Ready.' for e in events))
+                self.assertIsNone(host.status['error'])
+            finally:host.loop.close()
+
+    async def test_bare_wake_recovers_from_prior_error(self):
+        host=runtime.Conversation(lambda e:None,no_capture=True,session_id='wake-error-test')
+        host.status['error']='Previous request failed'
+        try:
+            await host.accept('Argos')
+            self.assertTrue(host.status['dialogue_open'])
+            self.assertEqual(host.status['phase'],'listening')
+            self.assertIsNone(host.status['error'])
+        finally:host.loop.close()
+
     def test_voice_update_is_not_accepted_when_only_text_has_started(self):
         state={'agent_connected':True,'renderer_connected':True,'voice_ready':False}
         self.assertFalse(release_ready(state))

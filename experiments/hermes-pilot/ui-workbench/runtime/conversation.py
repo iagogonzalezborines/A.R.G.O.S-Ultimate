@@ -267,7 +267,10 @@ class Conversation:
   if norm in {'stop listening','turn off the microphone','deja de escuchar','apaga el microfono','no escuches'}:
    self.language=choose_language(text,self.language,detected,probability);await self.listen(False);return
   if not self.status['dialogue_open'] and not direct:return
-  if not text.strip():self.state('listening',dialogue_open=True);return
+  if not text.strip():self.state('listening',dialogue_open=True,error=None);return
+  # A recorded failure belongs to the previous request. Clear it only after
+  # accepting a new addressed turn; passive standby audio must not erase it.
+  self.status['error']=None
   self.language=choose_language(text,self.language,detected,probability)
   self.emit({'type':'voice.transcript','text':text,'language':self.language})
   if norm in {'eso es todo','hasta luego',"that's all",'that is all','goodbye'}:
