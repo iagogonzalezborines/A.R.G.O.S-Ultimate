@@ -4,6 +4,11 @@ import contextlib,difflib,hashlib,json,os,re,secrets,shutil,signal,stat,subproce
 from pathlib import Path
 P=Path(__file__).resolve().parents[1];U=P/'ui-workbench';BASE=Path(__file__).parent
 EDITABLE={'runtime/conversation.py','runtime/speech_pipeline.py','runtime/stt_worker.py','runtime/tts_worker.py','dist/app.js','dist/progress.js','dist/files.js','dist/window-manager.js','dist/orbital.js','dist/style.css','dist/index.html','checks/desktop-voice-contract.txt'}
+CONTEXT=('ui-workbench/runtime/workspace_broker.py','ui-workbench/runtime/projects.py','ui-workbench/runtime/apps.py','ui-workbench/runtime/machine.py','ui-workbench/desktop/main.cjs','ui-workbench/desktop/preload.cjs','ui-workbench/server.py','checks/workspace_mcp.py','checks/project_tool.py','checks/adaptive_tool.py')
+def extension_name(name):
+ return isinstance(name,str) and bool(re.fullmatch(r'(?:dist/[a-z][a-z0-9_-]{0,63}\.(?:js|css)|runtime/[a-z][a-z0-9_]{0,63}\.py)',name))
+class NoSourceChange(ValueError):
+ pass
 LOCK=threading.RLock()
 def clean(value):
  if isinstance(value,dict):return {k:('[redacted]' if type(v)!=bool and re.search(r'(^|_)token$|password|secret|credential|api.?key|authorization|access.?token|refresh.?token',k,re.I) else clean(v)) for k,v in value.items()}
@@ -33,7 +38,9 @@ def live_path(name,root=U):return P/'checks/desktop-voice-contract.txt' if name=
 
 def incident_view(row):
  result=dict(row)
- if row.get('code')=='PermissionError':
+ if row.get('code')=='PermissionError' and row.get('message')=='New application files require extending the trusted editable scope; not silently installed':
+  result.update(repairable=False,status='previous_scope_limit',diagnosis='El actualizador actual ya admite nuevos módulos de aplicación con revisión exacta. Esta incidencia corresponde al límite anterior; no se instaló ni se reejecutó la propuesta. Una integración que requiera un adaptador del host sigue necesitando ese adaptador real.')
+ elif row.get('code')=='PermissionError':
   result.update(repairable=False,status='blocked_by_policy',diagnosis='Operación bloqueada por los permisos actuales. Es una protección, no una avería que Codex deba corregir. Para mejorar ARGOS, usa desarrollo sobre la copia del piloto; la instalación original sigue protegida.')
  else:result['repairable']=True
  return result
@@ -93,17 +100,34 @@ class Maintenance:
   proposals=[]
   for file in sorted((self.private/'proposals').glob('*/proposal.json'),key=lambda p:p.stat().st_mtime,reverse=True)[:20] if (self.private/'proposals').exists() else []:
    row=json.loads(read_regular(file,2097152));proposals.append({k:row.get(k) for k in ['id','goal','status','created','native_thread_id','changed_files','error']})
-  return {'scope':'ARGOS isolated desktop pilot only','coding_model':'gpt-6-luna / low','executor':'Native Hermes CodexAppServerSession with existing pilot subscription','commands':'Shell and programming tools in the isolated candidate only; no arbitrary host shell','editable_files':sorted(EDITABLE),'protected':'Release/approval controller, broker, launcher, credentials, operational ARGOS, user projects and active IDE sessions','capabilities':['conversation','EN/ES local voice','workspace windows and selected paths','public web search','scoped file explorer and reviewed changes','read-only storage','normal Firefox music','allowlisted installed Linux app launch','incremental native research sources','isolated Codex programming','reviewed update and rollback','bounded redacted incident log'],'workspace':self.workspace(),'incidents':[incident_view(r) for r in self.load('incidents.json',[])[-20:]],'proposals':proposals,'pending_restart':bool(self.load('pending.json'))}
+  return {'scope':'ARGOS isolated desktop pilot only','coding_model':'gpt-6-luna / low','executor':'Native Hermes CodexAppServerSession with existing pilot subscription','commands':'Shell and programming tools in the isolated candidate only; no arbitrary host shell','editable_files':sorted(EDITABLE|self.extensions()),'new_modules':['dist/*.js','dist/*.css','runtime/*.py'],'read_only_context':list(CONTEXT),'protected':'Release/approval controller, broker, launcher, credentials, operational ARGOS, user projects and active IDE sessions','capabilities':['conversation','EN/ES local voice','workspace windows and selected paths','public web search','scoped file explorer and reviewed changes','read-only storage','normal Firefox music','allowlisted installed Linux app launch','incremental native research sources','isolated Codex programming','reviewed update and rollback','bounded redacted incident log'],'workspace':self.workspace(),'incidents':[incident_view(r) for r in self.load('incidents.json',[])[-20:]],'proposals':proposals,'pending_restart':bool(self.load('pending.json'))}
  def show(self):
   self.publish({'type':'presentation','actor':'argos','intent':{'type':'window.open','id':'maintenance','kind':'maintenance','title':'ARGOS · Desarrollo y autolog'}})
   return {'ok':True,'status':'presentation_requested'}
- def manifest(self,candidate=False,ident=None):
+ def extensions(self):
+  # Installed source identity comes from the existing release journal.
+  names=set()
+  for path in (self.private/'proposals').glob('*/proposal.json'):
+   row=json.loads(read_regular(path,2097152))
+   if row.get('status') not in {'installing','awaiting_health','installed','rolling_back'}:continue
+   for change in row.get('changed_files',[]):
+    name=change.get('path')
+    if name not in EDITABLE and extension_name(name):names.add(name)
+  if len(names)>128:raise ValueError('Installed extension inventory exceeds bound')
+  return names
+ def manifest(self,candidate=False,ident=None,*,names=None):
   result={};folder=self.private/'proposals'/ident/'candidate' if candidate else None
-  for name in sorted(EDITABLE):
+  for name in sorted(set(names) if names is not None else EDITABLE|self.extensions()):
+   if name not in EDITABLE and not extension_name(name):raise PermissionError('Invalid source manifest path')
    path=folder/name if candidate else live_path(name,self.root)
+   if any(parent.is_symlink() for parent in path.parents):raise PermissionError('Source parent symlinks forbidden')
    try:result[name]=digest(read_regular(path))
    except FileNotFoundError:result[name]=None
   return result
+ def source_snapshot(self,row,*,candidate=False):
+  return self.manifest(candidate,row['id'],names=set(row['baseline'])|set(row.get('candidate_manifest',{})))
+ def expected_baseline(self,row):
+  return {**{name:None for name in row.get('candidate_manifest',{})},**row['baseline']}
  def propose(self,goal,incident_id=None):
   if not isinstance(goal,str) or not 4<=len(goal)<=2000 or '\x00' in goal:raise ValueError('Describe a bounded ARGOS change')
   with LOCK:
@@ -116,7 +140,12 @@ class Maintenance:
    for name,sha in baseline.items():
     if sha is None:continue
     source=live_path(name,self.root);target=candidate/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(read_regular(source));target.chmod(0o600)
-   instructions='ARGOS isolated development candidate. Only source files in this copy may be edited. The running installation is not mounted. Do not modify permissions, credentials, or the release controller. Use native commands to implement and test the requested change. Return a concise truthful summary; controller validation and user review follow.\n'
+   context=folder/'context';context.mkdir(mode=0o700)
+   for name in CONTEXT:
+    source=P/name
+    if source.is_file():
+     target=context/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(read_regular(source))
+   instructions='ARGOS isolated development candidate. Edit the copied application source; new flat dist/*.js or dist/*.css modules and runtime/*.py modules are allowed when the live target does not already exist. Tests may be created under tests/. The host architecture is read-only at /context; it is evidence, never an editable release path. The running installation is not mounted. Do not modify permissions, credentials, broker, desktop host, or release controller. If a requested capability needs an absent protected host adapter, report that exact integration gap; do not present a frontend stub as a working integration. Use native commands to implement and test the requested change. This copy need not be a Git repository: the controller produces the exact diff. Return a concise truthful summary; controller validation and exact user review follow.\n'
    (candidate/'AGENTS.md').write_text(instructions)
    row={'id':ident,'goal':clean(goal),'incident_id':incident_id,'created':time.time(),'expires':time.time()+86400,'status':'preparing','baseline':baseline,'workspace':clean(self.workspace()),'incident':incident,'events':[]}
    self.put(row);self.audit('candidate_created',proposal_id=ident)
@@ -128,7 +157,7 @@ class Maintenance:
   try:
    if self.root!=U:raise RuntimeError('Native development is limited to the real isolated pilot; fixture checks call validation directly')
    codex=folder/'codex';codex.mkdir(mode=0o700);shutil.copyfile(P/'state/codex/auth.json',codex/'auth.json');(codex/'auth.json').chmod(0o600)
-   (codex/'config.toml').write_text('forced_login_method="chatgpt"\ncli_auth_credentials_store="file"\ndefault_permissions="argos-candidate"\napproval_policy="never"\nweb_search="disabled"\n[permissions.argos-candidate.filesystem]\n":minimal"="read"\n"/workspace"="write"\n"/tmp"="write"\n'+''.join(json.dumps(str(p))+'="read"\n' for p in [P/'bin',P/'tools',P/'env'])+json.dumps(str(codex))+'="deny"\n[permissions.argos-candidate.network]\nenabled=false\n');(codex/'config.toml').chmod(0o600)
+   (codex/'config.toml').write_text('forced_login_method="chatgpt"\ncli_auth_credentials_store="file"\ndefault_permissions="argos-candidate"\napproval_policy="never"\nweb_search="disabled"\n[permissions.argos-candidate.filesystem]\n":minimal"="read"\n"/workspace"="write"\n"/context"="read"\n"/tmp"="write"\n'+''.join(json.dumps(str(p))+'="read"\n' for p in [P/'bin',P/'tools',P/'env'])+json.dumps(str(codex))+'="deny"\n[permissions.argos-candidate.network]\nenabled=false\n');(codex/'config.toml').chmod(0o600)
    # Explicit inputs only; neither host context nor logs are scraped by the coder.
    atomic(folder/'request.json',{'goal':row['goal'],'workspace':row['workspace'],'incident':row.get('incident')})
    command=coding_sandbox(folder,[str(P/'env/bin/python'),str(BASE/'codex_worker.py')])
@@ -154,11 +183,16 @@ class Maintenance:
     if not current.get('summary'):raise RuntimeError('Native coding result missing')
    finally:watchdog.cancel();terminate(process);self.process=None;(folder/'codex/auth.json').unlink(missing_ok=True)
    self.validate(ident)
+  except NoSourceChange:
+   current=self.get(ident)
+   if current['status']=='preparing':current.update(status='no_change',error=None);self.put(current)
+   self.audit('preparation_report_without_patch',proposal_id=ident)
   except Exception as error:
    current=self.get(ident)
    if current['status']=='preparing':current.update(status='failed',error=clean(str(error))[:700]);self.put(current)
    if not self.closed:self.incident('development',error,notify=False)
-  self.publish({'type':'process.completed','id':'development-'+ident,'status':'Cambio listo para revisión' if self.get(ident)['status']=='awaiting_review' else 'Programación finalizada con incidencias'})
+  outcome=self.get(ident)['status']
+  self.publish({'type':'process.completed','id':'development-'+ident,'status':'Cambio listo para revisión' if outcome=='awaiting_review' else 'Informe listo · sin cambio instalable' if outcome=='no_change' else 'Programación finalizada con incidencias'})
   self.publish({'type':'maintenance.changed','proposal_id':ident});self.show()
  def validate(self,ident):
   row=self.get(ident);folder=self.private/'proposals'/ident;candidate=folder/'candidate';changes=[];diff=[]
@@ -166,12 +200,21 @@ class Maintenance:
   import itertools
   entries=list(itertools.islice(candidate.rglob('*'),5001))
   if len(entries)>5000:raise ValueError('Candidate tree exceeds bound')
+  total=0
   for path in entries:
    if path.is_symlink():raise PermissionError('Candidate symlinks are forbidden')
+   if not path.is_dir() and not path.is_file():raise PermissionError('Candidate special files are forbidden')
    relative=path.relative_to(candidate)
-   if path.is_file() and str(relative) not in EDITABLE and relative.parts[0] not in {'tests','.git','__pycache__'} and str(relative)!='AGENTS.md' and '__pycache__' not in relative.parts:raise PermissionError('New application files require extending the trusted editable scope; not silently installed')
-  for name,old in row['baseline'].items():
-   if name not in EDITABLE:raise PermissionError('Manifest contains an unauthorized path')
+   if path.is_file() and relative.parts[0] not in {'.git','__pycache__'} and '__pycache__' not in relative.parts:
+    total+=len(read_regular(path))
+    if total>4194304:raise ValueError('Candidate content exceeds bound')
+   if not path.is_file() or str(relative) in row['baseline'] or relative.parts[0] in {'tests','.git','__pycache__'} or str(relative)=='AGENTS.md' or '__pycache__' in relative.parts:continue
+   name=str(relative);target=live_path(name,self.root)
+   if not extension_name(name) or target.exists() or target.is_symlink():raise PermissionError('Only new application modules in dist/ or runtime/ are reviewable; existing protected files remain excluded')
+  names=set(row['baseline'])|{str(p.relative_to(candidate)) for p in entries if p.is_file() and extension_name(str(p.relative_to(candidate)))}
+  for name in sorted(names):
+   old=row['baseline'].get(name)
+   if name not in EDITABLE and name not in self.extensions() and not extension_name(name):raise PermissionError('Manifest contains an unauthorized path')
    path=candidate/name
    data=read_regular(path) if path.exists() else None;sha=digest(data) if data is not None else None
    if sha==old:continue
@@ -180,14 +223,17 @@ class Maintenance:
    if old and digest(original)!=old:raise PermissionError('Installed source changed during coding')
    after=data.decode('utf-8');before=original.decode('utf-8');changes.append({'path':name,'before':old,'after':sha,'bytes':len(data)})
    diff.extend(difflib.unified_diff(before.splitlines(True),after.splitlines(True),fromfile='before/'+name,tofile='after/'+name))
-  if not changes:raise ValueError('Codex produced no source change')
+  if not changes:raise NoSourceChange('Codex produced no source change')
   if len(changes)>20 or sum(c['bytes'] for c in changes)>1048576:raise ValueError('Change exceeds bounded review size')
+  snapshot=self.manifest(True,ident,names=names)
+  if any(snapshot[c['path']]!=c['after'] for c in changes):raise PermissionError('Candidate changed while generating its diff')
   result=validate_candidate(candidate)
   if not result['ok']:raise ValueError('Controller validation failed: '+result['error'])
+  if self.manifest(True,ident,names=names)!=snapshot:raise PermissionError('Candidate changed during validation')
   content=''.join(diff)
   if clean(content)!=content:raise PermissionError('Sensitive material detected in patch; a redacted diff cannot authorize hidden source changes')
   if len(content)>100000:raise ValueError('Diff too large for one review')
-  row.update(status='awaiting_review',changed_files=changes,diff=content,validation=result,candidate_manifest=self.manifest(True,ident));row['review_digest']=digest(json.dumps([changes,row['candidate_manifest'],row['baseline']],sort_keys=True).encode());self.put(row);self.audit('validation_passed',proposal_id=ident,review_digest=row['review_digest']);return row
+  row.update(status='awaiting_review',changed_files=changes,diff=content,validation=result,candidate_manifest=snapshot);row['review_digest']=digest(json.dumps([changes,row['candidate_manifest'],row['baseline']],sort_keys=True).encode());self.put(row);self.audit('validation_passed',proposal_id=ident,review_digest=row['review_digest']);return row
  def review(self,ident):
   row=self.get(ident)
   return {k:v for k,v in row.items() if k not in {'baseline','candidate_manifest','workspace'}}
@@ -199,7 +245,7 @@ class Maintenance:
    if sha!=row.get('review_digest'):raise PermissionError('Approval does not match this exact change')
    if not approve:row['status']='rejected';self.put(row);self.audit('rejected',proposal_id=ident);return {'ok':True,'status':'rejected'}
    if self.load('pending.json'):raise PermissionError('Another update awaits restart')
-   if self.manifest()!=row['baseline'] or self.manifest(True,ident)!=row['candidate_manifest']:raise PermissionError('Source changed since review; prepare a fresh proposal')
+   if self.source_snapshot(row)!=self.expected_baseline(row) or self.source_snapshot(row,candidate=True)!=row['candidate_manifest']:raise PermissionError('Source changed since review; prepare a fresh proposal')
    row['status']='approved';self.put(row);self.save('pending.json',{'id':ident,'review_digest':sha});self.audit('approved',proposal_id=ident,review_digest=sha)
   self.publish({'type':'app.restart','reason':'approved_update'});return {'ok':True,'status':'approved_restart_pending'}
  def apply_pending(self):
@@ -211,7 +257,7 @@ class Maintenance:
     if pending['review_digest']!=row['review_digest']:raise PermissionError('Invalid rollback grant')
     self.rollback(ident);return None
    if row['status']!='approved' or pending['review_digest']!=row['review_digest']:raise PermissionError('No exact user grant')
-   if self.manifest()!=row['baseline'] or self.manifest(True,ident)!=row['candidate_manifest']:raise PermissionError('Approved content changed before installation')
+   if self.source_snapshot(row)!=self.expected_baseline(row) or self.source_snapshot(row,candidate=True)!=row['candidate_manifest']:raise PermissionError('Approved content changed before installation')
    backup=folder/'backup';backup.mkdir(exist_ok=True,mode=0o700)
    for change in row['changed_files']:
     name=change['path'];target=backup/name;target.parent.mkdir(parents=True,exist_ok=True)
@@ -219,7 +265,9 @@ class Maintenance:
    row['status']='installing';self.put(row) # durable journal before first source write
    try:
     for change in row['changed_files']:
-     target=live_path(change['path'],self.root);data=read_regular(folder/'candidate'/change['path']);replace_bytes(target,data)
+     target=live_path(change['path'],self.root);data=read_regular(folder/'candidate'/change['path'])
+     if digest(data)!=change['after']:raise PermissionError('Candidate changed during installation')
+     replace_bytes(target,data)
     row['status']='awaiting_health';self.put(row);(self.private/'pending.json').unlink();self.audit('installed_awaiting_health',proposal_id=ident);return ident
    except BaseException:self.rollback(ident,reason='installation_failure');raise
  def health_ok(self,ident):
@@ -230,9 +278,10 @@ class Maintenance:
   with LOCK:
    row=self.get(ident)
    if row['status'] not in {'installing','awaiting_health','installed','rolling_back'}:raise PermissionError('Release is not rollback eligible')
-   if row['status']=='installed' and any(self.manifest()[c['path']]!=c['after'] for c in row['changed_files']):raise PermissionError('Installed code changed; do not overwrite newer work')
+   snapshot=self.source_snapshot(row)
+   if row['status']=='installed' and any(snapshot[c['path']]!=c['after'] for c in row['changed_files']):raise PermissionError('Installed code changed; do not overwrite newer work')
    for c in row['changed_files']:
-    current=self.manifest()[c['path']]
+    current=snapshot[c['path']]
     if current not in {c['before'],c['after']}:raise PermissionError('Do not overwrite newer source during rollback')
     if c['before'] and digest(read_regular(self.private/'proposals'/ident/'backup'/c['path']))!=c['before']:raise PermissionError('Backup integrity check failed')
    row['status']='rolling_back';self.put(row)
@@ -297,6 +346,7 @@ def coding_sandbox(folder,argv):
  for p in ['/usr','/bin','/sbin','/lib','/lib64']:
   if Path(p).exists():cmd+=['--ro-bind',p,p]
  cmd+=['--proc','/proc','--dev','/dev','--tmpfs','/tmp','--dir','/run','--dir','/workspace','--bind',str(candidate),'/workspace','--bind',str(codex),str(codex)]
+ if (folder/'context').is_dir():cmd+=['--ro-bind',str(folder/'context'),'/context']
  for p in [P/'source',P/'env',P/'tools',P/'bin',BASE/'codex_worker.py',folder/'request.json']:
   cmd+=['--ro-bind',str(p),'/request.json' if p.name=='request.json' else str(p)]
  for p in ['/etc/ssl','/etc/ca-certificates','/etc/resolv.conf','/etc/hosts','/etc/nsswitch.conf','/etc/ld.so.cache']:

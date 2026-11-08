@@ -66,6 +66,15 @@ class Handler(SimpleHTTPRequestHandler):
             return self.reply(200,dict(self.server.voice.status) if self.server.voice else {'ready':False,'phase':'off','listening':False})
         if path=='/':self.path='/index.html'
         elif path not in {'/index.html','/style.css','/app.js','/project-map.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json'} and not path.startswith('/assets/'):
+            # New renderer modules are public only after the trusted release
+            # journal admits them; candidates and arbitrary files stay private.
+            development=getattr(self.server.workspace,'development',None)
+            if development and 'dist'+path in development.extensions():
+                from maintenance.controller import read_regular
+                file=DIST/path.lstrip('/')
+                try:body=read_regular(file)
+                except (OSError,ValueError):return self.send_error(404)
+                self.send_response(200);self.send_header('Content-Type','text/javascript' if path.endswith('.js') else 'text/css');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body);return
             return self.send_error(404)
         decoded=unquote(path)
         if '..' in decoded.split('/') or not (DIST/decoded.lstrip('/')).resolve().is_relative_to(DIST):return self.send_error(404)

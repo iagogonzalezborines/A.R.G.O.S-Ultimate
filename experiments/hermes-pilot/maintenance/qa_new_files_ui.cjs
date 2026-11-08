@@ -1,0 +1,8 @@
+const fs=require('node:fs'),path=require('node:path');
+const P=path.resolve(__dirname,'..'),U=path.join(P,'ui-workbench'),port=process.argv[2],id=process.argv[3];
+const {_electron:electron}=require(path.join(P,'source/node_modules/playwright'));
+(async()=>{const env={PATH:'/usr/bin:/bin',LANG:'C.UTF-8',HOME:path.join(U,'state/home'),ARGOS_UI_QA:'1',ARGOS_UI_PLATFORM:'x11',ARGOS_UI_ORIGIN:'http://127.0.0.1:'+port};for(const k of ['DISPLAY','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS'])if(process.env[k])env[k]=process.env[k];
+ const app=await electron.launch({executablePath:path.join(P,'source/node_modules/electron/dist/electron'),args:[path.join(U,'desktop/main.cjs')],env});const report={checks:[],errors:[]};let page;
+ try{page=await app.firstWindow();page.on('pageerror',e=>report.errors.push(String(e)));await page.waitForFunction(()=>window.ARGOSWorkspace);await page.evaluate(()=>window.ARGOSWorkspace.openPanel('maintenance'));const card=page.locator(`[data-proposal="${id}"]`);await card.getByText(/\+export const fixture/).waitFor();await card.getByText('Nuevo · dist/review-fixture.js',{exact:true}).waitFor();report.checks.push({name:'new module appears in exact review diff',ok:true});await page.screenshot({path:path.join(U,'reports/new-file-update-review.png')});await card.getByRole('button',{name:'Aprobar actualización y reiniciar',exact:true}).click();report.checks.push({name:'trusted renderer sends exact approval',ok:true});if(report.errors.length)throw Error('Renderer error');}
+ finally{await app.close();fs.writeFileSync(path.join(U,'reports/new-file-update-ui.json'),JSON.stringify(report,null,2))}
+})().catch(e=>{console.error(e);process.exitCode=1});
