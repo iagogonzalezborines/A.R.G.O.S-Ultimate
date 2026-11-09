@@ -34,7 +34,7 @@ app.whenReady().then(()=>{
  ipcMain.handle('ui:voice-state',event=>{if(!trusted(event))throw Error('Untrusted sender');return request('/voice-state')});
  ipcMain.handle('ui:workspace-state',(event,payload)=>{if(!trusted(event))throw Error('Untrusted sender');return request('/api/workspace',payload)});
  ipcMain.handle('ui:capability',(event,payload)=>{if(!trusted(event)||!payload||!['files','workspace','storage','media','development','apps','projects'].includes(payload.tool))throw Error('Untrusted capability');return request('/api/capability',payload)});
- ipcMain.handle('ui:voice',(event,payload)=>{if(!trusted(event)||!payload||!['text','listen','interrupt','output'].includes(payload.op)||Object.keys(payload).some(k=>!['op','enabled','text'].includes(k)))throw Error('Unsupported voice control');return request('/api/voice',payload)});
+ ipcMain.handle('ui:voice',(event,payload)=>{if(!trusted(event)||!payload||!['text','listen','interrupt','output','retry'].includes(payload.op)||Object.keys(payload).some(k=>!['op','enabled','text'].includes(k)))throw Error('Unsupported voice control');return request('/api/voice',payload)});
  const remoteSession=session.fromPartition('argos-pilot-public-sources');
  remoteSession.setPermissionRequestHandler((wc,permission,callback)=>callback(false));remoteSession.setPermissionCheckHandler(()=>false);remoteSession.on('will-download',event=>event.preventDefault());
  const dnsCache=new Map();

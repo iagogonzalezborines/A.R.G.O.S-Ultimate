@@ -14,7 +14,7 @@ def release_ready(state,*,text_only=False):
 def stderr_summary(data):
     text=data.decode(errors='replace') if isinstance(data,(bytes,bytearray)) else str(data)
     frames=[{'file':Path(p).name,'line':int(n),'function':f[:80]}
-            for p,n,f in re.findall(r'File "([^"\n]+)", line (\d+), in ([^\n]+)',text)][-6:]
+            for p,n,f in re.findall(r'File "([^"\n]+)", line (\d+),? in ([^\n]+)',text)][-6:]
     types=sorted(set(re.findall(r'(?m)^([A-Za-z_][\w.]*(?:Error|Exception))(?::|$)',text)))[:8]
     codes=[name for name in ['CERTIFICATE_VERIFY_FAILED','ECONNREFUSED','ENETUNREACH',
            'invalid_grant','reauthenticationRequired','Permission denied','ModuleNotFoundError'] if name in text]

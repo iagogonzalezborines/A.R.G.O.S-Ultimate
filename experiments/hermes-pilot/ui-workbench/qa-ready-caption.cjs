@@ -1,10 +1,11 @@
 // Renderer startup transitions only: no microphone, speech, models or live broker.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const ROOT=__dirname,P=path.dirname(ROOT),{_electron:electron}=require(path.join(P,'source/node_modules/playwright'));
-const report={checks:[],errors:[]};
+const report={checks:[],errors:[]},voiceCommands=[];
 function check(name,ok){report.checks.push({name,ok});if(!ok)throw Error(name)}
 const preparing={phase:'preparing',ready:false,listening:false,text_only:false,voice_ready:false};
 const server=http.createServer((req,res)=>{
+ if(req.url==='/api/voice'){let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{voiceCommands.push(JSON.parse(body));res.setHeader('Content-Type','application/json');res.end(JSON.stringify({ok:true}))});return}
  if(req.url==='/events'){res.writeHead(200,{'Content-Type':'text/event-stream'});res.write(': fixture\n\n');return}
  if(req.url==='/voice-state'||req.url==='/api/workspace'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(req.url==='/voice-state'?preparing:{ok:true}));return}
  const file=path.resolve(ROOT,'dist','.'+(req.url==='/'?'/index.html':req.url));
@@ -17,6 +18,10 @@ const server=http.createServer((req,res)=>{
  app=await electron.launch({executablePath:path.join(P,'source/node_modules/electron/dist/electron'),args:[path.join(ROOT,'desktop/main.cjs')],env});const page=await app.firstWindow();page.on('pageerror',e=>report.errors.push(String(e)));await page.waitForFunction(()=>window.ARGOSWorkspace);
  const send=event=>app.evaluate(({BrowserWindow},e)=>BrowserWindow.getAllWindows()[0].webContents.send('runtime-event',e),event);
  await send({type:'voice.state',...preparing});await send({type:'voice.caption',text:'Preparando voz · compilando audio local'});await page.getByText('Preparando voz · compilando audio local',{exact:true}).waitFor();check('startup preparation caption visible',true);
+ check('microphone is disabled during active startup',await page.locator('#microphone').isDisabled());
+ await send({type:'voice.state',...preparing,phase:'error',startup_error_component:'codex',error:'Codex startup failed. Retry.'});await page.getByRole('button',{name:'Reintentar inicio de ARGOS',exact:true}).click();await page.waitForTimeout(50);check('failed startup can retry through trusted Electron IPC',voiceCommands.length===1&&voiceCommands[0].op==='retry');
+ await send({type:'voice.state',...preparing});await page.waitForFunction(()=>document.querySelector('#microphone').disabled);check('retry control disables again while preparing',await page.locator('#microphone').isDisabled());
+ await send({type:'voice.caption',text:'Preparando voz…'});
  const ready={...preparing,phase:'standby',ready:true,voice_ready:true,listening:true};await send({type:'voice.state',...ready});await page.getByText('Voz preparada.',{exact:true}).waitFor();check('readiness replaces stale startup caption',true);
  await send({type:'voice.answer',text:'Your files are ready.'});await send({type:'voice.state',...ready,phase:'speaking'});await send({type:'voice.state',...ready});await page.getByText('Your files are ready.',{exact:true}).waitFor();check('return to standby preserves actual answer',true);
  await send({type:'voice.state',...preparing});await send({type:'voice.caption',text:'Preparando Codex…'});await send({type:'voice.state',...ready,text_only:true,voice_ready:false,listening:false});await page.getByText('Conversación por texto disponible.',{exact:true}).waitFor();check('text-only readiness is not voice readiness',true);

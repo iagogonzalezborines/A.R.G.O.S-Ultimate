@@ -1,0 +1,409 @@
+{
+  "date": "2026-11-09",
+  "scope": "Installed ARGOS Hermes app startup; no Agent Desktop integration or Gods Eye View changes",
+  "recorded_failure": {
+    "attempt": "229a0c3d5e4da430",
+    "events": [
+      {
+        "component": "recognition",
+        "stage": "starting",
+        "elapsed_seconds": 0.0115
+      },
+      {
+        "component": "speech",
+        "stage": "starting",
+        "elapsed_seconds": 0.1253
+      },
+      {
+        "component": "codex",
+        "stage": "starting",
+        "elapsed_seconds": 0.1905
+      },
+      {
+        "component": "codex",
+        "stage": "runtime_import",
+        "elapsed_seconds": 1.2039
+      },
+      {
+        "component": "speech",
+        "stage": "loading",
+        "elapsed_seconds": 3.455
+      },
+      {
+        "component": "codex",
+        "stage": "failed",
+        "elapsed_seconds": 49.3111,
+        "error_type": "WorkerStartupError",
+        "diagnostics": {
+          "last_stage": "runtime_import",
+          "frames": [],
+          "exception_types": [],
+          "codes": []
+        }
+      }
+    ]
+  },
+  "baseline_restart": {
+    "attempt": "e620abb40b64540c",
+    "events": [
+      {
+        "component": "recognition",
+        "stage": "starting",
+        "elapsed_seconds": 0.0007
+      },
+      {
+        "component": "speech",
+        "stage": "starting",
+        "elapsed_seconds": 0.0013
+      },
+      {
+        "component": "codex",
+        "stage": "starting",
+        "elapsed_seconds": 0.0016
+      },
+      {
+        "component": "speech",
+        "stage": "loading",
+        "elapsed_seconds": 0.0202
+      },
+      {
+        "component": "codex",
+        "stage": "runtime_import",
+        "elapsed_seconds": 0.0229
+      },
+      {
+        "component": "codex",
+        "stage": "runtime_store",
+        "elapsed_seconds": 7.4347
+      },
+      {
+        "component": "codex",
+        "stage": "runtime_provider",
+        "elapsed_seconds": 8.4879
+      },
+      {
+        "component": "codex",
+        "stage": "hermes_agent",
+        "elapsed_seconds": 9.0494
+      },
+      {
+        "component": "recognition",
+        "stage": "ready",
+        "elapsed_seconds": 14.0614
+      },
+      {
+        "component": "codex",
+        "stage": "session_history",
+        "elapsed_seconds": 18.709
+      },
+      {
+        "component": "codex",
+        "stage": "prompt_restore",
+        "elapsed_seconds": 18.8678
+      },
+      {
+        "component": "codex",
+        "stage": "app_server_connect",
+        "elapsed_seconds": 18.8903
+      },
+      {
+        "component": "codex",
+        "stage": "session_recovery",
+        "elapsed_seconds": 18.9004
+      },
+      {
+        "component": "codex",
+        "stage": "authentication",
+        "elapsed_seconds": 22.3616
+      },
+      {
+        "component": "codex",
+        "stage": "capability_registration",
+        "elapsed_seconds": 22.3632
+      },
+      {
+        "component": "codex",
+        "stage": "ready",
+        "elapsed_seconds": 23.7052
+      },
+      {
+        "component": "speech",
+        "stage": "model_loading",
+        "elapsed_seconds": 30.5051
+      },
+      {
+        "component": "speech",
+        "stage": "voice_reference",
+        "elapsed_seconds": 119.1884
+      },
+      {
+        "component": "speech",
+        "stage": "compiling",
+        "elapsed_seconds": 129.5896
+      },
+      {
+        "component": "speech",
+        "stage": "ready",
+        "elapsed_seconds": 149.8065
+      },
+      {
+        "component": "application",
+        "stage": "ready",
+        "elapsed_seconds": 149.8069
+      }
+    ]
+  },
+  "after": {
+    "health": {
+      "ready": true,
+      "presentation_ready": true,
+      "mode": "argos-app",
+      "agent_connected": true,
+      "voice_ready": true,
+      "renderer_connected": true
+    },
+    "voice": {
+      "phase": "standby",
+      "ready": true,
+      "voice_ready": true,
+      "listening": true,
+      "startup_retries": 0,
+      "startup_seconds": {
+        "codex": 4.504826410000078,
+        "recognition": 1.9494903349998367,
+        "speech": 18.956612365999945
+      },
+      "components": {
+        "codex": "ready",
+        "recognition": "ready",
+        "speech": "ready"
+      },
+      "error": null
+    },
+    "trace": {
+      "attempt": "25382082c294fdca",
+      "events": [
+        {
+          "component": "codex",
+          "stage": "starting",
+          "elapsed_seconds": 0.0008
+        },
+        {
+          "component": "codex",
+          "stage": "runtime_import",
+          "elapsed_seconds": 0.0215
+        },
+        {
+          "component": "codex",
+          "stage": "import_agent",
+          "elapsed_seconds": 0.0326
+        },
+        {
+          "component": "codex",
+          "stage": "import_state",
+          "elapsed_seconds": 0.6706
+        },
+        {
+          "component": "codex",
+          "stage": "import_provider",
+          "elapsed_seconds": 0.6807
+        },
+        {
+          "component": "codex",
+          "stage": "runtime_store",
+          "elapsed_seconds": 0.6865
+        },
+        {
+          "component": "codex",
+          "stage": "runtime_provider",
+          "elapsed_seconds": 0.6907
+        },
+        {
+          "component": "codex",
+          "stage": "hermes_agent",
+          "elapsed_seconds": 0.6937
+        },
+        {
+          "component": "codex",
+          "stage": "session_history",
+          "elapsed_seconds": 1.8101
+        },
+        {
+          "component": "codex",
+          "stage": "prompt_restore",
+          "elapsed_seconds": 1.8498
+        },
+        {
+          "component": "codex",
+          "stage": "app_server_connect",
+          "elapsed_seconds": 1.8677
+        },
+        {
+          "component": "codex",
+          "stage": "session_recovery",
+          "elapsed_seconds": 1.8756
+        },
+        {
+          "component": "codex",
+          "stage": "authentication",
+          "elapsed_seconds": 3.2019
+        },
+        {
+          "component": "codex",
+          "stage": "capability_registration",
+          "elapsed_seconds": 3.2037
+        },
+        {
+          "component": "codex",
+          "stage": "ready",
+          "elapsed_seconds": 4.5056
+        },
+        {
+          "component": "recognition",
+          "stage": "starting",
+          "elapsed_seconds": 4.5059
+        },
+        {
+          "component": "speech",
+          "stage": "starting",
+          "elapsed_seconds": 4.5065
+        },
+        {
+          "component": "speech",
+          "stage": "loading",
+          "elapsed_seconds": 4.5257
+        },
+        {
+          "component": "recognition",
+          "stage": "ready",
+          "elapsed_seconds": 6.4554
+        },
+        {
+          "component": "speech",
+          "stage": "model_loading",
+          "elapsed_seconds": 7.5336
+        },
+        {
+          "component": "speech",
+          "stage": "voice_reference",
+          "elapsed_seconds": 9.094
+        },
+        {
+          "component": "speech",
+          "stage": "compiling",
+          "elapsed_seconds": 10.2616
+        },
+        {
+          "component": "speech",
+          "stage": "ready",
+          "elapsed_seconds": 23.4631
+        },
+        {
+          "component": "application",
+          "stage": "ready",
+          "elapsed_seconds": 23.4635
+        }
+      ]
+    }
+  },
+  "native_conversation": {
+    "audio_workers": 0,
+    "microphone_capture": false,
+    "speaker_playback": false,
+    "isolated_credential_copy": true,
+    "turns": [
+      {
+        "ok": true,
+        "speech": "Yes, I’m here.",
+        "seconds": 1.9671475690001898,
+        "first_text_seconds": 1.815647798999862,
+        "usage": {
+          "prompt_tokens": 20559,
+          "completion_tokens": 10,
+          "total_tokens": 20569,
+          "cache_read_tokens": 8064
+        }
+      },
+      {
+        "ok": true,
+        "speech": "Sí, estoy aquí.",
+        "seconds": 0.9205040600002121,
+        "first_text_seconds": 0.7912139069999284,
+        "usage": {
+          "prompt_tokens": 21956,
+          "completion_tokens": 9,
+          "total_tokens": 21965,
+          "cache_read_tokens": 20352
+        }
+      }
+    ],
+    "startup": {
+      "startup_seconds": 5.894445008000048,
+      "codex_ready": true,
+      "subscription_account_present": true,
+      "registered_tool_count": 8,
+      "model_turns_during_startup": 0
+    },
+    "unexpected_tool_calls": []
+  },
+  "ui": {
+    "checks": [
+      {
+        "name": "startup preparation caption visible",
+        "ok": true
+      },
+      {
+        "name": "microphone is disabled during active startup",
+        "ok": true
+      },
+      {
+        "name": "failed startup can retry through trusted Electron IPC",
+        "ok": true
+      },
+      {
+        "name": "retry control disables again while preparing",
+        "ok": true
+      },
+      {
+        "name": "readiness replaces stale startup caption",
+        "ok": true
+      },
+      {
+        "name": "return to standby preserves actual answer",
+        "ok": true
+      },
+      {
+        "name": "text-only readiness is not voice readiness",
+        "ok": true
+      },
+      {
+        "name": "degraded audio is explicit",
+        "ok": true
+      },
+      {
+        "name": "new wake clears displayed previous error",
+        "ok": true
+      },
+      {
+        "name": "error recovery preserves the new transcript",
+        "ok": true
+      },
+      {
+        "name": "no renderer errors",
+        "ok": true
+      }
+    ],
+    "errors": []
+  },
+  "tests": {
+    "repository": 366,
+    "startup_lifecycle": 10,
+    "renderer": 11
+  },
+  "limitations": [
+    "No OS reboot was performed",
+    "Before/after filesystem and model caches differ; these timings are not a controlled speedup benchmark",
+    "The precise blocked import at PC startup was not retained by the old diagnostic parser",
+    "No microphone-to-speaker acoustic test was performed"
+  ]
+}

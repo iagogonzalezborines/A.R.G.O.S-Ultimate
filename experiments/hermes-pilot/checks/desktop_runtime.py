@@ -20,8 +20,11 @@ startup_stage('runtime_import')
 try:
  with contextlib.redirect_stdout(sys.stderr):
   from pilot import FIXTURE
+  startup_stage('import_agent')
   from run_agent import AIAgent
+  startup_stage('import_state')
   from hermes_state import SessionDB
+  startup_stage('import_provider')
   from hermes_cli.runtime_provider import resolve_runtime_provider
   startup_stage('runtime_store')
   db=SessionDB();sid=sys.argv[1] if len(sys.argv)>1 else 'argos-workspace-default'

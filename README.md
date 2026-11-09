@@ -4,6 +4,8 @@
 
 Actualización de casa del 8 de noviembre: [instalación, voz CUDA, Engineering, recuperación y límites pendientes](experiments/hermes-pilot/reports/home-integration-2026-11-08.md). ARGOS (Hermes) está actualizado y abierto con el SteelSeries; el timeout original durante el inicio de sesión aún no se ha reproducido.
 
+Arranque del 9 de noviembre: [carga prioritaria de Codex, recuperación limitada y comprobación real](experiments/hermes-pilot/reports/startup-recovery-2026-11-09.md). El fallo quedó localizado antes de la conexión con Codex; la app corregida arranca y permite reintentar desde el micrófono. Falta validar otro encendido en frío.
+
 Asistente con Core Python/SQLite, tareas en segundo plano, conversación y tareas con perfiles Codex explícitos,
 investigación web, operaciones del PC y voz local. La consola muestra solo una esfera
 ASCII; los detalles se consultan desde otra terminal y las aprobaciones también admiten voz. Esta es la

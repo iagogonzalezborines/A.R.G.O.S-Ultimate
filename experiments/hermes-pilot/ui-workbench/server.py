@@ -122,7 +122,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not self.server.voice:raise ValueError('Voice unavailable')
                 if not isinstance(body,dict) or set(body)-{'op','enabled','text','language'}:raise ValueError('Invalid voice fields')
                 op=body.get('op')
-                if op not in {'text','listen','interrupt','output','test-text','test-speech','test-tts'}:raise ValueError('Unknown voice command')
+                if op not in {'text','listen','interrupt','output','retry','test-text','test-speech','test-tts'}:raise ValueError('Unknown voice command')
                 if op in {'listen','output'} and type(body.get('enabled')) is not bool:raise ValueError('Invalid voice control')
                 if op in {'test-text','test-speech','test-tts'} and (not self.server.voice.no_capture or not isinstance(body.get('text'),str) or not 0<len(body['text'])<=12000):raise ValueError('Test entry disabled')
                 if op=='text' and (not isinstance(body.get('text'),str) or not 0<len(body['text'].strip())<=12000):raise ValueError('Invalid text')

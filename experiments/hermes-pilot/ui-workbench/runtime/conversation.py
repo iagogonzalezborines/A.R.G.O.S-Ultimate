@@ -38,8 +38,8 @@ def presentation_context(windows):
 
 
 class WorkerStartupError(RuntimeError):
- def __init__(self,component,detail,diagnostics=None):
-  self.component=component;self.diagnostics=diagnostics or {};super().__init__(component+': '+detail)
+ def __init__(self,component,detail,diagnostics=None,*,retryable=False):
+  self.component=component;self.diagnostics=diagnostics or {};self.retryable=retryable;super().__init__(component+': '+detail)
 
 class Worker:
  def __init__(self,command,env=None,prefix=b'',*,name='worker',startup_timeout=90):self.command=command;self.env=env;self.prefix=prefix;self.process=None;self.lock=asyncio.Lock();self.name=name;self.startup_timeout=startup_timeout
@@ -77,8 +77,10 @@ class Worker:
      if on_stage:await on_stage(self.name,'ready')
      return ready
   except TimeoutError as error:
+   await self.close()
    diagnostics={'last_stage':self.last_stage,**stderr_summary(self.stderr_tail)}
-   await self.close();raise WorkerStartupError(self.name,'readiness timed out after '+str(self.startup_timeout)+' seconds at '+self.last_stage,diagnostics) from error
+   retryable=self.name=='codex' and self.last_stage in {'runtime_import','import_agent','import_state','import_provider'}
+   raise WorkerStartupError(self.name,'readiness timed out after '+str(self.startup_timeout)+' seconds at '+self.last_stage,diagnostics,retryable=retryable) from error
   except BaseException as error:
    diagnostics={'last_stage':self.last_stage,**stderr_summary(self.stderr_tail)}
    if isinstance(error,WorkerStartupError):error.diagnostics=diagnostics
@@ -141,6 +143,7 @@ class Conversation:
  def post(self,op,**values):
   return asyncio.run_coroutine_threadsafe(self.command(op,**values),self.loop)
  async def prepare(self):
+  self.state('preparing',ready=False,codex_ready=False,voice_ready=False,speech_ready=False,recognition_ready=False,error=None,startup_error_component=None,startup_retries=0,components={})
   self.queue=asyncio.Queue(maxsize=2)
   env={'HOME':str(VOICE/'home'),'PATH':'/usr/bin:/bin','HF_HOME':str(VOICE/'hf'),'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1','HF_HUB_DISABLE_IMPLICIT_TOKEN':'1','TOKENIZERS_PARALLELISM':'false','ARGOS_STARTUP_EVENTS':'1','PYTHONDONTWRITEBYTECODE':'1','TORCHINDUCTOR_CACHE_DIR':str(PILOT/'cache/torch-streaming')}
   libraries=VOICE/'qwen-env/lib/python3.12/site-packages/nvidia'
@@ -158,18 +161,29 @@ class Conversation:
    self.state(components={**self.status.get('components',{}),name:value},**({'codex_ready':value=='ready'} if name=='codex' else {}))
    labels={'codex':'Codex','recognition':'reconocimiento','speech':'voz'}
    if value!='ready':self.emit({'type':'voice.caption','text':'Preparando '+labels[name]+(' · compilando audio local' if value=='compiling' else '…')})
-  workers=(self.model,) if self.text_only else (self.stt,self.tts,self.model)
-  initializers=[asyncio.create_task(worker.start(stage)) for worker in workers]
+  # Establish native conversation before competing with multi-GB audio model
+  # loads. This changes startup ordering only; ordinary turns remain unchanged.
+  initializers=[];turn_task=None
   try:
-   model_ready=await initializers[-1]
+   for attempt in range(2):
+    task=asyncio.create_task(self.model.start(stage));initializers.append(task)
+    try:
+     model_ready=await task;break
+    except WorkerStartupError as error:
+     if attempt or not error.retryable:raise
+     self.startup_trace.record('codex','retrying_import',error=error,diagnostics=error.diagnostics)
+     self.state(startup_retries=1)
+     self.emit({'type':'voice.caption','text':'Recuperando el inicio de Codex…'})
    self.status['api_mode']=model_ready.get('api_mode');self.status['codex_ready']=model_ready.get('codex_ready',False)
    self.status['startup_seconds']={'codex':model_ready['startup_seconds']}
    self.state('preparing' if not self.text_only else 'standby',ready=True)
-   self.tasks.append(asyncio.create_task(self.turns()))
+   turn_task=asyncio.create_task(self.turns());self.tasks.append(turn_task)
    if not self.text_only:
-    audio=await asyncio.gather(*initializers[:-1],return_exceptions=True)
+    audio_workers=(self.stt,self.tts)
+    audio_tasks=[asyncio.create_task(worker.start(stage)) for worker in audio_workers];initializers.extend(audio_tasks)
+    audio=await asyncio.gather(*audio_tasks,return_exceptions=True)
     failures=[]
-    for worker,result in zip(workers[:-1],audio):
+    for worker,result in zip(audio_workers,audio):
      if isinstance(result,BaseException):
       failures.append(worker.name);self.startup_trace.record(worker.name,'failed',error=result,diagnostics=getattr(result,'diagnostics',None))
       if self.workspace and self.workspace.development:self.workspace.development.incident('voice.prepare',result)
@@ -182,6 +196,9 @@ class Conversation:
    self.startup_trace.record('application','ready' if self.text_only or self.status.get('voice_ready') else 'degraded')
    if not self.no_capture and self.status['recognition_ready']:await self.listen(True)
   except BaseException as error:
+   if turn_task:
+    turn_task.cancel();await asyncio.gather(turn_task,return_exceptions=True)
+    if turn_task in self.tasks:self.tasks.remove(turn_task)
    for task in initializers:
     if not task.done():task.cancel()
    await asyncio.gather(*initializers,return_exceptions=True)
@@ -190,7 +207,7 @@ class Conversation:
    component=getattr(error,'component','startup')
    self.startup_trace.record(component,'failed',error=error,diagnostics=getattr(error,'diagnostics',None))
    if self.workspace and self.workspace.development:self.workspace.development.incident('voice.prepare',error)
-   self.state('error',ready=False,codex_ready=False,components={name:('failed' if name==component else 'stopped') for name in ('codex','recognition','speech')},startup_error_component=component,error='No se pudo iniciar '+{'codex':'Codex','recognition':'el reconocimiento','speech':'la voz'}.get(component,'la conversación')+'. Revisa el autolog.')
+   self.state('error',ready=False,codex_ready=False,components={name:('failed' if name==component else 'stopped') for name in ('codex','recognition','speech')},startup_error_component=component,error='No se pudo iniciar '+{'codex':'Codex','recognition':'el reconocimiento','speech':'la voz'}.get(component,'la conversación')+'. Pulsa el micrófono para reintentar; el detalle está en el autolog.')
  async def listen(self,enabled):
   self.generation+=1
   if getattr(self,'tts_active',False):self.tts.interrupt()
@@ -456,7 +473,13 @@ class Conversation:
    with contextlib.suppress(ProcessLookupError):await self.player.wait()
   self.speaking=False;self.emit({'type':'voice.level','level':0})
  async def command(self,op,**values):
-  if op=='listen':
+  if op=='retry':
+   if self.closed:raise ValueError('La aplicación se está cerrando')
+   if getattr(self,'prepare_task',None) and not self.prepare_task.done():return {'ok':False,'error':'startup_in_progress'}
+   if self.status['ready'] or not self.status.get('startup_error_component'):return {'ok':False,'error':'startup_retry_unavailable'}
+   self.prepare_task=asyncio.create_task(self.prepare())
+   return {'ok':True,'status':'startup_requested'}
+  elif op=='listen':
    if not self.status['ready']:return {'ok':False,'error':'preparing'}
    if values.get('enabled') and not self.status.get('recognition_ready'):return {'ok':False,'error':'recognition_unavailable'}
    await self.listen(bool(values.get('enabled')))
