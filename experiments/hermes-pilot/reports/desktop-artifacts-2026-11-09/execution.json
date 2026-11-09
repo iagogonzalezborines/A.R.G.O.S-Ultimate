@@ -1,0 +1,119 @@
+{
+  "checks": [
+    {
+      "name": "meld-editor real enablement",
+      "ok": true
+    },
+    {
+      "name": "thunar real enablement",
+      "ok": true
+    },
+    {
+      "name": "scope proposal has no launch",
+      "ok": true
+    },
+    {
+      "name": "real app has no host authority",
+      "ok": true
+    },
+    {
+      "name": "saved artifact detected from app filesystem",
+      "ok": true
+    },
+    {
+      "name": "imported original unchanged",
+      "ok": true
+    },
+    {
+      "name": "unapproved output remains absent",
+      "ok": true
+    },
+    {
+      "name": "fault injection identifies only owned application",
+      "ok": true
+    },
+    {
+      "name": "unexpected application close ends its supervisor",
+      "ok": true
+    },
+    {
+      "name": "restart restores no permission or input",
+      "ok": true
+    },
+    {
+      "name": "restart recovers exact saved document",
+      "ok": true
+    },
+    {
+      "name": "restart does not export pending proposal",
+      "ok": true
+    },
+    {
+      "name": "approved export matches observed artifact",
+      "ok": true
+    },
+    {
+      "name": "duplicate does not rewrite",
+      "ok": true
+    },
+    {
+      "name": "native task owns artifact receipt",
+      "ok": true
+    },
+    {
+      "name": "Thunar creates a genuine copied artifact",
+      "ok": true
+    },
+    {
+      "name": "Thunar export uses same native artifact contract",
+      "ok": true
+    }
+  ],
+  "profiles": {
+    "meld-editor": {
+      "revision": "254b03d018b5973524ec31e111c394a6c7d3fead9b0c8303105a526d8c8f357c",
+      "startup_capture": true
+    },
+    "thunar": {
+      "revision": "72a2e3b3f1df163e0fbe5c18f321ecc35ebff8432721621bdc788a84f82cf636",
+      "startup_capture": true,
+      "copy_and_export": true
+    }
+  },
+  "host_input": false,
+  "audio": false,
+  "max_rss_kib": 248216,
+  "project": {
+    "id": "p_992f2259",
+    "path": "/tmp/argos-desktop-qa/home/Projects/desktop-artifact-native-1794226477700701873"
+  },
+  "meld_launch_seconds": 2.946684426000502,
+  "boundary": {
+    "network": false,
+    "host_input": false,
+    "host_home": false,
+    "host_bus": false,
+    "gpu": false
+  },
+  "meld_edit_seconds": 0.9628,
+  "receipt": {
+    "kind": "desktop_exported",
+    "task_id": "t_1d15f0c3",
+    "project_id": "p_992f2259",
+    "before": null,
+    "bytes": 70,
+    "destination": "docs/requirements.md",
+    "export_id": "7ccf63159bf4ef8dc2db70c0",
+    "parent_identity": [
+      59,
+      80815
+    ],
+    "path": "document.md",
+    "profile": "meld-editor",
+    "session_id": "d5e15a235387a819f25cba6f",
+    "sha256": "44dfff24845343932f3d5cf7cfd23332fec665c0c616eb3a065547d0a9469c88",
+    "recovered": false,
+    "verification": "Approved content atomically written and read back"
+  },
+  "remaining_sampled_pids": []
+}

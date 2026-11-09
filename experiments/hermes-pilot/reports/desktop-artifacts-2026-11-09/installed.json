@@ -1,0 +1,19 @@
+{
+  "configuration": {
+    "projects_enabled": true,
+    "project_map_enabled": true,
+    "adaptive_enabled": true,
+    "desktop_enabled": true
+  },
+  "enabled_profiles": [
+    "meld-editor",
+    "thunar"
+  ],
+  "availability": {
+    "enabled": true,
+    "isolated_visual": true,
+    "active_job": null
+  },
+  "live_scopes": 0,
+  "projects_created": 0
+}

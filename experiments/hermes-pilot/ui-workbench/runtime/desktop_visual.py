@@ -70,20 +70,23 @@ class Visual:
         return ['/usr/bin/bwrap','--unshare-all','--die-with-parent','--new-session',
                 '--ro-bind','/usr','/usr','--symlink','usr/lib','/lib','--symlink','usr/lib','/lib64',
                 '--symlink','usr/bin','/bin','--proc','/proc','--dev','/dev','--tmpfs','/tmp',
-                '--ro-bind','/etc/fonts','/etc/fonts','--ro-bind','/etc/ld.so.cache','/etc/ld.so.cache',
+                '--ro-bind',str(home/'run/passwd'),'/etc/passwd','--ro-bind',str(home/'run/group'),'/etc/group',
+                '--ro-bind',str(home/'run/machine-id'),'/etc/machine-id','--ro-bind','/etc/fonts','/etc/fonts','--ro-bind','/etc/ld.so.cache','/etc/ld.so.cache',
                 '--ro-bind',str(self.root),'/opt/visual','--ro-bind',str(PILOT/'desktop/visual'),'/opt/argos',
                 '--bind',str(home/'run'),'/run/av','--bind',str(home/'private'),'/home/agent',
-                '--bind',str(home/'work'),'/work','--chdir','/work','--',*argv]
+                '--bind',str(scope.get('work',home/'work')),'/work','--chdir','/work','--',*argv]
 
     def environment(self, scope):
         return {'PATH':'/usr/bin:/bin','LANG':'C.UTF-8','HOME':'/home/agent','XDG_RUNTIME_DIR':'/run/av',
                 'SWAYSOCK':'/run/av/ipc.sock','WAYLAND_DISPLAY':scope.get('display','wayland-1'),
                 'WLR_BACKENDS':'headless','WLR_HEADLESS_OUTPUTS':str(scope['outputs']),
                 'WLR_RENDERER':'pixman','WLR_LIBINPUT_NO_DEVICES':'1','LD_LIBRARY_PATH':'/opt/visual/usr/lib',
-                'GDK_BACKEND':'wayland','NO_AT_BRIDGE':'1','GSETTINGS_BACKEND':'memory','XDG_SESSION_TYPE':'wayland'}
+                'GDK_BACKEND':'wayland','QT_QPA_PLATFORM':'wayland','NO_AT_BRIDGE':'1','GSETTINGS_BACKEND':'memory','XDG_SESSION_TYPE':'wayland'}
 
     def launch(self, proposal):
         self.validate_installation()
+        definition=proposal.get('definition')
+        if definition and self.d.profiles.definition(definition['id'])!=definition:raise PermissionError('Application profile changed')
         d = self.d
         if any(s['application']=='isolated-visual' and not s['released'] and s['child'].poll() is None for s in d.scopes.values()):
             raise ValueError('Release the existing isolated session first')
@@ -95,6 +98,7 @@ class Visual:
         scope = {'id':ident,'home':home,'application':'isolated-visual','title':'Visual · '+proposal['application'],
                  'profile':proposal['application'],'outputs':proposal['outputs'],'scale':proposal['scale'],
                  'released':False,'used':time.monotonic(),'snapshot':None,'views':{},'child':None}
+        if proposal.get('workspace'):scope['work']=Path(proposal['workspace']);scope['project']=proposal['project'];scope['task_id']=proposal['task_id'];scope['session_id']=proposal['session_id']
         d.scopes[ident] = scope
         try:
             if proposal['application']=='comparison':
@@ -105,8 +109,15 @@ class Visual:
                         raise PermissionError('Comparison requires two small allowed UTF-8 files')
                     self.check_text(text)
                     (home/'work'/(name+'.txt')).write_text(text)
-            (home/'run/session.json').write_text(json.dumps({'application':proposal['application']}))
+            if definition and not proposal.get('workspace'):
+                work=scope.get('work',home/'work')
+                for name,content in definition['seed'].items():
+                    if not (work/name).exists():(work/name).write_text(content)
+            (home/'run/session.json').write_text(json.dumps({'application':proposal['application'],**({'profile':definition} if definition else {})}))
             (home/'run/lease').touch()
+            (home/'run/passwd').write_text(f'agent:x:{os.getuid()}:{os.getgid()}::/home/agent:/usr/bin/nologin\n')
+            (home/'run/group').write_text(f'agent:x:{os.getgid()}:\n')
+            (home/'run/machine-id').write_text(secrets.token_hex(16)+'\n')
             scale = proposal['scale']
             config = 'xwayland disable\nseat seat0 fallback true\nseat seat0 attach *\nfocus_follows_mouse no\nfont monospace 12\ndefault_border pixel 0\n'
             for i in range(proposal['outputs']):
@@ -121,7 +132,8 @@ class Visual:
                 if ready.exists():
                     scope['display']=json.loads(ready.read_text())['wayland']
                     try:
-                        self.geometry(scope)
+                        geometry=self.geometry(scope)
+                        if definition and geometry['app_id']!=definition['app_id']:raise PermissionError('Unexpected application identity')
                         time.sleep(.3)  # First mapped buffer may precede the application's first paint.
                         return self.observe(scope)
                     except (PermissionError, FileNotFoundError): pass
@@ -180,6 +192,7 @@ class Visual:
         (scope['home']/'run/lease').touch()
         return {'ok':True,'scope':scope['id'],'application':'isolated-visual','snapshot':token,'ready':True,
                 'interaction_mode':'isolated','host_input':False,'observation_untrusted':True,
+                **{k:scope[k] for k in ('profile','project','task_id','session_id') if k in scope},
                 'geometry':geometry,'width':geometry['rect']['width'],'height':geometry['rect']['height'],
                 'data_url':'data:image/png;base64,'+base64.b64encode(data).decode()}
 

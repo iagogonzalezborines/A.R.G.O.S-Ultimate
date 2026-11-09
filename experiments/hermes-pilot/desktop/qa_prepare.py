@@ -17,6 +17,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--installed',type=Path,default=Path.home()/'.local/share/argos-hermes-pilot')
     parser.add_argument('--cleanup',action='store_true')
+    parser.add_argument('--projects',action='store_true',help='Enable native Projects only under the disposable QA home')
     args=parser.parse_args()
     if args.cleanup:
         for relative in ('state/codex/auth.json','state/hermes/auth.json'):
@@ -36,16 +37,21 @@ def main():
                 if name.startswith('config.'):dst.write_text(src.read_text().replace(str(p),str(q)))
                 else:shutil.copyfile(src,dst)
                 dst.chmod(0o600)
-    settings=json.loads((p/'installation.json').read_text())['desktop'];settings['state']='/tmp/argos-desktop-qa/scopes'
+    settings=json.loads((p/'installation.json').read_text())['desktop'];settings['state']=str(q.parent/'scopes')
     config=json.loads((q/'installation.json').read_text())
-    config.update(desktop_enabled=True,desktop=settings,user_home='/tmp/argos-desktop-qa/home',projects_enabled=False,project_map_enabled=False,adaptive_enabled=False)
+    config.update(desktop_enabled=True,desktop=settings,user_home=str(q.parent/'home'),projects_enabled=args.projects,project_map_enabled=args.projects,adaptive_enabled=False)
+    config['project_roots']=[str(q.parent/'home/Projects')]
+    Path(config['project_roots'][0]).mkdir(parents=True,exist_ok=True)
     (q/'installation.json').write_text(json.dumps(config,indent=2));Path(config['user_home']).mkdir(exist_ok=True)
     import re,tomllib
     cp=q/'state/codex/config.toml';source=cp.read_text()
     names=tomllib.loads(source)['mcp_servers']['argos-workspace']['enabled_tools']
     names=[n for n in names if n not in {'projects','adaptive'}]
+    if args.projects:names.append('projects')
     if 'desktop' not in names:names.append('desktop')
     source=re.sub(r'^enabled_tools\s*=.*$', 'enabled_tools='+json.dumps(names),source,flags=re.M)
+    if args.projects and '[mcp_servers.argos-workspace.tools.projects]' not in source:
+        source+='\n[mcp_servers.argos-workspace.tools.projects]\napproval_mode="approve"\n'
     cp.write_text(source)
     print(q)
 

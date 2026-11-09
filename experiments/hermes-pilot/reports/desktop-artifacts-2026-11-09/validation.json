@@ -1,0 +1,29 @@
+{
+  "core_tests": 416,
+  "desktop_tests_in_core": 50,
+  "native_desktop_artifacts_tests": 17,
+  "native_lifecycle_tests": 21,
+  "native_map_tests": 3,
+  "adaptive_tests": 7,
+  "files_checks": 25,
+  "storage_clipboard_checks": 21,
+  "research_checks": 17,
+  "startup_checks": 10,
+  "text_ingress": "readiness, bounds, credential rejection, FIFO and no audio passed",
+  "pcm_output": {
+    "raw_pcm_playback_passed": true,
+    "source_seconds": 0.8,
+    "actual_player_seconds": 0.8379259350003849,
+    "all_source_bytes_written": true,
+    "eof_drains_audio_tail": true,
+    "interruption_stops_player": true,
+    "interruption_stop_seconds": 0.0014167389999784064,
+    "playback": "temporary null sink, not speakers"
+  },
+  "real_app_checks": 17,
+  "electron_general_checks": 14,
+  "installed_ui_checks": 4,
+  "independence_checks": 34,
+  "qa_preparation": "disposable roots, Projects tools and derived-credential cleanup checked in fresh temporary installation",
+  "notes": "Native artifact/lifecycle suites include overlapping Block B base cases; counts are suite totals, not unique-test sum. No new Engineering model run; actual Codex here is General, with existing native Engineering lifecycle/security regressions. No physical host input or speaker playback."
+}

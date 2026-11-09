@@ -35,3 +35,6 @@ html,body{overflow:clip;overscroll-behavior:none}body{position:fixed;inset:0}
 .desktop-control-row{display:flex;flex-direction:column;gap:8px;margin:12px 0;padding:12px;border:1px solid #28415d;border-radius:8px;overflow-wrap:anywhere}.desktop-control-row pre{white-space:pre-wrap;max-height:180px;overflow:auto}.desktop-field{width:100%;min-height:80px;color:inherit;background:#091524;border:1px solid #355477;padding:8px;box-sizing:border-box}
 
 .file-review>pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+
+/* Keep artifact destinations compact and reviews readable above sticky consent. */
+input.desktop-field{min-height:38px}.file-review{display:flex;flex-direction:column;overflow:hidden}.file-review>*{flex-shrink:0}.file-review>pre,.file-review>.file-diff{flex:1;min-height:0;overflow:auto}.file-review>.file-actions{position:static}.file-review>pre{padding-bottom:0}.desktop-control-row details pre{overflow-wrap:anywhere}

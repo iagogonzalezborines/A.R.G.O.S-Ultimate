@@ -90,11 +90,11 @@ def launch_child(argv, env):
 
 
 class Desktop:
-    def __init__(self, publish, *, files=None, config_path=CONFIG_PATH, present=None):
+    def __init__(self, publish, *, files=None, config_path=CONFIG_PATH, present=None, projects=None):
         all_config = json.loads(Path(config_path).read_text()) if Path(config_path).exists() else {}
         self.config = all_config.get('desktop', {})
         self.enabled = all_config.get('desktop_enabled') is True
-        self.publish = publish; self.files = files
+        self.publish = publish; self.files = files; self.projects=projects
         self.lock = threading.RLock(); self.scopes = {}; self.jobs = {}; self.active = None; self.closed = False
         self.env = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'}
         for k in ('DISPLAY', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_SESSION_TYPE', 'HYPRLAND_INSTANCE_SIGNATURE'):
@@ -103,6 +103,10 @@ class Desktop:
         self.access = Windows(self, present)
         from .desktop_visual import Visual
         self.visual = Visual(self)
+        from .desktop_profiles import Profiles
+        self.profiles=Profiles(self)
+        from .desktop_artifacts import Artifacts
+        self.artifacts=Artifacts(self)
         self.available = False
         if self.enabled:
             try:
@@ -130,7 +134,7 @@ class Desktop:
                 'screenshots': False, 'shortcuts': False, 'drag': False,
                 'applications': ['calculator'] + (['comparison'] if Path('/usr/bin/meld').is_file() else []),
                 'active_job': self.active,
-                'scopes':[{'scope':s['id'],'application':s['application'],'title':s.get('title',s['application']),'expired':time.monotonic()-s['used']>900 or (s['child'] is not None and s['child'].poll() is not None)} for s in self.scopes.values() if not s['released']]}
+                'scopes':[{'scope':s['id'],'application':s['application'],'title':s.get('title',s['application']),**{k:s[k] for k in ('project','task_id','session_id') if k in s},'expired':time.monotonic()-s['used']>900 or (s['child'] is not None and s['child'].poll() is not None)} for s in self.scopes.values() if not s['released']]}
 
     identity = staticmethod(process_identity)
     hash = staticmethod(digest)
@@ -362,6 +366,9 @@ class Desktop:
         allowed = {'availability': set(), 'status': {'job'}, 'open': {'application','left','right'},
                    'observe': {'scope'}, 'act': {'scope','snapshot','refs','buttons'}, 'cancel': {'job'}, 'release': {'scope'},
                    'discover':set(), 'select':{'candidate'}, 'prepare':{'scope','snapshot','operation','ref','text'},
+                   'project_open':{'application','project','task_id','session_id','imports','output_directory'},
+                   'artifacts':{'project','task_id','session_id'}, 'export':{'project','task_id','session_id','path','sha256','destination'},
+                   'applications':set(), 'enable_application':{'application'},
                    'visual_open':{'application','left','right','scale','outputs'}, 'visual_act':{'scope','snapshot','actions'},
                    'review':{'proposal_id'}, 'confirm':{'proposal_id','approve'}, 'stop':set()}
         if action not in allowed or set(args) - allowed[action] - {'action'}: raise ValueError('Unsupported desktop operation or fields')
@@ -394,6 +401,11 @@ class Desktop:
         if action == 'act': return self.action(args)
         with self.lock:
             if self.active: raise RuntimeError('Desktop busy; status or cancel the active job')
+            if action == 'project_open': return self.artifacts.propose_session(args)
+            if action == 'artifacts': return self.artifacts.inspect(args)
+            if action == 'export': return self.artifacts.propose_export(args)
+            if action == 'applications': return self.profiles.discover()
+            if action == 'enable_application': return self.profiles.propose(args.get('application'))
             if action == 'visual_open': return self.visual.proposal(args)
             if action == 'discover': return self.access.discover()
             if action == 'select': return self.access.select(args.get('candidate'),user)

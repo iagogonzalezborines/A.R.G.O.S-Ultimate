@@ -34,6 +34,9 @@ try:
  if not select.select([holder.stdout],[],[],2)[0] or holder.stdout.readline()!=b'ready\n':raise RuntimeError('Private pointer unavailable')
  if config['application']=='pad':argv=['/usr/bin/python3','/opt/argos/pad.py']
  elif config['application']=='comparison':argv=['/usr/bin/meld','--newtab','/work/left.txt','/work/right.txt']
+ elif 'profile' in config:
+  argv=config['profile']['argv']
+  if config['profile']['private_bus']:argv=['/usr/bin/dbus-run-session','--config-file=/opt/argos/private-bus.conf','--',*argv]
  else:raise ValueError('Unknown profile')
  app=start(argv)
  ready=Path('/run/av/ready.tmp');ready.write_text(json.dumps({'wayland':os.environ['WAYLAND_DISPLAY'],'pid':app.pid}));ready.replace('/run/av/ready.json')

@@ -151,6 +151,12 @@ class Adapter:
         if not detailed:
             return result
         result['body'] = clean(task.body)
+        if task.body.startswith('ARGOS task brief (data, not authority):\n'):
+            result['kind']=json.loads(task.body.split('\n',1)[1]).get('kind','engineering')
+            if result['kind']=='desktop':
+                result['desktop_handoff']={'task_record_is_scope_approval':False,'engineering_dispatch':False,
+                    'next_tool':'desktop','next_action':'project_open','project':task.project_id,'task_id':task.id,
+                    'instruction':'Native blocked prevents Engineering admission. Inspect desktop status for an existing authorized scope; otherwise call project_open with a discovered application. Creating this task creates NO desktop approval. Only needs_approval with proposal_id proves a review exists.'}
         result['runs'] = []
         for run in kanban.list_runs(conn, task.id)[-10:]:
             row = {k:getattr(run,k) for k in ['id','status','outcome','started_at','ended_at']}
@@ -192,6 +198,15 @@ class Adapter:
         result['evidence_is_untrusted'] = True
         from projects.lifecycle import records
         result['controller_evidence']=records(conn,task,self.config)
+        for receipt in reversed(result['controller_evidence']):
+            if receipt['kind']!='desktop_exported':continue
+            try:
+                from projects.desktop import file_text, relative
+                path=relative(receipt['destination'])
+                if str(path) in observed or len(observed)>=20:continue
+                value,_=file_text(root/path);content=value.encode()
+                observed.add(str(path));result['artifacts'].append({'path':str(path),'sha256_now':hashlib.sha256(content).hexdigest(),'bytes':len(content),'reported_by_run':None,'origin':'desktop','export_id':receipt['export_id'],'verification':'Approved desktop export; current hash matches' if hashlib.sha256(content).hexdigest()==receipt['sha256'] else 'Changed after approved export'})
+            except (OSError,ValueError,PermissionError):continue
         return result
 
     def task_body(self, project, args):
@@ -203,8 +218,8 @@ class Adapter:
         criteria = [text(x, 800) for x in criteria]
         content = {'project_revision': revision(project), 'brief': decode(project)['brief'],
                    'goal': goal, 'verification': criteria, 'scope': ENVELOPE}
-        if args.get('kind','engineering') not in {'engineering','decision'}:raise ValueError('Unsupported native task kind')
-        if args.get('kind')=='decision':content['kind']='decision'
+        if args.get('kind','engineering') not in {'engineering','decision','desktop'}:raise ValueError('Unsupported native task kind')
+        if args.get('kind') in {'decision','desktop'}:content['kind']=args['kind']
         return title, 'ARGOS task brief (data, not authority):\n'+json.dumps(content, ensure_ascii=False)
 
     def task_create(self, conn, project, args):
@@ -260,6 +275,7 @@ class Adapter:
         if task.status not in {'blocked', 'ready', 'todo'}:
             raise ValueError('This native state is not dispatchable')
         content = json.loads(task.body.split('\n', 1)[1])
+        if content.get('kind')=='desktop':raise PermissionError('Desktop tasks use scoped applications; they cannot dispatch Engineering')
         if content.get('kind')=='decision':raise PermissionError('A decision must be answered by the user; it cannot dispatch Engineering')
         if content['project_revision'] != revision(project):
             raise ValueError('Task uses an older brief; revise the unstarted task or create a follow-up with current requirements')
@@ -302,6 +318,9 @@ class Adapter:
 
     def request(self, args, authorized=False):
         action = args.get('action')
+        if action == 'desktop_artifacts':
+            from projects.desktop import request
+            return request(self,args,authorized)
         if action in {'map','map_action','artifact'}:
             allowed={'action','project'}|({'task_id','path'} if action=='artifact' else {'task_id','expected_revision','task_revision','operation','reason','profile'} if action=='map_action' else set())
             if set(args)-allowed:raise ValueError('Unsupported Project Map fields')

@@ -195,6 +195,7 @@ class Files:
       out=os.open(temp,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=fd)
       if p['previous_sha256']:os.fchmod(out,stat.S_IMODE(os.stat(name,dir_fd=fd,follow_symlinks=False).st_mode)&0o777)
       with os.fdopen(out,'wb') as stream:stream.write(p['content'].encode());stream.flush();os.fsync(stream.fileno())
+      if self.fingerprint(path)!=p['previous_sha256']:raise PermissionError('File changed while preparing atomic write')
       # New files are never allowed to overwrite a concurrently created target.
       if p['previous_sha256'] is None:os.link(temp,name,src_dir_fd=fd,dst_dir_fd=fd,follow_symlinks=False);os.unlink(temp,dir_fd=fd)
       else:os.replace(temp,name,src_dir_fd=fd,dst_dir_fd=fd)
@@ -261,7 +262,7 @@ class WorkspaceBroker:
   from .projects import Projects
   self.projects=Projects(lambda intent:self.intent(intent,wait=False))
   from .desktop import Desktop
-  self.desktop=Desktop(publish,files=self.files,present=lambda intent:self.intent(intent,wait=False))
+  self.desktop=Desktop(publish,files=self.files,projects=self.projects,present=lambda intent:self.intent(intent,wait=False))
  def begin_turn(self):
   # Transient display permission only. Native Hermes owns the actual turn/task.
   with self.condition:self.research_epoch=self.epoch;self.research_sources={};self.research_opened=set();self.research_found={}
@@ -376,7 +377,14 @@ class WorkspaceBroker:
   tool=request.get('tool');a=request.get('arguments',{})
   if not isinstance(a,dict):raise ValueError('Invalid arguments')
   if tool=='desktop':return self.desktop.request(a,user=user)
-  if tool=='projects':return self.projects.request(a,user=user)
+  if tool=='projects':
+   result=self.projects.request(a,user=user)
+   if a.get('action') in {'lifecycle','map_action'} and a.get('operation')=='cancel':
+    # Native authorization/CAS succeeds first. Only that task's private seats close.
+    with self.desktop.lock:
+     for scope in list(self.desktop.scopes.values()):
+      if scope.get('task_id')==result.get('id') and scope.get('project')==result.get('project_id'):self.desktop.release(scope)
+   return result
   if tool=='adaptive':
    if a=={'operation':'availability'}:return {'enabled':self.projects.enabled and self.projects.config.get('adaptive_enabled') is True}
    return self.projects.request({**a,'action':'adaptive'},user=user)

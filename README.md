@@ -1,5 +1,7 @@
 # ARGOS · Linux 0.3
 
+[Aplicaciones reales y documentos persistentes — 9 de noviembre](experiments/hermes-pilot/reports/desktop-artifacts-2026-11-09.md): Meld y Thunar mediante perfiles revisados; archivos guardados, entrega autorizada y evidencia nativa de proyecto/tarea.
+
 [Escritorio visual independiente — 9 de noviembre](experiments/hermes-pilot/reports/desktop-visual-2026-11-09.md): sesión Wayland desechable con captura, clic, texto, atajos, scroll y arrastre; pruebas reales con General, lienzo y copias en Meld. Sin entrada global en el escritorio habitual.
 
 [Control semántico en segundo plano — 9 de noviembre](experiments/hermes-pilot/reports/desktop-background-2026-11-09.md): ventanas autorizadas, texto, botones/menús, interfaz y pruebas reales de convivencia. Entrada física/arrastre en el escritorio habitual siguen no disponibles.

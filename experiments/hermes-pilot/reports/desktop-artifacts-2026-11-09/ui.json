@@ -1,0 +1,91 @@
+{
+  "checks": [
+    {
+      "name": "natural request produced scoped real application",
+      "ok": true
+    },
+    {
+      "name": "review does not export early",
+      "ok": true
+    },
+    {
+      "name": "real document includes project requirements",
+      "ok": true
+    },
+    {
+      "name": "native task retains verified export",
+      "ok": true
+    },
+    {
+      "name": "Project Map opens the actual exported document",
+      "ok": true
+    },
+    {
+      "name": "narrow artifact panel has no horizontal overflow",
+      "ok": true
+    },
+    {
+      "name": "visual work runs independently",
+      "ok": true
+    },
+    {
+      "name": "applications respond during desktop work",
+      "ok": true
+    },
+    {
+      "name": "closing panels preserves running work",
+      "ok": true
+    },
+    {
+      "name": "cancel cleans held input",
+      "ok": true
+    },
+    {
+      "name": "conversation reports persistent delivery",
+      "ok": true
+    },
+    {
+      "name": "native task cancellation closes its private application",
+      "ok": true
+    },
+    {
+      "name": "closing application preserves saved working files",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [
+    {
+      "request": "En el proyecto «Gestor 3D entrega 1794226014311», abre un editor de texto, prepara un documento con su objetivo, requisitos y decisiones, y guárdalo en docs/requisitos.md. Quiero que lo hagas usando la aplicación, compruebes el archivo guardado y me presentes la entrega para revisión.",
+      "answer": "El brief está recuperado y la entrega ya está preparada: objetivo, tres requisitos y decisión de funcionamiento sin red. La apertura de Meld y la creación de `docs` esperan tu autorización en el panel de revisión; después podré guardar y verificar `docs/requisitos.md` y presentarlo para revisión.",
+      "seconds": 25.048415401000003
+    },
+    {
+      "request": "Ya he autorizado el espacio de trabajo. Continúa en el editor abierto, guarda el documento, verifica el contenido real del archivo y presenta la entrega a docs/requisitos.md para mi aprobación.",
+      "answer": "El documento está guardado en el espacio de Meld y verifiqué su contenido real: incluye el objetivo, los tres requisitos y la decisión de funcionar sin conexión. La copia exacta está presentada para tu aprobación como `docs/requisitos.md`; el archivo del proyecto aún no se ha entregado.\n\nSHA-256: `a69d9976d35ae9cbd44a8e357d86b1c81d9b06d3b39a1ec7bc963f3a7f2acbd2`",
+      "seconds": 37.100925232
+    },
+    {
+      "request": "Ya he aprobado la entrega. Dime dónde quedó guardado el documento y si puedo cerrar la aplicación sin perderlo.",
+      "answer": "Quedó guardado en `/tmp/argos-desktop-qa/home/Projects/gestor-3d-entrega-1794226014311/docs/requisitos.md`. Sí, puedes cerrar Meld sin perderlo: la entrega aprobada ya está escrita en el proyecto y se verificó que el archivo guardado coincide.",
+      "seconds": 5.943139341999995
+    }
+  ],
+  "errors": [],
+  "host_input": false,
+  "project": {
+    "id": "p_584ef289",
+    "path": "/tmp/argos-desktop-qa/home/Projects/gestor-3d-entrega-1794226014311"
+  },
+  "artifact": {
+    "path": "docs/requisitos.md",
+    "text": "# Gestor 3D\n\n## Objetivo\nGestionar una biblioteca de modelos 3D.\n\n## Requisitos\n- Catalogar archivos STL y OBJ.\n- Conservar los archivos originales.\n- Permitir búsquedas por etiquetas.\n\n## Decisión\n- El sistema funcionará sin conexión a la red.\n\n",
+    "sha256": "a69d9976d35ae9cbd44a8e357d86b1c81d9b06d3b39a1ec7bc963f3a7f2acbd2"
+  },
+  "task_id": "t_653937e1",
+  "session_id": "868343f24be4da34f1a3872a",
+  "apps_ms": 3.685662999996566
+}

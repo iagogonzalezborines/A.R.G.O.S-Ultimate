@@ -9,7 +9,7 @@ TOOL = {'name':'projects', 'description':
     'name/slug, folder and brief; user grants that folder and local Engineering scope once in the existing review panel. '
     'No agent approval tool. update replaces only the brief, preserving unchanged requirements/decisions, and requires '
     'the latest expected_revision. task_create needs project, expected_revision, title, goal and verification; optional '
-    'kind=decision creates a pending user decision; it is never dispatched to Engineering. open_map opens the real interactive project panel. map reads its current native evidence. parents are native prerequisite task IDs. Identical task requests are deduplicated. task_update revises an unstarted task; dependency links/unlinks one prerequisite, both require current project/task revisions. tasks/task read native '
+    'kind=desktop creates a persistent task for isolated application work and artifact delivery; use desktop.project_open, never Engineering dispatch for it. kind=decision creates a pending user decision; it is never dispatched to Engineering. open_map opens the real interactive project panel. map reads its current native evidence. parents are native prerequisite task IDs. Identical task requests are deduplicated. task_update revises an unstarted task; dependency links/unlinks one prerequisite, both require current project/task revisions. tasks/task read native '
     'status, runs, comments and bounded artifacts. dispatch needs project, task_id, expected_revision and task_revision; '
     'it starts scoped native Codex work and returns promptly. An interrupted attempt requires inspecting effects before '
     'a trusted, bounded retry grant followed by dispatch; repeated dispatch during a run never starts a second worker. Native review is not verified '
@@ -19,4 +19,4 @@ TOOL = {'name':'projects', 'description':
         'project':{**S,'description':'Native ID, exact name or alias returned by list/resolve.'},'name':S,'slug':S,
         'path':{**S,'description':'Optional absolute folder. OMIT to use the configured default projects root and slug; never pass a relative slug here.'},
         'register':{'type':'boolean','description':'Default false for a NEW folder. True only when the user explicitly asks to register an EXISTING folder.'},'brief':BRIEF,
-        'kind':{'type':'string','enum':['engineering','decision']},'expected_revision':S,'task_revision':S,'title':S,'goal':S,'verification':A(12),'parents':A(12),'task_id':S,'parent_id':S,'operation':{'type':'string','enum':['link','unlink']}}}}
+        'kind':{'type':'string','enum':['engineering','decision','desktop']},'expected_revision':S,'task_revision':S,'title':S,'goal':S,'verification':A(12),'parents':A(12),'task_id':S,'parent_id':S,'operation':{'type':'string','enum':['link','unlink']}}}}

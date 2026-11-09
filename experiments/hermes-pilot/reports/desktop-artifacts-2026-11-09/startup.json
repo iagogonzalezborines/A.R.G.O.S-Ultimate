@@ -1,0 +1,23 @@
+{
+  "checks": [
+    {
+      "name": "installed desktop ready",
+      "ok": true
+    },
+    {
+      "name": "installed real profiles enabled",
+      "ok": true
+    },
+    {
+      "name": "new controls discoverable",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [],
+  "errors": [],
+  "host_input": false
+}

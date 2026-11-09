@@ -1,0 +1,63 @@
+{
+  "meld-editor": {
+    "name": "Meld · editor de documentos",
+    "executable": "/usr/bin/meld",
+    "argv": [
+      "/usr/bin/meld",
+      "--newtab",
+      "/work/document.md",
+      "/work/reference.txt"
+    ],
+    "resources": [
+      "/usr/share/meld",
+      "/usr/bin/python3"
+    ],
+    "app_id": "org.gnome.Meld",
+    "private_bus": false,
+    "memory_mib": 1536,
+    "network": false,
+    "filesystem": "private workspace only; explicit imported copies",
+    "operations": [
+      "capture",
+      "click",
+      "scroll",
+      "text",
+      "keys",
+      "move",
+      "down",
+      "up",
+      "drag"
+    ],
+    "seed": {
+      "document.md": "",
+      "reference.txt": ""
+    }
+  },
+  "thunar": {
+    "name": "Thunar · archivos de trabajo",
+    "executable": "/usr/bin/thunar",
+    "argv": [
+      "/usr/bin/thunar",
+      "--window",
+      "/work"
+    ],
+    "resources": [],
+    "app_id": "thunar",
+    "private_bus": true,
+    "memory_mib": 1536,
+    "network": false,
+    "filesystem": "private workspace only; explicit imported copies",
+    "operations": [
+      "capture",
+      "click",
+      "scroll",
+      "text",
+      "keys",
+      "move",
+      "down",
+      "up",
+      "drag"
+    ],
+    "seed": {}
+  }
+}

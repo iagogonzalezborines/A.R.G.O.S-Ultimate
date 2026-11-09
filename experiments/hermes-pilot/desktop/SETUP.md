@@ -65,3 +65,33 @@ python experiments/hermes-pilot/desktop/visual/qa_native.py --output /tmp/argos-
 ```
 
 Prueba completa de aplicación/General: preparar la instalación desechable mediante `desktop/qa_prepare.py`, activar allí el conjunto con `prepare_visual_desktop.py --pilot /tmp/argos-desktop-qa/pilot --activate`, y ejecutar `node /tmp/argos-desktop-qa/pilot/desktop/visual/qa_ui.cjs`. Este harness crea otro compositor privado para Electron, separado del scope de ARGOS. Usa la suscripción existente. Ejecutar siempre `desktop/qa_prepare.py --cleanup` al terminar para retirar las credenciales derivadas. Los tests normales no abren estos compositores.
+
+## Aplicaciones reales y documentos de proyecto
+
+Sobre la instalación anterior, sin descargar paquetes:
+
+```sh
+python scripts/prepare_hermes_pilot.py --register
+```
+
+En **Control de aplicaciones**, revisar la habilitación de **Meld · editor de documentos** o **Thunar · archivos de trabajo** si están instalados. La habilitación comprueba el ejecutable y los recursos declarados y realiza un arranque/captura privados. El catálogo `visual/applications.json` contiene definiciones revisadas, nunca comandos recibidos del modelo. Un cambio de definición, ejecutable o recursos declarados invalida la habilitación. Las bibliotecas del sistema siguen dependiendo de la instalación de la distribución; no es un pin completo del sistema operativo.
+
+Pedir, por ejemplo: «En el proyecto Biblioteca 3D, abre un editor, prepara sus requisitos y presenta la entrega a docs/requisitos.md». General resuelve el proyecto y una tarea nativa de escritorio. La primera revisión autoriza la aplicación, las copias importadas y la carpeta de entrega; la segunda muestra el documento concreto y el estado anterior del destino. Una acción de escritorio no confirma su propia revisión. Para documentos simples se mantiene el camino directo de Files.
+
+Los documentos guardados se conservan en `project_state/desktop-artifacts/<sesión>/work`, vinculados mediante evidencia firmada al proyecto/tarea nativos. Las copias verificadas están fuera del montaje de la aplicación. Reiniciar no restaura permisos ni reproduce entrada/exportaciones. Desde **Proyectos → tarea → Archivos de escritorio** se inspecciona y propone la reapertura. Retirar acceso cierra la sesión; cancelar la tarea también cierra su aplicación y conserva lo guardado. El texto sin guardar no tiene recuperación garantizada.
+
+Formatos entregables: UTF-8 `.md`, `.txt`, `.csv` y JSON válido, hasta 256 KiB por archivo. Importación explícita de hasta ocho archivos pequeños, con presupuesto conjunto de 28 KB de texto serializado. No se monta el proyecto completo. Hasta ocho espacios conservados por tarea, 64 archivos inspeccionados y profundidad cuatro; no hay eliminación automática de documentos guardados ni sincronización entre equipos. Revisar el tamaño del estado nativo antes de acumular trabajos. La carpeta de entrega autorizada puede tener hasta tres componentes; la entrega va directamente dentro de ella. Nombres y contenidos que parezcan credenciales quedan excluidos.
+
+**Reproducir la prueba:** empezar sin `/tmp/argos-desktop-qa/pilot`, conservando antes la evidencia de cualquier ensayo anterior. `qa_prepare.py --projects` prepara el login derivado, habilita Projects/Project Map y la herramienta Projects y configura exclusivamente las raíces desechables. Los harnesses rechazan raíces personales. El conjunto visual debe estar previamente preparado en la instalación de origen:
+
+```sh
+python experiments/hermes-pilot/desktop/qa_prepare.py --projects
+python /tmp/argos-desktop-qa/pilot/projects/qa_desktop.py
+python /tmp/argos-desktop-qa/pilot/desktop/visual/qa_artifacts_native.py
+node /tmp/argos-desktop-qa/pilot/desktop/visual/qa_artifacts_ui.cjs
+python experiments/hermes-pilot/desktop/qa_prepare.py --cleanup
+```
+
+Usar el Python del piloto para los checks nativos si el Python del sistema no tiene sus dependencias. El segundo check habilita los dos perfiles en QA y usa aplicaciones reales; el tercero usa Electron y General/Codex reales en otro compositor privado. Los tests no escriben proyectos personales ni usan micrófono/altavoces. Ejecutar la limpieza de credenciales derivadas también después de un fallo. Evidencia y límites: [aplicaciones y entregas](../reports/desktop-artifacts-2026-11-09.md).
+
+**Reversión:** retirar los accesos visuales y eliminar las habilitaciones de `desktop.state/visual-profiles.json` impide nuevas aperturas de esos perfiles; reiniciar ARGOS. Para volver al código anterior, materializar el commit `2ca8855` en un destino separado, conservando configuración y estado privados. No borrar `project_state/desktop-artifacts` ni las tablas/comentarios nativos si se desea recuperar documentos. Los archivos ya entregados permanecen en el proyecto. No hay paquetes globales, portales ni reglas de Hyprland que restaurar.

@@ -161,6 +161,12 @@ class Windows:
         if not approve: p['status']='cancelled'; return {'status':'cancelled'}
         if self.d.active: raise RuntimeError('Desktop busy')
         p['status'] = 'consumed'  # A failed start never replays an approved effect.
+        if p['kind'] == 'desktop_project':
+            result=self.d.artifacts.launch(p);p['status']='applied';return {'status':'applied',**result}
+        if p['kind'] == 'desktop_export':
+            result=self.d.artifacts.export(p);p['status']='applied';return result
+        if p['kind'] == 'visual_enable':
+            result=self.d.profiles.enable(p['profile']);p['status']='applied';return result
         if p['kind'] == 'visual_launch':
             result = self.d.visual.launch(p); p['status']='applied'
             return {'status':'applied',**result}

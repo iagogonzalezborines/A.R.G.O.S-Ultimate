@@ -56,7 +56,8 @@ for line in sys.stdin:
      if not desktop['result'].get('isolated_visual'):
       props=exposed['inputSchema']['properties']
       props['action']['enum']=[a for a in props['action']['enum'] if not a.startswith('visual_')]
-      props['application']['enum'].remove('pad')
+      props['application']={'type':'string','enum':['calculator','comparison']}
+      props['action']['enum']=[a for a in props['action']['enum'] if a not in {'applications','enable_application','project_open','artifacts','export'}]
       for field in ('actions','scale','outputs'):props.pop(field,None)
      selected.append(exposed)
    except (OSError,ValueError):pass

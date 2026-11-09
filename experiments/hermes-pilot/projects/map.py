@@ -31,6 +31,7 @@ def row(adapter,conn,task,board):
     else:
         body=json.loads(task.body.split('\n',1)[1]);result.update(kind=body.get('kind','engineering'),goal=body['goal'],criteria=body['verification'],capability='Codex Engineering')
         if result['kind']=='decision':result['capability']='User decision'
+        if result['kind']=='desktop':result['capability']='Isolated desktop · reviewed artifacts'
     verified=[e for e in result['controller_evidence'] if e['kind']=='verification' and e.get('passed')]
     if verified and result['artifacts']:
         current={a['path']:a['sha256_now'] for a in result['artifacts']}
@@ -38,6 +39,8 @@ def row(adapter,conn,task,board):
     if task.status=='blocked' and result['runs']:result['blocked_reason']=result['runs'][-1].get('summary') or result['last_failure']
     result['state']=('decision' if result['kind']=='decision' and task.status not in {'done','archived'} else
                      'queued' if task.status in {'todo','ready'} or task.status=='blocked' and not result['runs'] else task.status)
+    if result['kind']=='desktop' and task.status not in {'done','archived'}:
+        result['state']='artifacts_delivered' if any(e['kind']=='desktop_exported' for e in result['controller_evidence']) else 'desktop_pending'
     return result
 
 
@@ -65,7 +68,10 @@ def request(adapter,args,authorized=False):
                 if path not in {a['path'] for a in view['artifacts']}:raise PermissionError('Only an observed artifact of this task can be opened')
                 file=Path(project.primary_path)/path
                 import hashlib
-                content=read_regular(file,262144)
+                if any(a.get('origin')=='desktop' and a['path']==path for a in view['artifacts']):
+                    from projects.desktop import file_text
+                    value,_=file_text(file);content=value.encode()
+                else:content=read_regular(file,262144)
                 return {'path':path,'text':clean(content.decode('utf-8')),'sha256':hashlib.sha256(content).hexdigest()}
         boards=[project.board_slug]
         if adapter.config.get('adaptive_enabled'):

@@ -1,0 +1,30 @@
+{
+  "profile": {
+    "name": "Dolphin \u00b7 archivos de trabajo",
+    "executable": "/usr/bin/dolphin",
+    "argv": [
+      "/usr/bin/dolphin",
+      "--new-window",
+      "/work"
+    ],
+    "resources": [],
+    "app_id": "org.kde.dolphin",
+    "private_bus": true,
+    "memory_mib": 1536,
+    "network": false,
+    "filesystem": "private workspace only; explicit imported copies",
+    "operations": [
+      "capture",
+      "click",
+      "scroll",
+      "text",
+      "keys",
+      "move",
+      "down",
+      "up",
+      "drag"
+    ],
+    "seed": {}
+  },
+  "result": "Launch, capture, selection and dialog input worked; copied.md was not produced. Private D-Bus without activation also failed to complete copy. Not advertised or enabled in delivery."
+}
