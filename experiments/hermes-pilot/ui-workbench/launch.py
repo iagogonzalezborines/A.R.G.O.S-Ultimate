@@ -22,7 +22,7 @@ def main():
  parser=argparse.ArgumentParser();parser.add_argument('--text-only',action='store_true',help='Use the existing conversation without starting microphone or synthesis workers');args=parser.parse_args()
  home=ROOT/'state/home';home.mkdir(parents=True,exist_ok=True,mode=0o700)
  env={'HOME':str(home),'PATH':'/usr/bin:/bin','LANG':'C.UTF-8','ARGOS_UI_PLATFORM':'x11','XDG_CONFIG_HOME':str(ROOT/'state/config'),'XDG_CACHE_HOME':str(ROOT/'state/cache'),'XDG_DATA_HOME':str(ROOT/'state/data'),'XDG_STATE_HOME':str(ROOT/'state/state')}
- for key in ['DISPLAY','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS']:
+ for key in ['DISPLAY','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS','HYPRLAND_INSTANCE_SIGNATURE']:
   if os.environ.get(key):env[key]=os.environ[key]
  private=ROOT/'private';private.mkdir(exist_ok=True,mode=0o700);lease=(private/'app.lock').open('a')
  try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)

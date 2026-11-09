@@ -24,7 +24,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(destination, *, microphone=None, register=False, projects=None, project_map=None, adaptive=None, adopt_legacy=False):
+def prepare(destination, *, microphone=None, register=False, projects=None, project_map=None, adaptive=None, workspace_control=None, adopt_legacy=False):
     destination = Path(destination).expanduser().resolve()
     if destination == REPO or destination.is_relative_to(REPO):
         raise ValueError('Install outside the source repository')
@@ -119,6 +119,8 @@ def prepare(destination, *, microphone=None, register=False, projects=None, proj
         if project_map and not settings.get('projects_enabled'):raise ValueError('Enable Projects before Project Map')
         settings['project_map_enabled']=bool(project_map)
         config_path.write_text(json.dumps(settings,indent=2)+'\n')
+    if workspace_control is not None:
+        configure_workspace_control(destination, workspace_control)
     if register:
         register_launcher(destination)
     return {'installation': str(destination), 'source_files': len(paths),
@@ -163,6 +165,21 @@ def configure_projects(destination, enabled, *, capability="projects"):
     config_path.write_text(json.dumps(config, indent=2)+'\n')
 
 
+def configure_workspace_control(destination, enabled):
+    """Deliberate transport admission; Broker still owns every scope/approval."""
+    codex=Path(destination)/'state/codex/config.toml'
+    source=codex.read_text();parsed=tomllib.loads(source)
+    server=parsed.get('mcp_servers',{}).get('argos-workspace',{})
+    if server.get('command')!=str(Path(destination)/'env/bin/python') or server.get('args')!=[str(Path(destination)/'checks/workspace_mcp.py')] or 'workspace' not in server.get('enabled_tools',[]):
+        raise ValueError('Workspace transport differs from the reviewed local Broker; preserved')
+    section='[mcp_servers.argos-workspace.tools.workspace]'
+    current=server.get('tools',{}).get('workspace',{}).get('approval_mode')
+    if current is not None and current!='approve':raise ValueError('Custom workspace approval policy preserved; review it before activation')
+    if enabled and section not in source:source+='\n'+section+'\napproval_mode="approve"\n'
+    if not enabled:source=re.sub(r'(?ms)^\[mcp_servers\.argos-workspace\.tools\.workspace\]\s*\n.*?(?=^\[|\Z)','',source)
+    tomllib.loads(source);codex.write_text(source)
+
+
 def register_launcher(destination):
     """A separate menu entry; leaves older ARGOS launchers and autostart intact."""
     executable = destination / 'bin/argos-hermes'
@@ -195,5 +212,6 @@ if __name__ == '__main__':
     parser.add_argument('--projects', choices=['on','off'], help='Explicitly enable or disable the installed native project integration; never starts a worker')
     parser.add_argument('--project-map', choices=['on','off'], help='Enable the validated native Project Map panel; no worker starts')
     parser.add_argument('--adaptive', choices=['on','off'], help='Enable bounded native capabilities; local inference stays unavailable without its reviewed private configuration')
+    parser.add_argument('--workspace-control', choices=['on','off'], help='Deliberately admit the reviewed workspace Broker tool in Codex; does not authorize files or Engineering')
     args = parser.parse_args()
-    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on', project_map=None if args.project_map is None else args.project_map=='on', adaptive=None if args.adaptive is None else args.adaptive=='on', adopt_legacy=args.adopt_legacy), indent=2))
+    print(json.dumps(prepare(args.destination, microphone=args.microphone, register=args.register, projects=None if args.projects is None else args.projects=='on', project_map=None if args.project_map is None else args.project_map=='on', adaptive=None if args.adaptive is None else args.adaptive=='on', workspace_control=None if args.workspace_control is None else args.workspace_control=='on', adopt_legacy=args.adopt_legacy), indent=2))

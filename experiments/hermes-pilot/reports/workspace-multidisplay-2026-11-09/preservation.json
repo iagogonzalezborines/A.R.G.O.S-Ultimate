@@ -1,0 +1,20 @@
+{
+  "original_artifact_hashes_unchanged": {
+    "LICENSES/ANATOMY-MIT.txt": true,
+    "LICENSES/ARCHIFY-APACHE-2.0.txt": true,
+    "LICENSES/ARCHIFY-NOTICE.txt": true,
+    "README.md": true,
+    "architecture.html": true,
+    "architecture.json": true,
+    "bracket.py": true,
+    "bracket.step": true,
+    "bracket.stl": true,
+    "comparador-referencias.html": true,
+    "comparador-referencias.mjs": true,
+    "medidas.json": true,
+    "preview.png": true,
+    "sculpture.blend": true,
+    "sculpture.glb": true,
+    "sculpture.py": true
+  }
+}

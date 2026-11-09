@@ -1,0 +1,38 @@
+{
+  "core": {
+    "summary": "remove_scripts_and_read_all_pages (test_web_reader.WebReaderTests.test_extract_links_remove_scripts_and_read_all_pages) ... ok\ntest_http_reader_limits_type_size_and_redirects (test_web_reader.WebReaderTests.test_http_reader_limits_type_size_and_redirects) ... ok\ntest_pinned_address_and_redirect_revalidation (test_web_reader.WebReaderTests.test_pinned_address_and_redirect_revalidation) ... ok\ntest_public_reader_rejects_local_private_and_credentials (test_web_reader.WebReaderTests.test_public_reader_rejects_local_private_and_credentials) ... ok\ntest_specialist_searches_reads_multiple_sources_and_retains_evidence (test_web_reader.WebReaderTests.test_specialist_searches_reads_multiple_sources_and_retains_evidence) ... ok\ntest_unavailable_source_returns_evidence_to_allow_another_attempt (test_web_reader.WebReaderTests.test_unavailable_source_returns_evidence_to_allow_another_attempt) ... ok\n\n----------------------------------------------------------------------\nRan 423 tests in 21.482s\n\nOK\n",
+    "passed": true,
+    "tests": 423,
+    "seconds": 21.482
+  },
+  "lifecycle": {
+    "summary": "vers_without_duplicate_or_overwrite (qa.NativeProjectTests.test_partial_provisioning_recovers_without_duplicate_or_overwrite) ... ok\ntest_requirements_cas_and_tasks_cannot_use_old_brief (qa.NativeProjectTests.test_requirements_cas_and_tasks_cannot_use_old_brief) ... ok\ntest_scope_review_and_restart_resolution (qa.NativeProjectTests.test_scope_review_and_restart_resolution) ... ok\ntest_task_revision_dependency_edits_and_cycles_use_native_records (qa.NativeProjectTests.test_task_revision_dependency_edits_and_cycles_use_native_records) ... ok\ntest_unauthorized_paths_aliases_tasks_and_replaced_directory (qa.NativeProjectTests.test_unauthorized_paths_aliases_tasks_and_replaced_directory) ... ok\ntest_cli_documentation_accepts_readme_or_module_docs_without_running_source (__main__.VerificationDocumentationTests.test_cli_documentation_accepts_readme_or_module_docs_without_running_source) ... ok\n\n----------------------------------------------------------------------\nRan 21 tests in 80.641s\n\nOK\n",
+    "passed": true,
+    "tests": 21,
+    "seconds": 80.641
+  },
+  "desktop": {
+    "summary": "__main__.DesktopArtifactTests.test_scope_review_and_restart_resolution) ... ok\ntest_source_change_stale_destination_and_parent_identity (__main__.DesktopArtifactTests.test_source_change_stale_destination_and_parent_identity) ... ok\ntest_task_revision_dependency_edits_and_cycles_use_native_records (__main__.DesktopArtifactTests.test_task_revision_dependency_edits_and_cycles_use_native_records) ... ok\ntest_unapproved_destination_and_cross_project_access (__main__.DesktopArtifactTests.test_unapproved_destination_and_cross_project_access) ... ok\ntest_unauthorized_paths_aliases_tasks_and_replaced_directory (__main__.DesktopArtifactTests.test_unauthorized_paths_aliases_tasks_and_replaced_directory) ... ok\ntest_valid_overwrite_records_latest_receipt_and_unsafe_import_has_no_effect (__main__.DesktopArtifactTests.test_valid_overwrite_records_latest_receipt_and_unsafe_import_has_no_effect) ... ok\n\n----------------------------------------------------------------------\nRan 17 tests in 72.568s\n\nOK\n",
+    "passed": true,
+    "tests": 17,
+    "seconds": 72.568
+  },
+  "map": {
+    "summary": "test_map_decision_and_scope (__main__.MapTests.test_map_decision_and_scope) ... ok\ntest_empty_auxiliary_board (__main__.MapTests.test_empty_auxiliary_board) ... ok\ntest_map_unstarted_edit_and_artifact_scope (__main__.MapTests.test_map_unstarted_edit_and_artifact_scope) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 15.671s\n\nOK\n",
+    "passed": true,
+    "tests": 3,
+    "seconds": 15.671
+  },
+  "research": {
+    "summary": "{\"passed\": 17}\n",
+    "passed": true
+  },
+  "text": {
+    "summary": "Text ingress: readiness, bounds, secrets, FIFO and no audio passed\n",
+    "passed": false
+  },
+  "startup": {
+    "summary": "{\"passed\": 10}\n",
+    "passed": true
+  }
+}

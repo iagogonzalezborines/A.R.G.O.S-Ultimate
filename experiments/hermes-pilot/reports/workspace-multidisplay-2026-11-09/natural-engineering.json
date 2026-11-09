@@ -1,0 +1,564 @@
+{
+  "checks": [
+    {
+      "name": "actual Codex worker reached foreground wait",
+      "ok": true
+    },
+    {
+      "name": "three real virtual outputs with mixed scale and portrait",
+      "ok": true
+    },
+    {
+      "name": "one control window and two minimal surfaces",
+      "ok": true
+    },
+    {
+      "name": "secondary placements verified",
+      "ok": true
+    },
+    {
+      "name": "CAD interactive geometry rendered",
+      "ok": true
+    },
+    {
+      "name": "holographic view changes presentation",
+      "ok": true
+    },
+    {
+      "name": "orthographic direction control changes camera",
+      "ok": true
+    },
+    {
+      "name": "real Blender GLB renders without Blender process",
+      "ok": true
+    },
+    {
+      "name": "STEP converts in read-only sandbox",
+      "ok": true
+    },
+    {
+      "name": "swap keeps artifact references and verifies destinations",
+      "ok": true
+    },
+    {
+      "name": "hide removes every ARGOS surface",
+      "ok": true
+    },
+    {
+      "name": "conversation stays alive while hidden",
+      "ok": true
+    },
+    {
+      "name": "native worker remains active with every surface hidden",
+      "ok": true
+    },
+    {
+      "name": "real conversation answered while Engineering stayed active",
+      "ok": true
+    },
+    {
+      "name": "explicit native cancellation cleans worker",
+      "ok": true
+    },
+    {
+      "name": "show restores same surfaces",
+      "ok": true
+    },
+    {
+      "name": "disconnect retains all artifacts on surviving outputs",
+      "ok": true
+    },
+    {
+      "name": "reconnect restores preferred monitor identity",
+      "ok": true
+    },
+    {
+      "name": "Anatomy keyboard interaction preserved",
+      "ok": true
+    },
+    {
+      "name": "independent artifact sandbox denies all controller authority",
+      "ok": true
+    },
+    {
+      "name": "return to integrated view preserves native association",
+      "ok": true
+    },
+    {
+      "name": "Archify interactive SVG displayed",
+      "ok": true
+    },
+    {
+      "name": "Electron restart restores authorized references without new tasks",
+      "ok": true
+    },
+    {
+      "name": "single main conversation and no secondary voice controls",
+      "ok": true
+    },
+    {
+      "name": "natural request hides all surfaces",
+      "ok": true
+    },
+    {
+      "name": "natural request restores the same workspace",
+      "ok": true
+    },
+    {
+      "name": "General resolves actual artifact and monitor keys",
+      "ok": true
+    },
+    {
+      "name": "only model mode through General",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [
+    {
+      "text": "¿Sigues disponible? Responde brevemente sin abrir ventanas ni detener tareas.",
+      "answer": "Sí, sigo disponible; no abriré ventanas ni detendré tareas.",
+      "seconds": 4.1058284060000005
+    },
+    {
+      "text": "ARGOS, oculta el workspace sin detener la conversación ni las tareas.",
+      "answer": "Workspace oculto. La conversación y las tareas siguen activas.",
+      "seconds": 9.319651053000008
+    },
+    {
+      "text": "ARGOS, vuelve a mostrarte.",
+      "answer": "Workspace mostrado de nuevo.",
+      "seconds": 7.101603108000011
+    },
+    {
+      "text": "Pon el modelo bracket.stl que ya está abierto en la segunda pantalla. Conserva los otros artefactos; no crees tareas ni archivos.",
+      "answer": "bracket.stl se movió a la segunda pantalla. Los otros artefactos se conservaron; no creé tareas ni archivos.",
+      "seconds": 13.56626943
+    },
+    {
+      "text": "Muéstrame solo el modelo bracket.stl que ya está abierto.",
+      "answer": "Ahora se muestra solo bracket.stl; los otros artefactos siguen abiertos, pero ocultos.",
+      "seconds": 15.785889593
+    }
+  ],
+  "errors": [],
+  "host_input": false,
+  "virtual_monitors": true,
+  "project": {
+    "id": "p_438b4b74",
+    "name": "Especialidades ARGOS 1794227809982",
+    "slug": "especialidades-argos-1794227809982",
+    "path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+    "board": "argos-especialidades-argos-1794227809982",
+    "revision": "bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585",
+    "brief": {
+      "objective": "Demostrar artefactos técnicos persistentes aislados",
+      "decisions": [
+        "Diagramas explicativos, no autoridad de estado",
+        "Sin fabricación ni certificación mecánica"
+      ],
+      "aliases": [],
+      "verification": [
+        "Abrir y verificar los artefactos reales"
+      ],
+      "requirements": [
+        "Guardar fuentes editables y exportaciones en este proyecto",
+        "Trabajar sin red ni hardware"
+      ]
+    },
+    "state": "ready",
+    "scope": "Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.",
+    "data_is_untrusted": true
+  },
+  "background": {
+    "id": "t_69ca15d9",
+    "marker": "workspace-qa-1794232364573.started",
+    "cancel": {
+      "id": "t_69ca15d9",
+      "project_id": "p_438b4b74",
+      "title": "QA workspace oculto workspace-qa-1794232364573.started",
+      "status": "archived",
+      "current_run_id": null,
+      "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+      "max_runtime_seconds": 300,
+      "last_failure": "",
+      "block_kind": null,
+      "parents": [],
+      "revision": "6a2cea49b516c2a49e945ab83772dabfb9406c5184c84d67b3b14ab9ff06383f",
+      "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Prueba autorizada de convivencia. Escribe workspace-qa-1794232364573.started con started en la raíz y ejecuta python -c \\\"import time; time.sleep(180)\\\" en primer plano. No hagas otros cambios ni lances procesos separados. Espera la cancelación del controlador.\", \"verification\": [\"La ocultación no interrumpe el trabajador; cancelación nativa explícita\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\"}",
+      "kind": "engineering",
+      "runs": [
+        {
+          "id": 7,
+          "status": "reclaimed",
+          "outcome": "reclaimed",
+          "started_at": 1794232369,
+          "ended_at": 1794232413,
+          "kind": "execution",
+          "summary": "task archived with run still active",
+          "metadata_truncated": false,
+          "metadata": {}
+        }
+      ],
+      "comments": [],
+      "events": [
+        {
+          "id": 79,
+          "kind": "created",
+          "run_id": null,
+          "at": 1794232365
+        },
+        {
+          "id": 80,
+          "kind": "blocked",
+          "run_id": null,
+          "at": 1794232365
+        },
+        {
+          "id": 81,
+          "kind": "unblocked",
+          "run_id": null,
+          "at": 1794232369
+        },
+        {
+          "id": 82,
+          "kind": "claimed",
+          "run_id": 7,
+          "at": 1794232369
+        },
+        {
+          "id": 83,
+          "kind": "spawned",
+          "run_id": 7,
+          "at": 1794232370
+        },
+        {
+          "id": 84,
+          "kind": "owner_admitted",
+          "run_id": 7,
+          "at": 1794232371
+        },
+        {
+          "id": 85,
+          "kind": "worker_bound",
+          "run_id": 7,
+          "at": 1794232372
+        },
+        {
+          "id": 86,
+          "kind": "heartbeat",
+          "run_id": 7,
+          "at": 1794232375
+        },
+        {
+          "id": 87,
+          "kind": "archived",
+          "run_id": 7,
+          "at": 1794232413
+        },
+        {
+          "id": 88,
+          "kind": "archive_worker_termination",
+          "run_id": 7,
+          "at": 1794232413
+        }
+      ],
+      "artifacts": [],
+      "evidence_is_untrusted": true,
+      "controller_evidence": []
+    }
+  },
+  "latencies": [
+    {
+      "operation": "inspect",
+      "milliseconds": 16.18926300000021
+    },
+    {
+      "operation": "distribute",
+      "milliseconds": 554.6794270000028
+    },
+    {
+      "operation": "present",
+      "milliseconds": 566.9314210000011
+    },
+    {
+      "operation": "present",
+      "milliseconds": 541.729545000002
+    },
+    {
+      "operation": "swap",
+      "milliseconds": 236.13111500000377
+    },
+    {
+      "operation": "hide",
+      "milliseconds": 40.17460800000117
+    },
+    {
+      "operation": "show",
+      "milliseconds": 30.52966299999389
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 15.650011999998242
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 24.617755999999645
+    },
+    {
+      "operation": "present",
+      "milliseconds": 841.806703000002
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 24.32188099999621
+    },
+    {
+      "operation": "return",
+      "milliseconds": 30.963890999992145
+    },
+    {
+      "operation": "present",
+      "milliseconds": 959.056923000011
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 25.62244199999259
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 19.10493499999575
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 23.036219000001438
+    },
+    {
+      "operation": "show",
+      "milliseconds": 88.16477599999052
+    }
+  ],
+  "last_visual": {
+    "hidden": false,
+    "main_visible": true,
+    "backend": "sway",
+    "recovery": {
+      "launcher": true,
+      "tray_created": true,
+      "shortcut": "Ctrl+Alt+A"
+    },
+    "displays": [
+      {
+        "key": "01901eff9e729ee895e5",
+        "name": "HEADLESS-1",
+        "label": "HEADLESS-1",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1000
+        },
+        "scale": 1,
+        "rotation": "normal",
+        "ordinal": 1,
+        "primary": true,
+        "placement": true
+      },
+      {
+        "key": "6b9dd21870ba8d0771c4",
+        "name": "HEADLESS-2",
+        "label": "HEADLESS-2",
+        "bounds": {
+          "x": 1600,
+          "y": 0,
+          "width": 1200,
+          "height": 800
+        },
+        "scale": 1.5,
+        "rotation": "normal",
+        "ordinal": 2,
+        "primary": false,
+        "placement": true
+      },
+      {
+        "key": "d7787d4f99516f5ab5f4",
+        "name": "HEADLESS-3",
+        "label": "HEADLESS-3",
+        "bounds": {
+          "x": 2800,
+          "y": 0,
+          "width": 1000,
+          "height": 1400
+        },
+        "scale": 1,
+        "rotation": "normal",
+        "ordinal": 3,
+        "primary": false,
+        "placement": true
+      }
+    ],
+    "surfaces": [
+      {
+        "id": "4a153a5e9168ed3b",
+        "ref": {
+          "project": "p_438b4b74",
+          "task_id": "t_ca6ce380",
+          "path": "bracket.stl"
+        },
+        "display": "6b9dd21870ba8d0771c4",
+        "preferred_display": "6b9dd21870ba8d0771c4",
+        "error": "",
+        "visible": true
+      },
+      {
+        "id": "746307a25b4b99c4",
+        "ref": {
+          "project": "p_438b4b74",
+          "task_id": "t_153784b9",
+          "path": "sculpture.glb"
+        },
+        "display": "6b9dd21870ba8d0771c4",
+        "preferred_display": "6b9dd21870ba8d0771c4",
+        "error": "",
+        "visible": true
+      },
+      {
+        "id": "47d57afa1d678872",
+        "ref": {
+          "project": "p_438b4b74",
+          "task_id": "t_220f439b",
+          "path": "architecture.html"
+        },
+        "display": "d7787d4f99516f5ab5f4",
+        "preferred_display": "d7787d4f99516f5ab5f4",
+        "error": "",
+        "visible": true
+      }
+    ]
+  },
+  "displays": [
+    {
+      "key": "01901eff9e729ee895e5",
+      "name": "HEADLESS-1",
+      "label": "HEADLESS-1",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "scale": 1,
+      "rotation": "normal",
+      "ordinal": 1,
+      "primary": true,
+      "placement": true
+    },
+    {
+      "key": "6b9dd21870ba8d0771c4",
+      "name": "HEADLESS-2",
+      "label": "HEADLESS-2",
+      "bounds": {
+        "x": 1600,
+        "y": 0,
+        "width": 1200,
+        "height": 800
+      },
+      "scale": 1.5,
+      "rotation": "normal",
+      "ordinal": 2,
+      "primary": false,
+      "placement": true
+    },
+    {
+      "key": "d7787d4f99516f5ab5f4",
+      "name": "HEADLESS-3",
+      "label": "HEADLESS-3",
+      "bounds": {
+        "x": 2800,
+        "y": 0,
+        "width": 1000,
+        "height": 1400
+      },
+      "scale": 1,
+      "rotation": "normal",
+      "ordinal": 3,
+      "primary": false,
+      "placement": true
+    }
+  ],
+  "refs": {
+    "diagram.architecture": {
+      "project": "p_438b4b74",
+      "task_id": "t_220f439b",
+      "path": "architecture.html"
+    },
+    "diagram.technical": {
+      "project": "p_438b4b74",
+      "task_id": "t_d382f7dd",
+      "path": "comparador-referencias.html"
+    },
+    "cad.parametric": {
+      "project": "p_438b4b74",
+      "task_id": "t_ca6ce380",
+      "path": "bracket.stl"
+    },
+    "design.blender": {
+      "project": "p_438b4b74",
+      "task_id": "t_153784b9",
+      "path": "sculpture.glb"
+    }
+  },
+  "cad_backend": "cpu-svg",
+  "blender_backend": "cpu-svg",
+  "isolation": {
+    "parent": true,
+    "storage": true,
+    "network": true,
+    "node": "undefined",
+    "controller": "undefined",
+    "surface": "undefined",
+    "popup": true
+  },
+  "resources": {
+    "scope": "Electron and sampled renderer descendants only",
+    "sample_interval_ms": 100,
+    "max_sample_gap_ms": 146.84371700000338,
+    "peak_summed_rss_kib": 1762648,
+    "clock_ticks_per_second": 100,
+    "rows": [
+      {
+        "phase": "two_models_visible",
+        "elapsed_ms": 39862.442159,
+        "rss_kib": 1371808,
+        "cpu_ticks": 1331
+      },
+      {
+        "phase": "visible_idle",
+        "elapsed_ms": 41863.929073,
+        "rss_kib": 1340300,
+        "cpu_ticks": 1396
+      },
+      {
+        "phase": "hidden_start",
+        "elapsed_ms": 58307.164946,
+        "rss_kib": 1327256,
+        "cpu_ticks": 1793
+      },
+      {
+        "phase": "hidden_idle",
+        "elapsed_ms": 60307.893235999996,
+        "rss_kib": 1326708,
+        "cpu_ticks": 1796
+      },
+      {
+        "phase": "final",
+        "elapsed_ms": 116816.114025,
+        "rss_kib": 1526064,
+        "cpu_ticks": 4533
+      }
+    ]
+  }
+}

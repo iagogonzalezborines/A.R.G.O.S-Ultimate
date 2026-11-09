@@ -1,0 +1,459 @@
+{
+  "checks": [
+    {
+      "name": "three real virtual outputs with mixed scale and portrait",
+      "ok": true
+    },
+    {
+      "name": "one control window and two minimal surfaces",
+      "ok": true
+    },
+    {
+      "name": "secondary placements verified",
+      "ok": true
+    },
+    {
+      "name": "CAD interactive geometry rendered",
+      "ok": true
+    },
+    {
+      "name": "holographic view changes presentation",
+      "ok": true
+    },
+    {
+      "name": "orthographic direction control changes camera",
+      "ok": true
+    },
+    {
+      "name": "real Blender GLB renders without Blender process",
+      "ok": true
+    },
+    {
+      "name": "STEP converts in read-only sandbox",
+      "ok": true
+    },
+    {
+      "name": "swap keeps artifact references and verifies destinations",
+      "ok": true
+    },
+    {
+      "name": "hide removes every ARGOS surface",
+      "ok": true
+    },
+    {
+      "name": "conversation stays alive while hidden",
+      "ok": true
+    },
+    {
+      "name": "show restores same surfaces",
+      "ok": true
+    },
+    {
+      "name": "disconnect retains all artifacts on surviving outputs",
+      "ok": true
+    },
+    {
+      "name": "reconnect restores preferred monitor identity",
+      "ok": true
+    },
+    {
+      "name": "Anatomy keyboard interaction preserved",
+      "ok": true
+    },
+    {
+      "name": "independent artifact sandbox denies all controller authority",
+      "ok": true
+    },
+    {
+      "name": "return to integrated view preserves native association",
+      "ok": true
+    },
+    {
+      "name": "Archify opens in coherent dark theme",
+      "ok": true
+    },
+    {
+      "name": "Archify interactive SVG displayed",
+      "ok": true
+    },
+    {
+      "name": "Electron restart restores authorized references without new tasks",
+      "ok": true
+    },
+    {
+      "name": "cross-task artifact access denied",
+      "ok": true
+    },
+    {
+      "name": "unknown monitor key rejected",
+      "ok": true
+    },
+    {
+      "name": "single output while hidden preserves references",
+      "ok": true
+    },
+    {
+      "name": "hidden hotplug recovers visible placements",
+      "ok": true
+    },
+    {
+      "name": "three outputs recovered after hidden hotplug",
+      "ok": true
+    },
+    {
+      "name": "primary-only mode gathers all surfaces",
+      "ok": true
+    },
+    {
+      "name": "single main conversation and no secondary voice controls",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [],
+  "errors": [],
+  "host_input": false,
+  "virtual_monitors": true,
+  "project": {
+    "id": "p_438b4b74",
+    "name": "Especialidades ARGOS 1794227809982",
+    "slug": "especialidades-argos-1794227809982",
+    "path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+    "board": "argos-especialidades-argos-1794227809982",
+    "revision": "bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585",
+    "brief": {
+      "objective": "Demostrar artefactos técnicos persistentes aislados",
+      "decisions": [
+        "Diagramas explicativos, no autoridad de estado",
+        "Sin fabricación ni certificación mecánica"
+      ],
+      "aliases": [],
+      "verification": [
+        "Abrir y verificar los artefactos reales"
+      ],
+      "requirements": [
+        "Guardar fuentes editables y exportaciones en este proyecto",
+        "Trabajar sin red ni hardware"
+      ]
+    },
+    "state": "ready",
+    "scope": "Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.",
+    "data_is_untrusted": true
+  },
+  "latencies": [
+    {
+      "operation": "inspect",
+      "milliseconds": 21.336483000000044
+    },
+    {
+      "operation": "distribute",
+      "milliseconds": 477.6590530000003
+    },
+    {
+      "operation": "present",
+      "milliseconds": 562.8181159999995
+    },
+    {
+      "operation": "present",
+      "milliseconds": 545.1586770000013
+    },
+    {
+      "operation": "swap",
+      "milliseconds": 155.30232400000023
+    },
+    {
+      "operation": "hide",
+      "milliseconds": 34.37854399999924
+    },
+    {
+      "operation": "show",
+      "milliseconds": 24.03803600000174
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 13.570757000001322
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 21.668894999998884
+    },
+    {
+      "operation": "present",
+      "milliseconds": 730.565047
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 16.46000699999786
+    },
+    {
+      "operation": "return",
+      "milliseconds": 31.45240300000296
+    },
+    {
+      "operation": "present",
+      "milliseconds": 811.645926000001
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 15.776802000000316
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 18.877529999997932
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 18.81171400000312
+    },
+    {
+      "operation": "hide",
+      "milliseconds": 21.166905999998562
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 15.876440000000002
+    },
+    {
+      "operation": "show",
+      "milliseconds": 307.91597699999693
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 17.937164000002667
+    },
+    {
+      "operation": "primary",
+      "milliseconds": 279.9419789999956
+    },
+    {
+      "operation": "inspect",
+      "milliseconds": 15.588878999995359
+    }
+  ],
+  "last_visual": {
+    "hidden": false,
+    "main_visible": true,
+    "backend": "sway",
+    "recovery": {
+      "launcher": true,
+      "tray_created": true,
+      "shortcut": "Ctrl+Alt+A"
+    },
+    "displays": [
+      {
+        "key": "01901eff9e729ee895e5",
+        "name": "HEADLESS-1",
+        "label": "HEADLESS-1",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1000
+        },
+        "scale": 1,
+        "rotation": "normal",
+        "ordinal": 1,
+        "primary": false,
+        "placement": true
+      },
+      {
+        "key": "6b9dd21870ba8d0771c4",
+        "name": "HEADLESS-2",
+        "label": "HEADLESS-2",
+        "bounds": {
+          "x": 1600,
+          "y": 0,
+          "width": 1200,
+          "height": 800
+        },
+        "scale": 1.5,
+        "rotation": "normal",
+        "ordinal": 2,
+        "primary": false,
+        "placement": true
+      },
+      {
+        "key": "d7787d4f99516f5ab5f4",
+        "name": "HEADLESS-3",
+        "label": "HEADLESS-3",
+        "bounds": {
+          "x": 2800,
+          "y": 0,
+          "width": 1000,
+          "height": 1400
+        },
+        "scale": 1,
+        "rotation": "normal",
+        "ordinal": 3,
+        "primary": true,
+        "placement": true
+      }
+    ],
+    "surfaces": [
+      {
+        "id": "fad271f1bbb0f7e4",
+        "ref": {
+          "project": "p_438b4b74",
+          "task_id": "t_ca6ce380",
+          "path": "bracket.stl"
+        },
+        "display": "d7787d4f99516f5ab5f4",
+        "preferred_display": "d7787d4f99516f5ab5f4",
+        "error": "",
+        "visible": true,
+        "placement_verified": true
+      },
+      {
+        "id": "a65e440a640a2eac",
+        "ref": {
+          "project": "p_438b4b74",
+          "task_id": "t_153784b9",
+          "path": "sculpture.glb"
+        },
+        "display": "d7787d4f99516f5ab5f4",
+        "preferred_display": "d7787d4f99516f5ab5f4",
+        "error": "",
+        "visible": true,
+        "placement_verified": true
+      },
+      {
+        "id": "902cd1e5a9863d61",
+        "ref": {
+          "project": "p_438b4b74",
+          "task_id": "t_220f439b",
+          "path": "architecture.html"
+        },
+        "display": "d7787d4f99516f5ab5f4",
+        "preferred_display": "d7787d4f99516f5ab5f4",
+        "error": "",
+        "visible": true,
+        "placement_verified": true
+      }
+    ]
+  },
+  "displays": [
+    {
+      "key": "01901eff9e729ee895e5",
+      "name": "HEADLESS-1",
+      "label": "HEADLESS-1",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "scale": 1,
+      "rotation": "normal",
+      "ordinal": 1,
+      "primary": true,
+      "placement": true
+    },
+    {
+      "key": "6b9dd21870ba8d0771c4",
+      "name": "HEADLESS-2",
+      "label": "HEADLESS-2",
+      "bounds": {
+        "x": 1600,
+        "y": 0,
+        "width": 1200,
+        "height": 800
+      },
+      "scale": 1.5,
+      "rotation": "normal",
+      "ordinal": 2,
+      "primary": false,
+      "placement": true
+    },
+    {
+      "key": "d7787d4f99516f5ab5f4",
+      "name": "HEADLESS-3",
+      "label": "HEADLESS-3",
+      "bounds": {
+        "x": 2800,
+        "y": 0,
+        "width": 1000,
+        "height": 1400
+      },
+      "scale": 1,
+      "rotation": "normal",
+      "ordinal": 3,
+      "primary": false,
+      "placement": true
+    }
+  ],
+  "refs": {
+    "diagram.architecture": {
+      "project": "p_438b4b74",
+      "task_id": "t_220f439b",
+      "path": "architecture.html"
+    },
+    "diagram.technical": {
+      "project": "p_438b4b74",
+      "task_id": "t_d382f7dd",
+      "path": "comparador-referencias.html"
+    },
+    "cad.parametric": {
+      "project": "p_438b4b74",
+      "task_id": "t_ca6ce380",
+      "path": "bracket.stl"
+    },
+    "design.blender": {
+      "project": "p_438b4b74",
+      "task_id": "t_153784b9",
+      "path": "sculpture.glb"
+    }
+  },
+  "cad_backend": "cpu-svg",
+  "blender_backend": "cpu-svg",
+  "isolation": {
+    "parent": true,
+    "storage": true,
+    "network": true,
+    "node": "undefined",
+    "controller": "undefined",
+    "surface": "undefined",
+    "popup": true
+  },
+  "resources": {
+    "scope": "Electron and sampled renderer descendants only",
+    "sample_interval_ms": 100,
+    "max_sample_gap_ms": 117.15094899999895,
+    "peak_summed_rss_kib": 1780652,
+    "clock_ticks_per_second": 100,
+    "rows": [
+      {
+        "phase": "two_models_visible",
+        "elapsed_ms": 11380.173836,
+        "rss_kib": 1398836,
+        "cpu_ticks": 542
+      },
+      {
+        "phase": "visible_idle",
+        "elapsed_ms": 13381.461751,
+        "rss_kib": 1367160,
+        "cpu_ticks": 596
+      },
+      {
+        "phase": "hidden_start",
+        "elapsed_ms": 20574.393096,
+        "rss_kib": 1346556,
+        "cpu_ticks": 842
+      },
+      {
+        "phase": "hidden_idle",
+        "elapsed_ms": 22575.446387999997,
+        "rss_kib": 1346648,
+        "cpu_ticks": 848
+      },
+      {
+        "phase": "final",
+        "elapsed_ms": 37601.219475000005,
+        "rss_kib": 1761612,
+        "cpu_ticks": 2744
+      }
+    ]
+  }
+}

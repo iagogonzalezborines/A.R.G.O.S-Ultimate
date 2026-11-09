@@ -20,7 +20,7 @@ from .apps import Apps
 
 ROOT=Path(__file__).resolve().parents[1]
 SOCKET=ROOT.parent/'private/workspace.sock'
-KINDS={'desktop','project','conversation','summary','note','sources','progress','browser','video','agents','files','document','change','storage','maintenance'}
+KINDS={'artifact','desktop','project','conversation','summary','note','sources','progress','browser','video','agents','files','document','change','storage','maintenance'}
 DENIED={'node_modules','__pycache__','credentials','secrets','venv','env','qwen-env'}
 
 def public_url(value):
@@ -258,7 +258,7 @@ class Files:
 
 class WorkspaceBroker:
  def __init__(self,publish,validate,*,socket_path=SOCKET,files=None):
-  self.publish=publish;self.validate=validate;self.storage=Storage();self.files=files or Files(storage=self.storage,progress=publish);self.condition=threading.Condition();self.windows=[];self.pending={};self.connected_at=0;self.socket_path=Path(socket_path);self.closed=False;self.epoch=0;self.research_epoch=None;self.development=None;self.apps=Apps();self.research_sources={};self.research_opened=set();self.research_found={};self.research_lock=threading.RLock()
+  self.publish=publish;self.validate=validate;self.storage=Storage();self.files=files or Files(storage=self.storage,progress=publish);self.condition=threading.Condition();self.windows=[];self.visual={};self.pending={};self.connected_at=0;self.socket_path=Path(socket_path);self.closed=False;self.epoch=0;self.research_epoch=None;self.development=None;self.apps=Apps();self.research_sources={};self.research_opened=set();self.research_found={};self.research_lock=threading.RLock()
   from .projects import Projects
   self.projects=Projects(lambda intent:self.intent(intent,wait=False))
   from .desktop import Desktop
@@ -266,18 +266,21 @@ class WorkspaceBroker:
  def begin_turn(self):
   # Transient display permission only. Native Hermes owns the actual turn/task.
   with self.condition:self.research_epoch=self.epoch;self.research_sources={};self.research_opened=set();self.research_found={}
- def state(self,windows,ack=None,error=None):
+ def state(self,windows,ack=None,error=None,visual=None,result=None):
   if not isinstance(windows,list) or len(windows)>40:raise ValueError('Invalid workspace snapshot')
   clean=[]
   for w in windows:
-   if not isinstance(w,dict) or set(w)-{'id','kind','title','x','y','width','height','minimized','maximized','actor','path','selected_path','url','focused','project','task_id'}:raise ValueError('Invalid window state')
+   if not isinstance(w,dict) or set(w)-{'id','kind','title','x','y','width','height','minimized','maximized','actor','path','selected_path','url','focused','project','task_id','selected_artifact'}:raise ValueError('Invalid window state')
    if not isinstance(w.get('id'),str) or w.get('kind') not in KINDS:raise ValueError('Invalid window state')
    for field in ('project','task_id'):
     if field in w and (w.get('kind')!='project' or not isinstance(w[field],str) or not re.fullmatch('[A-Za-z0-9_-]{1,80}',w[field])):raise ValueError('Invalid project observation')
    clean.append(w)
   with self.condition:
    self.windows=clean;self.connected_at=time.monotonic()
-   if ack in self.pending:self.pending[ack]={'ok':not error,'error':str(error)[:200] if error else None,'windows':clean}
+   if visual is not None:
+    if not isinstance(visual,dict) or len(json.dumps(visual))>48000:raise ValueError('Invalid visual state')
+    self.visual=visual
+   if ack in self.pending:self.pending[ack]={'ok':not error,'error':str(error)[:200] if error else None,'windows':clean,**({'visual':self.visual} if self.visual else {}),**({'result':result} if result is not None else {})}
    self.condition.notify_all()
   return {'ok':True}
  def intent(self,intent,*,wait=True,actor='argos',expected_epoch=None):
@@ -395,11 +398,14 @@ class WorkspaceBroker:
     return self.intent({'type':'window.open','id':'maintenance','kind':'maintenance','title':'ARGOS · Desarrollo y autolog'})
    return self.development.request(a,user=user)
   if tool=='workspace':
-   if set(a)-{'action','id','kind','title','text','url','path','x','y','width','height','sources','open_sources','speech'}:raise ValueError('Unexpected workspace fields')
+   if set(a)-{'action','id','kind','title','text','url','path','x','y','width','height','sources','open_sources','speech','operation','display','ref','other'}:raise ValueError('Unexpected workspace fields')
    action=a.get('action','inspect')
+   if action=='visual':
+    from .visual_workspace import command
+    return self.intent({'type':'workspace.visual','command':command(a)})
    if action in {'research_sources','research_result'}:return self.research(a)
    if action=='inspect':
-    with self.condition:return {'windows':list(self.windows),'connected':bool(self.connected_at and time.monotonic()-self.connected_at<45),'file_roots':self.files.list()['roots']}
+    with self.condition:return {'windows':list(self.windows),'visual':self.visual,'connected':bool(self.connected_at and time.monotonic()-self.connected_at<45),'file_roots':self.files.list()['roots']}
    if action=='arrange':return self.intent({'type':'workspace.arrange'})
    if action=='clear':
     with self.condition:

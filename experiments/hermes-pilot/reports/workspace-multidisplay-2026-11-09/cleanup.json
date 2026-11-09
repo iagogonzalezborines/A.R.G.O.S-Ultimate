@@ -1,0 +1,6 @@
+{
+  "qa_gateway_stopped": true,
+  "active_native_runs_before_cleanup": 0,
+  "private_qa_auth_copies_removed": 5,
+  "normal_installation_credentials_untouched": true
+}

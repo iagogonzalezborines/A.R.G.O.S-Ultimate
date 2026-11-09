@@ -1,0 +1,11 @@
+{
+  "installation": "~/.local/share/argos-hermes-pilot",
+  "source_files": 426,
+  "launched": false,
+  "projects_enabled": true,
+  "launcher_registered": true,
+  "workspace_control": "on",
+  "private_configuration_preserved": true,
+  "final_ui_checks": 28,
+  "renderer_errors": []
+}

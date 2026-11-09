@@ -1,5 +1,7 @@
 # ARGOS · Linux 0.3
 
+[Workspace multidisplay — 9 de noviembre](experiments/hermes-pilot/reports/workspace-multidisplay-2026-11-09.md): ocultación recuperable, superficies coordinadas, CAD/GLB interactivos y presentación holográfica. [Log de la sesión](docs/validation/session-2026-11-09.md).
+
 [Especialidades técnicas — 9 de noviembre](experiments/hermes-pilot/reports/specialized-2026-11-09.md): diagramas interactivos, CAD paramétrico y Blender mediante Engineering nativo, artefactos persistentes y visores aislados en Project Map. LearnHarness evaluado como candidato separado.
 
 [Aplicaciones reales y documentos persistentes — 9 de noviembre](experiments/hermes-pilot/reports/desktop-artifacts-2026-11-09.md): Meld y Thunar mediante perfiles revisados; archivos guardados, entrega autorizada y evidencia nativa de proyecto/tarea.

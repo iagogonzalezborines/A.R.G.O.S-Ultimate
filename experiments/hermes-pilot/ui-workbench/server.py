@@ -25,6 +25,11 @@ def publish(event):
         sequence+=1;events.append({'sequence':sequence,**event});changed.notify_all()
 
 def validate(intent):
+    if isinstance(intent,dict) and intent.get('type')=='workspace.visual':
+        from runtime.visual_workspace import command
+        if set(intent)!={'type','command'}:raise ValueError('Invalid visual intent')
+        command({'action':'visual',**intent['command']})
+        return intent
     if not isinstance(intent,dict) or set(intent)-{'type','id','kind','title','text','url','path','x','y','width','height','status'}:
         raise ValueError('Unsupported presentation fields')
     if intent.get('type') not in {'window.open','window.close','window.focus','window.minimize','window.restore','window.maximize','window.move','window.update','workspace.arrange','workspace.clear'}:
@@ -74,7 +79,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.authorized():return self.send_error(401)
             return self.reply(200,dict(self.server.voice.status) if self.server.voice else {'ready':False,'phase':'off','listening':False})
         if path=='/':self.path='/index.html'
-        elif path not in {'/index.html','/style.css','/app.js','/desktop-control.js','/project-map.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json'} and not path.startswith('/assets/'):
+        elif path not in {'/index.html','/style.css','/app.js','/desktop-control.js','/project-map.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json','/surface.html','/surface.js','/artifact-view.js','/visual-workspace.js'} and not path.startswith('/assets/'):
             # New renderer modules are public only after the trusted release
             # journal admits them; candidates and arbitrary files stay private.
             development=getattr(self.server.workspace,'development',None)
@@ -124,8 +129,8 @@ class Handler(SimpleHTTPRequestHandler):
                 incident=self.server.workspace.development.incident(body['component'],RuntimeError(body['message']),notify=body['component']=='renderer')
                 return self.reply(200,{'recorded':True,'incident_id':incident['id']})
             if self.path=='/api/workspace':
-                if not isinstance(body,dict) or set(body)-{'windows','ack','error'}:raise ValueError('Invalid desktop acknowledgement')
-                return self.reply(200,self.server.workspace.state(body.get('windows'),body.get('ack'),body.get('error')))
+                if not isinstance(body,dict) or set(body)-{'windows','ack','error','visual','result'}:raise ValueError('Invalid desktop acknowledgement')
+                return self.reply(200,self.server.workspace.state(body.get('windows'),body.get('ack'),body.get('error'),body.get('visual'),body.get('result')))
             if self.path=='/api/capability':return self.reply(200,self.server.workspace.request(body,user=True))
             if self.path=='/api/voice':
                 if not self.server.voice:raise ValueError('Voice unavailable')

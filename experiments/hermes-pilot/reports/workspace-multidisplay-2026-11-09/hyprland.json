@@ -1,0 +1,201 @@
+{
+  "host_input_injected": false,
+  "physical_monitors": true,
+  "placements": [
+    {
+      "window": 0,
+      "display": "2e91c6e4d6d8d86844b9",
+      "verified": true
+    },
+    {
+      "window": 0,
+      "display": "2876ca33337e841003ed",
+      "verified": true
+    },
+    {
+      "window": 1,
+      "display": "2876ca33337e841003ed",
+      "verified": true
+    },
+    {
+      "window": 1,
+      "display": "2e91c6e4d6d8d86844b9",
+      "verified": true
+    }
+  ],
+  "samples": [
+    {
+      "time": 1794232410088,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    },
+    {
+      "time": 1794232410433,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232410519,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232410635,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232410735,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232410835,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232410953,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232411070,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232411176,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    },
+    {
+      "time": 1794232411309,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232411391,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232411512,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": true
+    },
+    {
+      "time": 1794232411610,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    },
+    {
+      "time": 1794232411713,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    },
+    {
+      "time": 1794232411831,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    },
+    {
+      "time": 1794232411949,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    },
+    {
+      "time": 1794232412045,
+      "cursor": {
+        "x": 1470,
+        "y": 738
+      },
+      "focus_changed": false
+    }
+  ],
+  "backend": "hyprland",
+  "monitors": [
+    {
+      "key": "2e91c6e4d6d8d86844b9",
+      "name": "HDMI-A-1",
+      "label": "HDMI-A-1",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "scale": 1,
+      "rotation": 0,
+      "ordinal": 1,
+      "primary": true,
+      "placement": true
+    },
+    {
+      "key": "2876ca33337e841003ed",
+      "name": "DP-1",
+      "label": "DP-1",
+      "bounds": {
+        "x": 1920,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "scale": 1,
+      "rotation": 0,
+      "ordinal": 2,
+      "primary": false,
+      "placement": true
+    }
+  ],
+  "focus_changes": 10,
+  "cursor_changes": 0
+}

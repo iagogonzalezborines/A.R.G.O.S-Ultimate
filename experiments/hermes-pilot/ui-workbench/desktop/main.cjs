@@ -9,16 +9,16 @@ app.setPath('sessionData',path.join(ROOT,'state',process.env.ARGOS_UI_QA==='1'?'
 app.enableSandbox();
 app.setName('ARGOS');app.setDesktopName('argos-workspace.desktop');
 if(!app.requestSingleInstanceLock())app.quit();
-app.on('second-instance',()=>{if(win&&!win.isDestroyed()){if(win.isMinimized())win.restore();win.show();win.focus()}});
+app.on('second-instance',()=>{if(surfaces)surfaces.run({operation:'show'}).catch(()=>{});else if(win&&!win.isDestroyed())win.show()});
 // This host's Wayland/GPU compositor returned UnknownVizError on capture.
 // Keep the isolated presentation pilot on the verified software rendering path.
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('ozone-platform',process.env.ARGOS_UI_PLATFORM==='x11'?'x11':process.env.WAYLAND_DISPLAY?'wayland':'x11');
 if(process.env.ARGOS_UI_QA==='1')app.commandLine.appendSwitch('mute-audio');
-let win,eventsRequest,reconnect,lastEvent=0,fullscreenRecovery=false;const views=new Map();
+let surfaces,workspaceWindows=[];let win,eventsRequest,reconnect,lastEvent=0,fullscreenRecovery=false;const views=new Map();
 function token(){return fs.readFileSync(path.join(ROOT,'private/presentation.token'),'utf8').trim()}
 function request(route,payload){return new Promise((resolve,reject)=>{const body=payload?JSON.stringify(payload):null;const req=http.request(ORIGIN+route,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token(),...(body?{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}:{})}},response=>{let text='';response.on('data',c=>{text+=c;if(text.length>2400000)req.destroy()});response.on('end',()=>{try{const result=JSON.parse(text);if(response.statusCode>=400)throw Error(result.error||'Request rejected');resolve(result)}catch(e){reject(e)}})});req.on('error',reject);req.setTimeout(route==='/api/capability'&&payload?.tool==='projects'?60000:route==='/api/capability'&&payload?.tool==='files'&&['confirm','paste'].includes(payload.arguments?.action)?0:15000,()=>req.destroy(Error('Workspace host timeout')));if(body)req.write(body);req.end()})}
-function subscribe(){if(!win||win.isDestroyed())return;let buffer='';eventsRequest=http.get(ORIGIN+'/events',{headers:{Authorization:'Bearer '+token(),...(lastEvent?{'Last-Event-ID':String(lastEvent)}:{})}},response=>{response.on('data',chunk=>{buffer+=chunk;let at;while((at=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,at);buffer=buffer.slice(at+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(line)try{const event=JSON.parse(line.slice(6));lastEvent=event.sequence;if(win&&!win.isDestroyed())win.webContents.send('runtime-event',event)}catch{}}});response.on('end',()=>{reconnect=setTimeout(subscribe,1000)})});eventsRequest.on('error',()=>{reconnect=setTimeout(subscribe,1000)})}
+function subscribe(){if(!win||win.isDestroyed())return;let buffer='';eventsRequest=http.get(ORIGIN+'/events',{headers:{Authorization:'Bearer '+token(),...(lastEvent?{'Last-Event-ID':String(lastEvent)}:{})}},response=>{response.on('data',chunk=>{buffer+=chunk;let at;while((at=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,at);buffer=buffer.slice(at+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(line)try{const event=JSON.parse(line.slice(6));lastEvent=event.sequence;if(event.intent?.type==='workspace.visual'){surfaces.run(event.intent.command).then(result=>request('/api/workspace',{windows:workspaceWindows,visual:surfaces.snapshot(),ack:event.request_id,result})).catch(e=>request('/api/workspace',{windows:workspaceWindows,visual:surfaces.snapshot(),ack:event.request_id,error:e.message}));}else if(win&&!win.isDestroyed())win.webContents.send('runtime-event',event)}catch{}}});response.on('end',()=>{reconnect=setTimeout(subscribe,1000)})});eventsRequest.on('error',()=>{reconnect=setTimeout(subscribe,1000)})}
 function trusted(event){return win&&!win.isDestroyed()&&event.sender===win.webContents&&event.senderFrame===win.webContents.mainFrame&&event.senderFrame.url.startsWith(ORIGIN+'/')}
 function emit(data){if(win&&!win.isDestroyed())win.webContents.send('browser-event',data)}
 function secure(contents){contents.setWindowOpenHandler(({url})=>{if(allowedURL(url))emit({type:'source-open',url});return {action:'deny'}});contents.on('will-navigate',(event,url)=>{if(!allowedURL(url))event.preventDefault()});contents.on('will-redirect',(event,url)=>{if(!allowedURL(url))event.preventDefault()})}
@@ -26,7 +26,7 @@ async function snapshot(id,view){try{const image=await view.webContents.captureP
 app.whenReady().then(()=>{
  if(!app.hasSingleInstanceLock())return;
  Menu.setApplicationMenu(null);const area=screen.getPrimaryDisplay().workAreaSize;
- win=new BrowserWindow({width:Math.min(1540,area.width-30),height:Math.min(940,area.height-30),minWidth:850,minHeight:620,title:'ARGOS · Workspace',backgroundColor:'#01050a',frame:false,show:true,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webviewTag:false,webSecurity:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:true}});
+ win=new BrowserWindow({width:Math.min(1540,area.width-30),height:Math.min(940,area.height-30),minWidth:Math.max(100,Math.min(850,area.width-30)),minHeight:Math.max(100,Math.min(620,area.height-30)),title:'ARGOS · Workspace',backgroundColor:'#01050a',frame:false,show:true,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webviewTag:false,webSecurity:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:true}});
  win.webContents.setWindowOpenHandler(({url})=>{if(allowedURL(url))emit({type:'source-open',url});return {action:'deny'}});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(ORIGIN+'/'))event.preventDefault()});
  win.webContents.on('will-frame-navigate',event=>{if(!event.isMainFrame&&event.frame?.url?.startsWith(ORIGIN+'/project-preview/'))event.preventDefault()});
@@ -35,7 +35,7 @@ app.whenReady().then(()=>{
  win.webContents.on('did-finish-load',subscribe);
  ipcMain.handle('ui:diagnostic',(event,payload)=>{if(!trusted(event)||!payload||Object.keys(payload).some(k=>!['component','message'].includes(k))||typeof payload.message!=='string'||payload.message.length>800)throw Error('Invalid diagnostic');return request('/api/diagnostic',payload)});
  ipcMain.handle('ui:voice-state',event=>{if(!trusted(event))throw Error('Untrusted sender');return request('/voice-state')});
- ipcMain.handle('ui:workspace-state',(event,payload)=>{if(!trusted(event))throw Error('Untrusted sender');return request('/api/workspace',payload)});
+ ipcMain.handle('ui:workspace-state',(event,payload)=>{if(!trusted(event))throw Error('Untrusted sender');workspaceWindows=payload.windows;return request('/api/workspace',{...payload,visual:surfaces?.snapshot()})});
  ipcMain.handle('ui:capability',(event,payload)=>{if(!trusted(event)||!payload||!['files','workspace','storage','media','development','apps','projects','desktop'].includes(payload.tool))throw Error('Untrusted capability');return request('/api/capability',payload)});
  ipcMain.handle('ui:voice',(event,payload)=>{if(!trusted(event)||!payload||!['text','listen','interrupt','output','retry'].includes(payload.op)||Object.keys(payload).some(k=>!['op','enabled','text'].includes(k)))throw Error('Unsupported voice control');return request('/api/voice',payload)});
  const remoteSession=session.fromPartition('argos-pilot-public-sources');
@@ -64,8 +64,10 @@ app.whenReady().then(()=>{
   const displaced=win.isFullScreen()&&(Math.abs(bounds.width-display.width)>4||Math.abs(bounds.height-display.height)>4);
   if(displaced){fullscreenRecovery=true;win.setFullScreen(false);setTimeout(()=>{if(win&&!win.isDestroyed())win.setFullScreen(true);fullscreenRecovery=false},200)}
   else win.setFullScreen(!win.isFullScreen());
- });ipcMain.on('ui:close',event=>{if(trusted(event))win.close()});
+ });ipcMain.on('ui:close',event=>{if(trusted(event))app.quit()});
+ win.on('close',()=>{if(!surfaces?.stopping)app.quit()});
  win.on('closed',()=>{clearTimeout(reconnect);eventsRequest?.destroy();for(const view of views.values())if(!view.webContents.isDestroyed())view.webContents.close();views.clear();win=null});
- win.loadURL(ORIGIN+'/');
+ const {Surfaces}=require('./surfaces.cjs');surfaces=new Surfaces({main:win,root:ROOT,origin:ORIGIN,request,report:visual=>request('/api/workspace',{windows:workspaceWindows,visual}),send:event=>win.webContents.send('runtime-event',event)});
+ win.loadURL(ORIGIN+'/').then(()=>{surfaces.queue=surfaces.initialize().catch(()=>{})}).catch(()=>{});
 });
 app.on('window-all-closed',()=>app.quit());
