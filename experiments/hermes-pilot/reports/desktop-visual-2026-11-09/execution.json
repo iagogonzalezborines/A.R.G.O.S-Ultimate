@@ -1,0 +1,181 @@
+{
+  "checks": [
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "private output and canvas window observed",
+      "ok": true
+    },
+    {
+      "name": "actual visual batch completes",
+      "ok": true
+    },
+    {
+      "name": "text click scroll and drag verified by application",
+      "ok": true
+    },
+    {
+      "name": "duplicate delivery does not replay",
+      "ok": true
+    },
+    {
+      "name": "no host devices bus home network or process namespace",
+      "ok": true
+    },
+    {
+      "name": "long action returns without blocking conversation slot",
+      "ok": true
+    },
+    {
+      "name": "independent seat receives typing during ARGOS drag",
+      "ok": true
+    },
+    {
+      "name": "input arrives exclusively at intended seats",
+      "ok": true
+    },
+    {
+      "name": "drag completes independently",
+      "ok": true
+    },
+    {
+      "name": "key combination edits intended canvas",
+      "ok": true
+    },
+    {
+      "name": "balanced mouse press and release accepted",
+      "ok": true
+    },
+    {
+      "name": "cancel releases held pointer without touching host",
+      "ok": true
+    },
+    {
+      "name": "application no longer dragging after cancellation",
+      "ok": true
+    },
+    {
+      "name": "stale observation rejected",
+      "ok": true
+    },
+    {
+      "name": "release removes session files",
+      "ok": true
+    },
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "two virtual monitors at scale 1.5",
+      "ok": true
+    },
+    {
+      "name": "scaled coordinate mapping text and drag 1.5",
+      "ok": true
+    },
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "two virtual monitors at scale 2",
+      "ok": true
+    },
+    {
+      "name": "scaled coordinate mapping text and drag 2",
+      "ok": true
+    },
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "Meld actual saved copy edited",
+      "ok": true
+    },
+    {
+      "name": "Meld originals preserved",
+      "ok": true
+    },
+    {
+      "name": "closed application rejects observations",
+      "ok": true
+    },
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "layout changed after observation rejects delivery",
+      "ok": true
+    },
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "interrupted keyboard destroys private seat",
+      "ok": true
+    },
+    {
+      "name": "scope consent precedes launch",
+      "ok": true
+    },
+    {
+      "name": "idle compositor and application terminate",
+      "ok": true
+    },
+    {
+      "name": "restart does not restore grants or replay input",
+      "ok": true
+    },
+    {
+      "name": "all sampled child processes released",
+      "ok": true
+    }
+  ],
+  "audio": false,
+  "host_input_injected": false,
+  "samples": 282,
+  "focus_changes": 0,
+  "cursor_changes": 0,
+  "focus_events": 0,
+  "focus_event_transitions": 0,
+  "max_rss_kib": 288144,
+  "max_sample_gap_ms": 142.46,
+  "launch_seconds": 1.057171082999048,
+  "sequence_seconds": 0.9296,
+  "canvas": {
+    "text": "ARGOS independiente",
+    "applied": "ARGOS independiente",
+    "scroll": 3,
+    "dropped": true,
+    "dragging": false,
+    "keys": 19,
+    "clicks": 3,
+    "moves": 24
+  },
+  "boundary": {
+    "network": false,
+    "host_runtime": false,
+    "input": false,
+    "gpu": false,
+    "bus": false,
+    "host_home": false,
+    "proc_count": 2
+  },
+  "status_ms": 0.022868000087328255,
+  "cancel": {
+    "state": "cancelled",
+    "completed_steps": 0,
+    "held_input_released": true,
+    "seconds": 0.2507
+  },
+  "sampling_errors": [],
+  "sample_period_target_ms": 50,
+  "remaining_child_pids": [],
+  "limits": "Host sampling plus compositor focus events; concurrent synthetic input validated on a second disposable seat, not physical human input or games."
+}

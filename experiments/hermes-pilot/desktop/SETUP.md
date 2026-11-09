@@ -44,3 +44,24 @@ python experiments/hermes-pilot/desktop/qa_background.py --foreground-consent --
 ```
 
 La automatización de interfaz `desktop/qa_windows_ui.cjs` se ejecuta desde una instalación desechable preparada por `qa_prepare.py`; exige sesión gráfica y usa General real. `ARGOS_QA_SKIP_GENERAL=1` limita la repetición a los controles deterministas. Al terminar, ejecuta `qa_prepare.py --cleanup` para retirar credenciales derivadas. No ejecutar estos harnesses durante un trabajo del usuario que necesite conservar el foco.
+
+## Sesión visual independiente (opcional y fijada)
+
+En el piloto ya preparado, con Agent Desktop operativo, cerrar antes cualquier sesión visual en uso:
+
+```sh
+python scripts/prepare_hermes_pilot.py --register
+python scripts/prepare_visual_desktop.py --activate
+```
+
+Instala paquetes fijados en `~/.local/share/argos-desktop/visual-1`, compila dos auxiliares pequeños y registra su manifiesto en la configuración privada. Requiere Linux x86_64, bubblewrap, GTK3/GI, compilador C, wayland-scanner y las bibliotecas Wayland/XKB del sistema. El pin se probó sobre este entorno Arch; no se presume compatibilidad binaria con cualquier distribución. No cambia servicios ni portales, no descarga modelos y no abre una aplicación. Sin `--activate`, solo prepara los componentes. Si el espejo retira una versión, buscar el mismo archivo en un archivo oficial y verificar el hash; no actualizar el pin silenciosamente.
+
+Próximo arranque → **Control de aplicaciones → Abrir lienzo visual aislado**. La revisión autoriza capturas e interacción exclusivamente dentro de esa sesión sin red. General puede interpretar las capturas mediante el Codex configurado. Meld admite copias de dos archivos pequeños ya autorizados; los cambios son temporales. Retirar acceso elimina las copias. [Alcance, seguridad y evidencia](../reports/desktop-visual-2026-11-09.md).
+
+Prueba nativa, sin entrada física al host ni audio:
+
+```sh
+python experiments/hermes-pilot/desktop/visual/qa_native.py --output /tmp/argos-visual-new-evidence
+```
+
+Prueba completa de aplicación/General: preparar la instalación desechable mediante `desktop/qa_prepare.py`, activar allí el conjunto con `prepare_visual_desktop.py --pilot /tmp/argos-desktop-qa/pilot --activate`, y ejecutar `node /tmp/argos-desktop-qa/pilot/desktop/visual/qa_ui.cjs`. Este harness crea otro compositor privado para Electron, separado del scope de ARGOS. Usa la suscripción existente. Ejecutar siempre `desktop/qa_prepare.py --cleanup` al terminar para retirar las credenciales derivadas. Los tests normales no abren estos compositores.

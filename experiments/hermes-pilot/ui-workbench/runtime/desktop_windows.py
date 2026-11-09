@@ -161,6 +161,9 @@ class Windows:
         if not approve: p['status']='cancelled'; return {'status':'cancelled'}
         if self.d.active: raise RuntimeError('Desktop busy')
         p['status'] = 'consumed'  # A failed start never replays an approved effect.
+        if p['kind'] == 'visual_launch':
+            result = self.d.visual.launch(p); p['status']='applied'
+            return {'status':'applied',**result}
         if p['kind'] == 'launch':
             result = self.d.launch(p['application'], p['left'], p['right']); p['status']='applied'
             return {'status':'applied',**result}

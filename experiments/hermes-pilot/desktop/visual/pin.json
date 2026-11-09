@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "platform": "linux-x86_64",
+  "packages": [
+    {
+      "url": "https://mirror.zyner.org/archlinux/extra/os/x86_64/sway-1:1.12-4-x86_64.pkg.tar.zst",
+      "sha256": "5704cfc9eba9804116c665cb4450352bf5a240c1a8300b36aca3218116648443",
+      "signer": "35BAE1BF9A6B317021E690C26E7CE0B0A36DA2AE"
+    },
+    {
+      "url": "https://mirror.zyner.org/archlinux/extra/os/x86_64/wlroots0.20-0.20.2-1-x86_64.pkg.tar.zst",
+      "sha256": "8b1da3fbf29cc45908d8de771bd22a5813b298a9049462df5b8952f23c3ffb8f",
+      "signer": "262A58EC6C51F7EA395B2E2DFDC3040B92ACA748"
+    },
+    {
+      "url": "https://mirror.zyner.org/archlinux/extra/os/x86_64/libliftoff-0.5.0-1-x86_64.pkg.tar.zst",
+      "sha256": "59cf08c21500673a14287b83b89b6db5389134cc24c97d9222c7cddefa639ccf",
+      "signer": "95220BE99CE6FF778AE0DC670F65C7D881506130"
+    },
+    {
+      "url": "https://mirror.zyner.org/archlinux/extra/os/x86_64/grim-1.5.0-2-x86_64.pkg.tar.zst",
+      "sha256": "2cbddb88d4a3316c61e8984203bbdca81cbf089c323e5db09c4e1648c483c8a6",
+      "signer": "2E36D8620221482FC45CB7F2A91764759326B440"
+    },
+    {
+      "url": "https://mirror.zyner.org/archlinux/extra/os/x86_64/wtype-0.4-2-x86_64.pkg.tar.zst",
+      "sha256": "36ce49003b9e741b85463574d3ab35316bd27d0ef950db0e1f8540d75d68409d",
+      "signer": "04DC3FB1445FECA813C27EFAEA4F7B321A906AD9"
+    }
+  ],
+  "protocols": [
+    {
+      "file": "wlr-virtual-pointer-unstable-v1.xml",
+      "sha256": "3ff6d540be0bc5228195bf072bde42117ea17945a5c2061add5d3cf97d6bb524",
+      "source": "https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-virtual-pointer-unstable-v1.xml"
+    },
+    {
+      "file": "virtual-keyboard-unstable-v1.xml",
+      "sha256": "7ad7870003ecd592cae47dc19d277a609b7f18fd7b7be012623cf3225a7294f5",
+      "source": "https://github.com/atx/wtype/blob/v0.4/protocol/virtual-keyboard-unstable-v1.xml"
+    }
+  ]
+}

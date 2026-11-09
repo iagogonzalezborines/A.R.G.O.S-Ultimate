@@ -51,7 +51,14 @@ for line in sys.stdin:
      s.settimeout(2);s.connect('/run/argos-workspace.sock');s.sendall(b'{"tool":"desktop","arguments":{"action":"availability"}}\n');desktop=json.loads(s.makefile('rb').readline(4096))
     if desktop.get('result',{}).get('enabled'):
      from desktop_tool import TOOL as DESKTOP
-     selected.append(DESKTOP)
+     import copy
+     exposed=copy.deepcopy(DESKTOP)
+     if not desktop['result'].get('isolated_visual'):
+      props=exposed['inputSchema']['properties']
+      props['action']['enum']=[a for a in props['action']['enum'] if not a.startswith('visual_')]
+      props['application']['enum'].remove('pad')
+      for field in ('actions','scale','outputs'):props.pop(field,None)
+     selected.append(exposed)
    except (OSError,ValueError):pass
    result={'tools':selected}
   elif method=='tools/call':

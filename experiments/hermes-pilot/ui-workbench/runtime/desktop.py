@@ -30,8 +30,10 @@ def process_identity(pid):
     return (p.stat().st_uid, str((p / 'exe').resolve(strict=True)), (p / 'stat').read_text().rsplit(')', 1)[1].split()[19])
 
 
-def run_json(argv, env, *, cancel=None, timeout=3, limit=131072, deadline=None, input_data=None):
+def run_json(argv, env, *, cancel=None, timeout=3, limit=131072, deadline=None, input_data=None, raw=False):
     """No shell, bounded output, timeout and cancellation reap the child group."""
+    if cancel is not None and cancel.is_set(): raise InterruptedError("Desktop operation cancelled")
+    if deadline is not None and time.monotonic() >= deadline: raise TimeoutError("Desktop deadline exceeded")
     p = subprocess.Popen(argv, env=env, stdin=subprocess.PIPE if input_data is not None else subprocess.DEVNULL, stdout=subprocess.PIPE,
                          stderr=subprocess.DEVNULL, start_new_session=True)
     data = bytearray(); deadline = min(time.monotonic() + timeout, deadline if deadline is not None else float("inf"))
@@ -54,6 +56,9 @@ def run_json(argv, env, *, cancel=None, timeout=3, limit=131072, deadline=None, 
                     if len(data) > limit:
                         raise ValueError('Desktop output limit exceeded')
         p.wait(timeout=max(.01, deadline-time.monotonic()))
+        if raw:
+            if p.returncode: raise RuntimeError("Private graphics helper failed")
+            return bytes(data)
         result = json.loads(data)
         if not isinstance(result, dict) or not result.get('ok'):
             code = result.get('error', {}).get('code', 'DESKTOP_FAILED') if isinstance(result, dict) else 'DESKTOP_FAILED'
@@ -96,6 +101,8 @@ class Desktop:
             if os.environ.get(k): self.env[k] = os.environ[k]
         from .desktop_windows import Windows
         self.access = Windows(self, present)
+        from .desktop_visual import Visual
+        self.visual = Visual(self)
         self.available = False
         if self.enabled:
             try:
@@ -115,13 +122,15 @@ class Desktop:
         return {'enabled': self.available and not self.closed, 'configured': self.enabled,
                 'version': '1.2.0', 'semantic_wayland': True,
                 'physical_input': False, 'arbitrary_launch': False,
+                'isolated_visual': self.visual.ready, 'isolated_profiles': (['pad']+(['comparison'] if Path('/usr/bin/meld').is_file() else [])) if self.visual.ready else [],
+                'isolated_operations': ['window_capture','click','scroll','text','keys','move','down','up','drag'] if self.visual.ready else [],
                 'interaction_modes': {'background': 'semantic only; application behavior must be verified',
                                       'foreground': 'unavailable; never escalated silently'},
                 'window_selection': True, 'generic_effects_require_review': True, 'launch_requires_user_consent': True,
                 'screenshots': False, 'shortcuts': False, 'drag': False,
                 'applications': ['calculator'] + (['comparison'] if Path('/usr/bin/meld').is_file() else []),
                 'active_job': self.active,
-                'scopes':[{'scope':s['id'],'application':s['application'],'title':s.get('title',s['application']),'expired':time.monotonic()-s['used']>900} for s in self.scopes.values() if not s['released']]}
+                'scopes':[{'scope':s['id'],'application':s['application'],'title':s.get('title',s['application']),'expired':time.monotonic()-s['used']>900 or (s['child'] is not None and s['child'].poll() is not None)} for s in self.scopes.values() if not s['released']]}
 
     identity = staticmethod(process_identity)
     hash = staticmethod(digest)
@@ -236,6 +245,7 @@ class Desktop:
 
     def observe(self, scope, cancel=None, deadline=None):
         self.scope(scope['id'])
+        if scope['application'] == 'isolated-visual': return self.visual.observe(scope, cancel, deadline)
         if scope['application'] == 'accessible-window': return self.access.observe(scope, cancel, deadline)
         rows = self.windows(scope, cancel, deadline)
         if len(rows) != 1: raise PermissionError('Authorized window disappeared')
@@ -352,6 +362,7 @@ class Desktop:
         allowed = {'availability': set(), 'status': {'job'}, 'open': {'application','left','right'},
                    'observe': {'scope'}, 'act': {'scope','snapshot','refs','buttons'}, 'cancel': {'job'}, 'release': {'scope'},
                    'discover':set(), 'select':{'candidate'}, 'prepare':{'scope','snapshot','operation','ref','text'},
+                   'visual_open':{'application','left','right','scale','outputs'}, 'visual_act':{'scope','snapshot','actions'},
                    'review':{'proposal_id'}, 'confirm':{'proposal_id','approve'}, 'stop':set()}
         if action not in allowed or set(args) - allowed[action] - {'action'}: raise ValueError('Unsupported desktop operation or fields')
         if action == 'availability': return self.availability()
@@ -362,7 +373,7 @@ class Desktop:
                 for p in self.access.pending.values():
                     if p['status']=='pending': p['status']='cancelled'
                 for scope in self.scopes.values(): scope['snapshot']=None
-            return {'ok':True,'cancellation_requested':True,'held_input':False}
+            return {'ok':True,'cancellation_requested':True,'held_input_cleanup':'Inspect terminal job evidence; cleanup is asynchronous'}
         if action == 'review':
             with self.lock:
                 p=self.access.review(args.get('proposal_id'))
@@ -379,9 +390,11 @@ class Desktop:
                 if job is None: raise ValueError('No matching desktop operation')
                 job['cancel'].set()
                 return {'id':job['id'], 'state':job['state'], 'cancellation_requested':job['state'] not in TERMINAL}
+        if action == 'visual_act': return self.visual.action(args)
         if action == 'act': return self.action(args)
         with self.lock:
             if self.active: raise RuntimeError('Desktop busy; status or cancel the active job')
+            if action == 'visual_open': return self.visual.proposal(args)
             if action == 'discover': return self.access.discover()
             if action == 'select': return self.access.select(args.get('candidate'),user)
             if action == 'prepare': return self.access.prepare(args)

@@ -1,0 +1,91 @@
+{
+  "checks": [
+    {
+      "name": "visual session discoverable in real application",
+      "ok": true
+    },
+    {
+      "name": "scope review precedes launch",
+      "ok": true
+    },
+    {
+      "name": "UI screenshot click and text reach real canvas",
+      "ok": true
+    },
+    {
+      "name": "panel reopening preserves isolated scope",
+      "ok": true
+    },
+    {
+      "name": "General visual loop changes real application",
+      "ok": true
+    },
+    {
+      "name": "narrow visual panel contains its screenshot",
+      "ok": true
+    },
+    {
+      "name": "background job returns promptly",
+      "ok": true
+    },
+    {
+      "name": "panel close does not cancel active job",
+      "ok": true
+    },
+    {
+      "name": "reopening busy panel preserves stop control",
+      "ok": true
+    },
+    {
+      "name": "applications remain responsive during visual work",
+      "ok": true
+    },
+    {
+      "name": "conversation remains available",
+      "ok": true
+    },
+    {
+      "name": "UI stop releases held input",
+      "ok": true
+    },
+    {
+      "name": "UI revocation destroys private scope",
+      "ok": true
+    },
+    {
+      "name": "real Broker admits comparison of authorized files",
+      "ok": true
+    },
+    {
+      "name": "comparison preserves originals",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [
+    {
+      "request": "En el lienzo visual aislado que ya he autorizado, observa la captura. Sustituye el texto de Draft por \"Prueba visual natural\", pulsa Apply draft, desplaza la lista hacia abajo y arrastra la tarjeta azul MODEL.STL a DROP HERE. Usa desktop visual_act, verifica con otra captura y dime lo que observas. No abras otras aplicaciones.",
+      "answer": "Hecho en el lienzo visual aislado: el texto aplicado es “Prueba visual natural”, la lista se desplazó hasta mostrar los elementos 6–12 y la tarjeta MODEL.STL quedó dentro del área verde. La captura final muestra “Dropped: True”."
+    },
+    {
+      "request": "Mientras trabajas, dime brevemente qué es una carpeta. No uses herramientas.",
+      "answer": "Una carpeta es un contenedor para organizar archivos y otras carpetas."
+    }
+  ],
+  "errors": [],
+  "host_input": false,
+  "canvas": {
+    "text": "Prueba visual natural",
+    "applied": "Prueba visual natural",
+    "scroll": 5,
+    "dropped": true,
+    "dragging": false,
+    "keys": 42,
+    "clicks": 4,
+    "moves": 25
+  },
+  "apps_ms": 4.279367999995884
+}

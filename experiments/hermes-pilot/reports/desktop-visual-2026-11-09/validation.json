@@ -1,0 +1,22 @@
+{
+  "core_tests": 410,
+  "desktop_tests": 44,
+  "files": 25,
+  "storage_clipboard": 21,
+  "research_boundaries": 17,
+  "startup": 10,
+  "text_ingress": "readiness, bounds, credential rejection, FIFO and no audio passed",
+  "general_image_forwarding": "confirmed in actual code-mode calls; no raw trace or images copied from Codex session logs",
+  "host_portal_modified": false,
+  "physical_host_input_injected": false,
+  "audio_playback": false,
+  "installed": {
+    "desktop_enabled": true,
+    "isolated_visual": true,
+    "projects_enabled": true,
+    "project_map_enabled": true,
+    "adaptive_enabled": true,
+    "jobs_started": 0,
+    "scopes_opened": 0
+  }
+}

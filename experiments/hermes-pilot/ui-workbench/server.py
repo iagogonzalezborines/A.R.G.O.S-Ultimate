@@ -148,6 +148,8 @@ class Handler(SimpleHTTPRequestHandler):
             message={errno.ENOSPC:'The destination does not have enough free space.',errno.EROFS:'The destination filesystem is read-only.',errno.EXDEV:'Moving across filesystems is not enabled. Copy the file instead.'}.get(error.errno,'The filesystem operation failed.')
             return self.reply(507 if error.errno==errno.ENOSPC else 409,{'error':message})
         except Exception as error:
+            if self.path=='/api/capability' and body.get('tool')=='desktop' and isinstance(error,RuntimeError):
+                return self.reply(409,{'error':str(error)[:200]})
             if self.server.workspace.development:self.server.workspace.development.incident('desktop.request',error)
             return self.reply(503,{'error':'Conversation unavailable'})
         publish({'actor':'argos','intent':intent})
