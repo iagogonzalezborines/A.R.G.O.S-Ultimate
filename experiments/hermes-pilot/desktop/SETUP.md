@@ -32,3 +32,15 @@ python experiments/hermes-pilot/desktop/qa_prepare.py --cleanup
 ```
 
 El último comando debe ejecutarse también si falla la prueba. Resultados y captura: `/tmp/argos-desktop-qa/pilot/reports/desktop-live/`. El test abre calculadora/Meld reales y una ventana Electron de prueba; no usa micrófono ni altavoces. La suite normal `PYTHONPATH=src python -m unittest discover -s tests -v` no toca aplicaciones reales.
+
+## Ventanas accesibles y segundo plano
+
+La ampliación de Hyprland se instala con el mismo materializador. En ARGOS, abre **Control de aplicaciones**, autoriza la lectura de una ventana y revisa cada modificación o activación. Retirar acceso no cierra una aplicación del usuario. Las autorizaciones no sobreviven al reinicio. Informe, evidencia, límites de entrada física y plan de reversión: [segundo plano](../reports/desktop-background-2026-11-09.md).
+
+Prueba nativa optativa, solo con autorización para enfocar ventanas desechables y producir entrada sintética de prueba:
+
+```sh
+python experiments/hermes-pilot/desktop/qa_background.py --foreground-consent --output /tmp/argos-background-evidence
+```
+
+La automatización de interfaz `desktop/qa_windows_ui.cjs` se ejecuta desde una instalación desechable preparada por `qa_prepare.py`; exige sesión gráfica y usa General real. `ARGOS_QA_SKIP_GENERAL=1` limita la repetición a los controles deterministas. Al terminar, ejecuta `qa_prepare.py --cleanup` para retirar credenciales derivadas. No ejecutar estos harnesses durante un trabajo del usuario que necesite conservar el foco.

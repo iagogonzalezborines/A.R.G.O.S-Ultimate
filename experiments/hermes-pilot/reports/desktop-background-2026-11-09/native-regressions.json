@@ -1,0 +1,285 @@
+{
+  "checks": [
+    {
+      "name": "real application and General ready in text mode",
+      "ok": true
+    },
+    {
+      "name": "desktop discovered through trusted renderer IPC",
+      "ok": true
+    },
+    {
+      "name": "ordinary native turn before desktop request",
+      "ok": true
+    },
+    {
+      "name": "natural launch requires explicit focus permission",
+      "ok": true
+    },
+    {
+      "name": "natural request used real desktop open and act",
+      "ok": true
+    },
+    {
+      "name": "calculator is native Wayland",
+      "ok": true
+    },
+    {
+      "name": "actual calculator displays 37",
+      "ok": true
+    },
+    {
+      "name": "General reports observed answer",
+      "ok": true
+    },
+    {
+      "name": "stale snapshot rejected in real application",
+      "ok": true
+    },
+    {
+      "name": "desktop operation hands back running job",
+      "ok": true
+    },
+    {
+      "name": "app discovery stays responsive during desktop work",
+      "ok": true
+    },
+    {
+      "name": "closing progress panel does not cancel desktop work",
+      "ok": true
+    },
+    {
+      "name": "background sequence completes",
+      "ok": true
+    },
+    {
+      "name": "duplicate action does not replay",
+      "ok": true
+    },
+    {
+      "name": "ordinary conversation remains available",
+      "ok": true
+    },
+    {
+      "name": "actual cancellation stops remaining clicks",
+      "ok": true
+    },
+    {
+      "name": "real Meld comparison is observed read-only",
+      "ok": true
+    },
+    {
+      "name": "comparison preserved originals",
+      "ok": true
+    },
+    {
+      "name": "closed application scope rejected",
+      "ok": true
+    },
+    {
+      "name": "restart preserves configured availability without replay",
+      "ok": true
+    },
+    {
+      "name": "old action not resumed after restart",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [
+    {
+      "request": "Argos, ¿estás ahí? Responde brevemente sin usar herramientas.",
+      "answer": "Sí, aquí estoy."
+    },
+    {
+      "request": "ARGOS, abre la calculadora y úsala para calcular 12 + 25. Comprueba lo que aparece en su pantalla y dime el resultado.",
+      "answer": "La apertura requiere que autorices el lanzamiento en la ventana de revisión. Aún no he podido usarla ni comprobar el resultado."
+    },
+    {
+      "request": "Ya he autorizado el lanzamiento. Continúa en la calculadora abierta con 12 + 25, verifica la pantalla y dime el resultado.",
+      "answer": "La pantalla de la calculadora muestra 37."
+    },
+    {
+      "request": "Mientras tanto, dime en una frase qué diferencia hay entre un archivo y una carpeta. No uses herramientas.",
+      "answer": "Un archivo contiene datos, mientras que una carpeta sirve para organizar archivos y otras carpetas."
+    }
+  ],
+  "renderer_errors": [],
+  "audio": false,
+  "native_action": {
+    "enabled": true,
+    "configured": true,
+    "version": "1.2.0",
+    "semantic_wayland": true,
+    "physical_input": false,
+    "arbitrary_launch": false,
+    "interaction_modes": {
+      "background": "semantic only; application behavior must be verified",
+      "foreground": "unavailable; never escalated silently"
+    },
+    "window_selection": true,
+    "generic_effects_require_review": true,
+    "launch_requires_user_consent": true,
+    "screenshots": false,
+    "shortcuts": false,
+    "drag": false,
+    "applications": [
+      "calculator",
+      "comparison"
+    ],
+    "active_job": null,
+    "scopes": [
+      {
+        "scope": "da1b81907ca8ed39a14d96c4",
+        "application": "calculator",
+        "title": "calculator",
+        "expired": false
+      }
+    ],
+    "state": "idle"
+  },
+  "desktop_calls": [
+    {
+      "time": 1794218510.9935384,
+      "tool": "desktop",
+      "action": "availability",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794218511.006955,
+      "tool": "desktop",
+      "action": "availability",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794218531.9752092,
+      "tool": "desktop",
+      "action": "open",
+      "ok": true,
+      "error": null,
+      "status": "needs_approval"
+    },
+    {
+      "time": 1794218541.4745674,
+      "tool": "desktop",
+      "action": "status",
+      "ok": true,
+      "error": null,
+      "status": "idle"
+    },
+    {
+      "time": 1794218546.2517848,
+      "tool": "desktop",
+      "action": "observe",
+      "ok": false,
+      "error": "Unsupported desktop operation or fields",
+      "status": null
+    },
+    {
+      "time": 1794218551.132192,
+      "tool": "desktop",
+      "action": "observe",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794218556.1959076,
+      "tool": "desktop",
+      "action": "act",
+      "ok": false,
+      "error": "Stale snapshot; observe before acting",
+      "status": null
+    },
+    {
+      "time": 1794218562.761836,
+      "tool": "desktop",
+      "action": "observe",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794218568.0975573,
+      "tool": "desktop",
+      "action": "act",
+      "ok": true,
+      "error": null,
+      "status": "running"
+    },
+    {
+      "time": 1794218572.1738944,
+      "tool": "desktop",
+      "action": "status",
+      "ok": true,
+      "error": null,
+      "status": "idle"
+    },
+    {
+      "time": 1794218576.8566208,
+      "tool": "desktop",
+      "action": "observe",
+      "ok": true,
+      "error": null,
+      "status": null
+    }
+  ],
+  "calculator_display": [
+    {
+      "role": "text",
+      "name": "",
+      "text": "37"
+    }
+  ],
+  "wayland": [
+    {
+      "class": "galculator",
+      "pid": 158637,
+      "xwayland": false,
+      "mapped": true
+    }
+  ],
+  "apps_ms": 5.361151999997674,
+  "foreground_started_while_job": "running",
+  "foreground_answer": "Un archivo contiene datos, mientras que una carpeta sirve para organizar archivos y otras carpetas.",
+  "cancelled": {
+    "state": "cancelled",
+    "steps": 1
+  },
+  "comparison": {
+    "ok": true,
+    "scope": "0eb52ab3bf0c0e8aa7dfda00",
+    "application": "comparison",
+    "snapshot": "236a0e164ce7544f9053587a",
+    "elements": [],
+    "texts": [
+      {
+        "role": "label",
+        "name": "Meld",
+        "text": "Meld"
+      },
+      {
+        "role": "text",
+        "name": "",
+        "text": "STL and OBJ\n3MF accepted"
+      },
+      {
+        "role": "text",
+        "name": "",
+        "text": "STL and OBJ\n3MF pending"
+      }
+    ],
+    "read_only": true,
+    "process_verified": true,
+    "window_verified": true,
+    "observation_untrusted": true,
+    "ready": true
+  }
+}

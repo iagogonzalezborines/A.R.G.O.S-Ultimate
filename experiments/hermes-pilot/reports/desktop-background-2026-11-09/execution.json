@@ -1,0 +1,187 @@
+{
+  "checks": [
+    {
+      "name": "model selection requires read approval",
+      "ok": true
+    },
+    {
+      "name": "QA focus verified",
+      "ok": true
+    },
+    {
+      "name": "target and foreground on different outputs",
+      "ok": true
+    },
+    {
+      "name": "QA focus verified",
+      "ok": true
+    },
+    {
+      "name": "background replacement verified",
+      "ok": true
+    },
+    {
+      "name": "foreground input receiver untouched",
+      "ok": true
+    },
+    {
+      "name": "static focus and cursor unchanged",
+      "ok": true
+    },
+    {
+      "name": "background button delivered",
+      "ok": true
+    },
+    {
+      "name": "foreground has no unintended key/button events",
+      "ok": true
+    },
+    {
+      "name": "concurrent semantic edit succeeds",
+      "ok": true
+    },
+    {
+      "name": "foreground receives test keys only",
+      "ok": true
+    },
+    {
+      "name": "background target receives no physical events",
+      "ok": true
+    },
+    {
+      "name": "emergency stop invalidates pending effects",
+      "ok": true
+    },
+    {
+      "name": "native menu item activated",
+      "ok": true
+    },
+    {
+      "name": "release leaves user-owned target alive",
+      "ok": true
+    },
+    {
+      "name": "QA focus verified",
+      "ok": true
+    },
+    {
+      "name": "real Meld text replacement verified",
+      "ok": true
+    },
+    {
+      "name": "Meld edit preserves foreground receiver",
+      "ok": true
+    },
+    {
+      "name": "source files unchanged",
+      "ok": true
+    },
+    {
+      "name": "closed application rejected",
+      "ok": true
+    },
+    {
+      "name": "QA focus verified",
+      "ok": true
+    },
+    {
+      "name": "calculator background result 37",
+      "ok": true
+    },
+    {
+      "name": "calculator preserves focus cursor and receiver",
+      "ok": true
+    },
+    {
+      "name": "real running sequence cancels",
+      "ok": true
+    }
+  ],
+  "input": "synthetic compositor events confined to QA receiver; no claim of human input coverage",
+  "outputs": [
+    {
+      "id": 0,
+      "name": "DP-1",
+      "x": 1920,
+      "y": 0,
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "transform": 0
+    },
+    {
+      "id": 1,
+      "name": "HDMI-A-1",
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080,
+      "scale": 1,
+      "transform": 0
+    }
+  ],
+  "different_outputs": true,
+  "text_job": {
+    "state": "completed",
+    "seconds": 0.2802,
+    "verified_text": true,
+    "input_observation": {
+      "focus_unchanged": true,
+      "cursor_unchanged": true,
+      "physical_input_sent": false,
+      "sampled_only": true
+    }
+  },
+  "input_counts": {
+    "foreground": {
+      "keys": 12,
+      "buttons": 0,
+      "motion": 0,
+      "focus_in": 1,
+      "applied": 0,
+      "marked": 0,
+      "text": "zzzzzzzzzzzz"
+    },
+    "target": {
+      "keys": 0,
+      "buttons": 0,
+      "motion": 0,
+      "focus_in": 1,
+      "applied": 1,
+      "marked": 0,
+      "text": "Concurrent background text"
+    }
+  },
+  "menu": {
+    "state": "completed",
+    "error": null,
+    "input_observation": {
+      "focus_unchanged": true,
+      "cursor_unchanged": true,
+      "physical_input_sent": false,
+      "sampled_only": true
+    },
+    "items": [
+      "ARGOS desktop isolation fixture target",
+      "Draft",
+      "Apply draft",
+      "Background draft: models STL and OBJ",
+      "Options",
+      "Mark draft"
+    ]
+  },
+  "meld": {
+    "state": "completed",
+    "seconds": 0.3865,
+    "verified_text": true,
+    "input_observation": {
+      "focus_unchanged": true,
+      "cursor_unchanged": true,
+      "physical_input_sent": false,
+      "sampled_only": true
+    }
+  },
+  "cancelled_steps": 1,
+  "held_input": false,
+  "physical_backend": "not implemented or advertised"
+}

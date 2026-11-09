@@ -20,7 +20,7 @@ from .apps import Apps
 
 ROOT=Path(__file__).resolve().parents[1]
 SOCKET=ROOT.parent/'private/workspace.sock'
-KINDS={'project','conversation','summary','note','sources','progress','browser','video','agents','files','document','change','storage','maintenance'}
+KINDS={'desktop','project','conversation','summary','note','sources','progress','browser','video','agents','files','document','change','storage','maintenance'}
 DENIED={'node_modules','__pycache__','credentials','secrets','venv','env','qwen-env'}
 
 def public_url(value):
@@ -261,7 +261,7 @@ class WorkspaceBroker:
   from .projects import Projects
   self.projects=Projects(lambda intent:self.intent(intent,wait=False))
   from .desktop import Desktop
-  self.desktop=Desktop(publish,files=self.files)
+  self.desktop=Desktop(publish,files=self.files,present=lambda intent:self.intent(intent,wait=False))
  def begin_turn(self):
   # Transient display permission only. Native Hermes owns the actual turn/task.
   with self.condition:self.research_epoch=self.epoch;self.research_sources={};self.research_opened=set();self.research_found={}
@@ -424,8 +424,8 @@ class WorkspaceBroker:
    if a.get('action')=='open':
     if a.get('id')=='calculator' and self.desktop.availability()['enabled']:
      if a.get('url') is not None:raise ValueError('Calculator does not accept URLs')
-     result=self.desktop.request({'action':'open','application':'calculator'})
-     return {**result,'status':'window_verified','name':'Calculadora'}
+     result=self.desktop.request({'action':'open','application':'calculator'},user=user)
+     return {**result,'status':'window_verified' if result.get('window_verified') else result['status'],'name':'Calculadora'}
     return self.apps.open(a.get('id'),a.get('url'))
    raise ValueError('Unknown application action')
   if tool=='media':

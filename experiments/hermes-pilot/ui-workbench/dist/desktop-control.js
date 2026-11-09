@@ -1,0 +1,24 @@
+const call=arguments_=>window.argosDesktop.capability({tool:'desktop',arguments:arguments_});
+export async function renderDesktopControl(w,{make,manager}){
+ const pad=make('div','panel-pad'),bar=make('div','file-actions'),status=make('p','file-status'),list=make('div'),detail=make('div');w.body.append(pad);pad.append(bar,status,list,detail);
+ let disposed=false,busy=false,enabled=false,selection=null,timer=null;
+ const button=(label,fn)=>{const b=make('button','file-button',label);b.onclick=async()=>{b.disabled=true;try{await fn()}catch(e){status.textContent=e.message.includes('Application closed')?'La aplicación se ha cerrado o ha cambiado. Actualiza las ventanas.':e.message}finally{b.disabled=false}};return b};
+ bar.append(button('Actualizar ventanas',load),button('Detener acciones',async()=>{await call({action:'stop'});status.textContent='Detención solicitada. Puede haber cambios parciales.'}));
+ pad.append(make('p','file-status','Segundo plano: accesibilidad, sin teclado ni ratón global. Cada ventana necesita permiso de lectura. Modificar texto o activar controles abre una revisión. El control físico en primer plano no está disponible.'));
+ async function show(data){if(disposed)return;selection=data;list.hidden=true;detail.replaceChildren();status.textContent='Ventana autorizada · '+data.application;
+  detail.append(button('Observar de nuevo',async()=>show(await call({action:'observe',scope:data.scope}))),button('Retirar acceso',async()=>{await call({action:'release',scope:data.scope});selection=null;detail.replaceChildren();await load()}));
+  for(const e of data.elements||[]){const row=make('div','desktop-control-row');row.append(make('strong','',e.name||e.role),make('small','file-status',e.role));
+   if(e.text)row.append(make('pre','',e.text));
+   if(e.actions.includes('replace_text')){const text=make('textarea','desktop-field');text.value=e.text||'';text.maxLength=4096;text.setAttribute('aria-label','Texto de '+(e.name||e.role));row.append(text,button('Revisar texto',async()=>{await call({action:'prepare',scope:data.scope,snapshot:data.snapshot,operation:'replace_text',ref:e.ref,text:text.value});status.textContent='Revisa y autoriza el texto en el panel de cambio.'}))}
+   if(e.actions.includes('click')&&data.mutation_requires_review)row.append(button('Revisar activación',async()=>{await call({action:'prepare',scope:data.scope,snapshot:data.snapshot,operation:'click',ref:e.ref});status.textContent='Revisa el efecto antes de autorizar.'}));
+   detail.append(row)
+  }manager.changed();
+ }
+ async function load(){const availability=await call({action:'availability'});enabled=availability.enabled;if(!enabled){status.textContent='Control de escritorio no disponible. Preparación fijada pendiente.';return}const result=await call({action:'discover'});if(disposed)return;list.replaceChildren();list.hidden=false;status.textContent=result.windows.length?'Selecciona una ventana para autorizar su lectura.':'No hay ventanas accesibles con identidad inequívoca.';
+  for(const entry of result.windows){const row=make('div','desktop-control-row');row.append(make('strong','',entry.app),make('span','',entry.title),button('Autorizar lectura',async()=>show(await call({action:'select',candidate:entry.candidate}))));list.append(row)}
+  for(const scope of availability.scopes||[]){const row=make('div','file-actions');const reopen=button('Reabrir acceso · '+(scope.title||scope.application),async()=>show(await call({action:'observe',scope:scope.scope})));reopen.disabled=scope.expired;row.append(reopen,button(scope.expired?'Retirar acceso caducado':'Retirar este acceso',async()=>{await call({action:'release',scope:scope.scope});await load()}));list.append(row)}
+ }
+ async function poll(){if(disposed)return;try{if(!busy&&!w.minimized){busy=true;const job=await call({action:'status'});if(job.state==='running')status.textContent='Trabajando en segundo plano · '+(job.completed_steps||0)+' acciones entregadas'}}catch(e){status.textContent='Sin conexión: '+e.message}finally{busy=false;if(!disposed)timer=setTimeout(poll,1000)}}
+ w.dispose=()=>{disposed=true;clearTimeout(timer)};
+ try{await load();if(enabled)poll()}catch(e){status.textContent=e.message.includes('Application closed')?'La aplicación se ha cerrado o ha cambiado. Actualiza las ventanas.':e.message}
+}

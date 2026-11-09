@@ -1,0 +1,18 @@
+{
+  "packages": {
+    "sway-1:1.12-4-x86_64.pkg.tar.zst": "5704cfc9eba9804116c665cb4450352bf5a240c1a8300b36aca3218116648443",
+    "wlroots0.20-0.20.2-1-x86_64.pkg.tar.zst": "8b1da3fbf29cc45908d8de771bd22a5813b298a9049462df5b8952f23c3ffb8f",
+    "libliftoff-0.5.0-1-x86_64.pkg.tar.zst": "59cf08c21500673a14287b83b89b6db5389134cc24c97d9222c7cddefa639ccf",
+    "weston-15.0.1-3-x86_64.pkg.tar.zst": "92fe0bfe2cf1ae02105b0e6573f6695c6bbd4637c9a6b20299a6fea8c3d23b4d"
+  },
+  "signatures_verified": true,
+  "installed_globally": false,
+  "nested_hyprland_validated": false,
+  "blockers": [
+    "Weston wl_compositor maximum 5, Hyprland requests 6",
+    "Sway xdg_wm_base maximum 5, Hyprland requests 6"
+  ],
+  "portal_changed": false,
+  "input_backend_enabled": false,
+  "hyprland_installed_source_sha256": "2671bcfb511a9c0fe9bf1ae9773b84e58c8dcf82b42679b050d43f34b3c4dcd0"
+}

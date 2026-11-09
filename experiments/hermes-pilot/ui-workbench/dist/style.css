@@ -31,3 +31,7 @@
 #core-menu{bottom:120px;max-height:calc(100vh - 150px)}
 /* Focus/scrollIntoView must scroll a panel, never move the desktop underneath it. */
 html,body{overflow:clip;overscroll-behavior:none}body{position:fixed;inset:0}
+
+.desktop-control-row{display:flex;flex-direction:column;gap:8px;margin:12px 0;padding:12px;border:1px solid #28415d;border-radius:8px;overflow-wrap:anywhere}.desktop-control-row pre{white-space:pre-wrap;max-height:180px;overflow:auto}.desktop-field{width:100%;min-height:80px;color:inherit;background:#091524;border:1px solid #355477;padding:8px;box-sizing:border-box}
+
+.file-review>pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}

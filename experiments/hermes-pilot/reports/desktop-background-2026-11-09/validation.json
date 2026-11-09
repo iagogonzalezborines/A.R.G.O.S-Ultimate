@@ -1,0 +1,47 @@
+{
+  "core_tests": {
+    "passed": 400,
+    "seconds": 15.637,
+    "command": "PYTHONPATH=src python -m unittest discover -s tests -v"
+  },
+  "desktop_unit_tests": 34,
+  "native_checks": 24,
+  "natural_ui_checks": 10,
+  "final_ui_checks": 7,
+  "regressions": {
+    "files": 25,
+    "storage_clipboard": 21,
+    "research_boundaries": 17,
+    "startup": 10,
+    "text_ingress": "passed"
+  },
+  "audio_played": false,
+  "personal_projects_modified": false,
+  "foreground_test_consent": "explicit user approval in this session",
+  "pending": [
+    "physical mouse event concurrency",
+    "human simultaneous input/games",
+    "fractional scaling",
+    "validated foreground input session",
+    "Wayland window capture",
+    "voice hardware acceptance"
+  ],
+  "installation": {
+    "source_matches_manifest": true,
+    "source_files": 300,
+    "authentication_unchanged": true,
+    "desktop_enabled": true,
+    "projects_enabled": true,
+    "project_map_enabled": true,
+    "adaptive_enabled": true,
+    "restart_required": true,
+    "portal_changed": false
+  },
+  "native_regression_checks": 22,
+  "installed_native_startup_via_identical_qa_source": true,
+  "cleanup": {
+    "derived_test_credentials_removed": true,
+    "private_headless_lab_removed": true,
+    "global_packages_or_portal_changed": false
+  }
+}

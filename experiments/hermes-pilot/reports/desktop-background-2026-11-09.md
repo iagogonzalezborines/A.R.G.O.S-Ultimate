@@ -1,0 +1,56 @@
+# Escritorio semántico en segundo plano — 9 de noviembre de 2026
+
+**Ampliación implementada e instalada; no es todavía control universal del escritorio.** ARGOS puede descubrir ventanas accesibles de Hyprland, solicitar acceso, leer controles, proponer y ejecutar cambios de texto y activar botones/menús mediante AT-SPI. La interacción semántica no envía entrada física. El control en primer plano, los atajos, la captura de ventanas, el scroll físico y el arrastre permanecen **no disponibles**; no se anuncian ni se usan como fallback silencioso.
+
+Se conserva Agent Desktop **1.2.0**, la calculadora y la comparación existentes, Broker/Policy, Projects/Engineering y la conversación. No hay otro runtime, scheduler, proveedor ni modelo. Hyprland **0.57.1**, pin `acc1aa0bfd4bd575dcb0f76c35ccf12b660a1ab9`; portal de la distribución **1.5.0**.
+
+## Uso y autorización
+
+En el menú de ARGOS: **Control de aplicaciones → Autorizar lectura** sobre una ventana identificada. La misma selección desde General abre una revisión; el modelo no puede aprobarla. La lectura no autoriza efectos. **Revisar texto** muestra el contenido anterior y el reemplazo; **Revisar activación** identifica el control. La confirmación admite una acción, y el resultado se obtiene del proceso y de una observación nueva. Preparar un borrador no pulsa «Enviar». Las integraciones de archivos, navegador o API conservan sus permisos y siguen siendo preferibles cuando resuelven la operación.
+
+**Detener acciones** cancela el trabajo y las revisiones pendientes. **Retirar acceso** elimina la autorización y las observaciones; no mata una aplicación del usuario. El perfil antiguo `release` sigue cerrando únicamente sus aplicaciones lanzadas por ARGOS. Cerrar/minimizar el panel no cancela trabajo. Abrir una aplicación nueva puede afectar al foco: General debe solicitar una revisión explícita del lanzamiento. No se declara un lanzamiento en segundo plano garantizado ni se habilita entrada física por aprobarlo. Reutilizar una calculadora ya autorizada sigue siendo inmediato.
+
+Las ventanas se vinculan a UID, ejecutable, inicio de proceso, ventana AT-SPI y dirección/identidad del compositor. Cambios de árbol, geometría o configuración de salidas invalidan la acción revisada. Hay un slot de ejecución, presupuesto de 12 segundos, cancelación del grupo auxiliar, observaciones acotadas y ninguna reproducción automática de efectos. Revisiones: 120 segundos; acceso: 15 minutos de inactividad. Las autorizaciones son transitorias y se pierden al reiniciar. La calculadora mantiene su política anterior.
+
+El lector genérico no guarda snapshots de texto en disco. Excluye roles de contraseña y nombres/patrones reconocibles de credenciales; eso no permite certificar secretos que una aplicación presente sin etiquetas reconocibles. Rechaza controles de activación sin nombre y no convierte activar un campo de texto en una pulsación de Return. Las propias superficies de aprobación de ARGOS están excluidas. Los procesos del mismo usuario y las aplicaciones siguen dentro del perímetro de confianza: AT-SPI no constituye un sandbox de aplicaciones.
+
+## Evidencia real
+
+[24 comprobaciones de escritorio](desktop-background-2026-11-09/execution.json), [10 de interfaz y General real](desktop-background-2026-11-09/ui-natural.json), [7 de interfaz final](desktop-background-2026-11-09/ui-final.json), [22 regresiones nativas con General](desktop-background-2026-11-09/native-regressions.json), [regresiones e instalación](desktop-background-2026-11-09/validation.json).
+
+- GTK3 nativo: reemplazo leído de vuelta, activación de botón, apertura de menú y activación de su elemento. Una aplicación GTK separada permaneció enfocada y registró eventos. En los ensayos estáticos conservaron foco/cursor y no llegaron teclas o botones inesperados al receptor de primer plano.
+- Entrada concurrente: 12 teclas sintéticas llegaron exclusivamente al receptor de primer plano mientras se verificaba el texto exacto en la aplicación de fondo. El receptor de fondo registró cero teclas y botones. Se ejercitó con las dos ventanas en salidas físicas distintas, ambas a escala 1.
+- Meld real: edición de una **copia desechable**, mediante una autorización genérica separada del perfil de comparación de solo lectura. Se verificó el texto y la conservación de los originales y del receptor de primer plano.
+- Galculator real: `12 + 25 = 37`, sin cambiar foco/cursor ni el receptor; cancelación de otra secuencia después de una entrega parcial. Ninguna tecla o botón quedó sostenido por el adaptador: no dispone de operaciones de presionar/mantener.
+- La regresión nativa adicional comprobó petición natural de cálculo, autorización del lanzamiento antes de abrir la ventana, resultado 37 observado, conversación mientras se ejecutaba otra secuencia, cierre del panel sin cancelar, deduplicación, cancelación, comparación en Meld y reinicio sin reproducción de efectos.
+- Electron → General/Codex → MCP → Broker → AT-SPI: petición natural sobre una ventana ya autorizada, revisión y confirmación del usuario, texto final «Borrador natural de ARGOS». El botón «Apply draft» permaneció sin pulsar. No fue una respuesta simulada ni una prueba solo de funciones.
+- Interfaz: menú descubrible, permiso de lectura, revisión sin efecto previo, edición confirmada, cierre/reapertura del panel conservando el acceso, retirada sin cerrar la aplicación, tamaño reducido y error visible al cerrar la aplicación. Cero errores de renderer. Se inspeccionaron las capturas y se corrigieron el ajuste de texto de revisión, el error de `/proc` presentado como archivo ausente y el acuse que confundía autorización con finalización.
+
+Capturas inspeccionadas: [revisión](desktop-background-2026-11-09/review.png), [texto verificado](desktop-background-2026-11-09/verified.png), [panel reducido](desktop-background-2026-11-09/narrow.png), [aplicación cerrada](desktop-background-2026-11-09/closed.png). Son capturas de la interfaz obtenidas por la automatización; **no prueban una capacidad de captura de ventanas Wayland disponible para General**.
+
+Regresiones: **400 tests** de `tests/`, incluidos 34 de escritorio/seguridad; archivos **25**, almacenamiento/clipboard **21**, investigación **17**, arranque **10**, entrada escrita (preparación, límites, credenciales, FIFO y ausencia de audio). Se probaron denegación de aprobación por el modelo, revisión caducada, referencias ajenas, cambios posteriores a aprobación, deduplicación, cambio de escala/geometría, cancelación y no recuperación de efectos. No se reprodujo audio ni se modificaron proyectos personales.
+
+Límites de la evidencia: las teclas concurrentes fueron sintéticas y las muestras de foco/cursor no constituyen una traza continua del asiento. El harness también cambió coordenadas del cursor, pero el receptor no registró movimiento: **no se da por validada entrada de ratón concurrente**. No se certifican juegos, entrada humana simultánea, escalado fraccional, todas las aplicaciones GTK/Qt/Electron, ni efectos de foco transitorios de aplicaciones arbitrarias. El controlador detiene la operación si sus muestras detectan cambio de foco y no lo restaura a escondidas. Los cambios continuos de una aplicación pueden invalidar una revisión del árbol completo. Procesos con varias ventanas de compositor ambiguas y controles no accesibles fallan cerrados.
+
+## Wayland y siguiente ampliación
+
+- La [PR #426](https://github.com/hyprwm/xdg-desktop-portal-hyprland/pull/426) se cerró en favor de la [#448](https://github.com/hyprwm/xdg-desktop-portal-hyprland/pull/448), abierta en la consulta de esta sesión. La segunda propone RemoteDesktop/ConnectToEIS; el manifiesto del portal instalado solo declara Screenshot, ScreenCast, GlobalShortcuts e InputCapture. Tener `libei` instalado no añade un backend RemoteDesktop.
+- El [código del commit instalado de Hyprland](https://github.com/hyprwm/Hyprland/blob/acc1aa0bfd4bd575dcb0f76c35ccf12b660a1ab9/src/config/shared/actions/ConfigActions.cpp) cambia temporalmente el foco del teclado en la entrega dirigida y lo restaura. `send_shortcut` **no se admite como entrada independiente**, aunque una consulta de ventana activa antes/después resulte idéntica. El harness lo usó únicamente para producir entrada de prueba en su propio receptor, durante la sesión de primer plano expresamente autorizada por el usuario.
+- [Agent Desktop Linux](https://agent-browser.dev/desktop/platforms/linux) mantiene entrada Wayland de teclado ligada a Mutter y gestos físicos ligados a X11. No se utilizó ninguna de esas rutas para suplir Hyprland. Su captura Wayland mediante portal y recorte de pantalla tampoco acredita captura independiente del contenido de una ventana cubierta por otras: no se amplió el permiso a todo el escritorio.
+- Se intentó un laboratorio reversible con bus privado, sin red ni dispositivos físicos de entrada. Paquetes firmados extraídos **solo en `/tmp`**, sin instalación global: Weston 15.0.1, Sway 1.12, wlroots 0.20.2 y libliftoff 0.5.0. El Hyprland anidado exigió `wl_compositor` v6 frente a v5 de Weston y `xdg_wm_base` v6 frente a v5 de Sway. No se parchearon protocolos ni se sustituyó el portal para eludir esos errores. No se compiló ni se validó #448. Las pruebas finales utilizaron la sesión real con permiso explícito y ventanas desechables.
+
+Antes de habilitar entrada física hace falta un laboratorio compatible y un backend revisado con sesiones explícitas, aviso visible, parada independiente, liberación de teclas/botones incluso ante caída y comprobación de geometría/escala/foco. Cualquier prueba de #448 debe fijar commit/dependencias, compilar en prefijo privado y usar bus y compositor aislados. La migración del portal habitual requeriría una revisión separada, conservar el paquete/configuración actuales y definir la restauración de los servicios de la distribución y el cierre de sesiones remotas. **No hay cambios de portal ni reglas permanentes de Hyprland que revertir en esta entrega.**
+
+## Instalación y relevo
+
+Con el piloto ya preparado y Agent Desktop fijado activado:
+
+```sh
+python scripts/prepare_hermes_pilot.py --register
+```
+
+La ampliación aparece en el próximo arranque de **ARGOS (Hermes)**. No descarga modelos ni exige activar un proveedor. Si falta la instalación inicial, seguir [SETUP](../desktop/SETUP.md). No se modifica globalmente `NO_AT_BRIDGE`; una aplicación iniciada sin accesibilidad puede no aparecer y requiere preparación deliberada propia.
+
+Reversión funcional: desactivar `desktop_enabled` en la configuración privada y reiniciar ARGOS deshabilita la herramienta completa; no altera Projects/Engineering, voz ni el portal. Para volver exactamente al adaptador anterior, instalar una copia del commit `a11c3b0` en otro destino mediante el materializador, conservando el estado privado; no copiar credenciales mediante Git. Commit de esta ampliación: el que incorpora este informe y su evidencia.
+
+Aceptación pendiente: una tarea propia en las aplicaciones reales elegidas; convivencia con teclado/ratón físicos y juegos; DPI/escala fraccional y compositor; micrófono y altavoces si se usa voz. Queda pendiente implementar y validar una sesión de control físico en primer plano. No presentar esta entrega como control universal ni como aislamiento garantizado para cualquier aplicación.

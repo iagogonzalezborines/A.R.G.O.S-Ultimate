@@ -1,0 +1,53 @@
+{
+  "checks": [
+    {
+      "name": "menu discovers and authorizes real window",
+      "ok": true
+    },
+    {
+      "name": "review does not mutate native text",
+      "ok": true
+    },
+    {
+      "name": "trusted UI applies and verifies actual native field",
+      "ok": true
+    },
+    {
+      "name": "closing panel retains authorized scope",
+      "ok": true
+    },
+    {
+      "name": "natural request reaches desktop review",
+      "ok": true
+    },
+    {
+      "name": "natural request produces real verified artifact",
+      "ok": true
+    },
+    {
+      "name": "drafting did not activate Apply draft",
+      "ok": true
+    },
+    {
+      "name": "no document layout overflow",
+      "ok": true
+    },
+    {
+      "name": "revoking does not close user application",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "renderer_errors": [],
+  "audio": false,
+  "answer": "La revisión del campo Draft con el texto «Borrador natural de ARGOS» está preparada. No he pulsado «Apply draft»; el cambio queda pendiente de tu revisión.",
+  "geometry": {
+    "width": 1920,
+    "height": 1080,
+    "scrollX": 0,
+    "scrollY": 0
+  }
+}

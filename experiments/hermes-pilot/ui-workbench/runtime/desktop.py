@@ -1,7 +1,7 @@
 """Scoped host desktop I/O. General reasons; the Broker owns admission and evidence.
 
 One transient action slot, no task scheduler and no replay across restarts. Only
-controller-launched calculator controls and a read-only comparison are exposed.
+controller-launched profiles and explicitly authorized accessible windows are exposed.
 """
 import hashlib
 import json
@@ -30,12 +30,15 @@ def process_identity(pid):
     return (p.stat().st_uid, str((p / 'exe').resolve(strict=True)), (p / 'stat').read_text().rsplit(')', 1)[1].split()[19])
 
 
-def run_json(argv, env, *, cancel=None, timeout=3, limit=131072, deadline=None):
+def run_json(argv, env, *, cancel=None, timeout=3, limit=131072, deadline=None, input_data=None):
     """No shell, bounded output, timeout and cancellation reap the child group."""
-    p = subprocess.Popen(argv, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+    p = subprocess.Popen(argv, env=env, stdin=subprocess.PIPE if input_data is not None else subprocess.DEVNULL, stdout=subprocess.PIPE,
                          stderr=subprocess.DEVNULL, start_new_session=True)
     data = bytearray(); deadline = min(time.monotonic() + timeout, deadline if deadline is not None else float("inf"))
     try:
+        if input_data is not None:
+            if len(input_data) > 8192: raise ValueError('Input exceeds budget')
+            p.stdin.write(input_data); p.stdin.close()
         with selectors.DefaultSelector() as sel:
             sel.register(p.stdout, selectors.EVENT_READ)
             while sel.get_map():
@@ -82,7 +85,7 @@ def launch_child(argv, env):
 
 
 class Desktop:
-    def __init__(self, publish, *, files=None, config_path=CONFIG_PATH):
+    def __init__(self, publish, *, files=None, config_path=CONFIG_PATH, present=None):
         all_config = json.loads(Path(config_path).read_text()) if Path(config_path).exists() else {}
         self.config = all_config.get('desktop', {})
         self.enabled = all_config.get('desktop_enabled') is True
@@ -91,6 +94,8 @@ class Desktop:
         self.env = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'}
         for k in ('DISPLAY', 'WAYLAND_DISPLAY', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_SESSION_TYPE', 'HYPRLAND_INSTANCE_SIGNATURE'):
             if os.environ.get(k): self.env[k] = os.environ[k]
+        from .desktop_windows import Windows
+        self.access = Windows(self, present)
         self.available = False
         if self.enabled:
             try:
@@ -110,9 +115,20 @@ class Desktop:
         return {'enabled': self.available and not self.closed, 'configured': self.enabled,
                 'version': '1.2.0', 'semantic_wayland': True,
                 'physical_input': False, 'arbitrary_launch': False,
+                'interaction_modes': {'background': 'semantic only; application behavior must be verified',
+                                      'foreground': 'unavailable; never escalated silently'},
+                'window_selection': True, 'generic_effects_require_review': True, 'launch_requires_user_consent': True,
+                'screenshots': False, 'shortcuts': False, 'drag': False,
                 'applications': ['calculator'] + (['comparison'] if Path('/usr/bin/meld').is_file() else []),
                 'active_job': self.active,
-                'scopes':[{'scope':s['id'],'application':s['application'],'expired':time.monotonic()-s['used']>900} for s in self.scopes.values() if not s['released']]}
+                'scopes':[{'scope':s['id'],'application':s['application'],'title':s.get('title',s['application']),'expired':time.monotonic()-s['used']>900} for s in self.scopes.values() if not s['released']]}
+
+    identity = staticmethod(process_identity)
+    hash = staticmethod(digest)
+
+    def semantic(self, scope, payload, cancel=None, deadline=None):
+        return run_json(['/usr/bin/python3', str(PILOT/'desktop/atspi_read.py'), str(scope['pid']), scope['window'], '--semantic'],
+                        self.env, cancel=cancel, timeout=3, deadline=deadline, input_data=json.dumps(payload,ensure_ascii=False).encode())
 
     def cli(self, scope, *args, cancel=None, deadline=None):
         env = {**self.env, 'HOME': str(scope['home']), 'AGENT_DESKTOP_HOME': str(scope['home'] / 'agent-state')}
@@ -127,7 +143,11 @@ class Desktop:
         if time.monotonic() - scope['used'] > 900:
             raise PermissionError('Desktop scope expired; release and open again')
         scope['used'] = time.monotonic()
-        if scope['child'].poll() is not None or process_identity(scope['pid']) != scope['identity']:
+        try:
+            live = (scope['child'] is None or scope['child'].poll() is None) and process_identity(scope['pid']) == scope['identity']
+        except OSError:
+            live = False
+        if not live:
             scope['snapshot'] = None
             raise PermissionError('Application closed or process identity changed')
         return scope
@@ -142,8 +162,8 @@ class Desktop:
         with self.lock:
             if self.active: raise RuntimeError('Desktop busy; status or cancel the active job')
             for scope in self.scopes.values():
-                if not scope['released'] and scope['child'].poll() is not None: self.release(scope)
-                if scope['application'] == application and not scope['released'] and scope['child'].poll() is None:
+                if not scope['released'] and scope['child'] is not None and scope['child'].poll() is not None: self.release(scope)
+                if scope['application'] == application and not scope['released'] and scope['child'] is not None and scope['child'].poll() is None:
                     if application == 'comparison': raise ValueError('Release the existing comparison before opening another')
                     return self.observe(scope)
             if sum(not s['released'] for s in self.scopes.values()) >= 2:
@@ -216,6 +236,7 @@ class Desktop:
 
     def observe(self, scope, cancel=None, deadline=None):
         self.scope(scope['id'])
+        if scope['application'] == 'accessible-window': return self.access.observe(scope, cancel, deadline)
         rows = self.windows(scope, cancel, deadline)
         if len(rows) != 1: raise PermissionError('Authorized window disappeared')
         raw = self.cli(scope, 'snapshot', '--app', scope['app'], '--window-id', scope['window'], '--compact', '--timeout-ms', '900', cancel=cancel, deadline=deadline)
@@ -249,7 +270,7 @@ class Desktop:
     def release(self, scope):
         scope['released'] = True; scope['snapshot'] = None
         child = scope['child']
-        if child.poll() is None:
+        if child is not None and child.poll() is None:
             try: os.killpg(child.pid, signal.SIGTERM); child.wait(timeout=1)
             except subprocess.TimeoutExpired: os.killpg(child.pid, signal.SIGKILL); child.wait()
         # Agent Desktop refs carry UI text; scope storage is transient, not memory.
@@ -329,10 +350,23 @@ class Desktop:
     def request(self, args, *, user=False):
         action = args.get('action')
         allowed = {'availability': set(), 'status': {'job'}, 'open': {'application','left','right'},
-                   'observe': {'scope'}, 'act': {'scope','snapshot','refs','buttons'}, 'cancel': {'job'}, 'release': {'scope'}}
+                   'observe': {'scope'}, 'act': {'scope','snapshot','refs','buttons'}, 'cancel': {'job'}, 'release': {'scope'},
+                   'discover':set(), 'select':{'candidate'}, 'prepare':{'scope','snapshot','operation','ref','text'},
+                   'review':{'proposal_id'}, 'confirm':{'proposal_id','approve'}, 'stop':set()}
         if action not in allowed or set(args) - allowed[action] - {'action'}: raise ValueError('Unsupported desktop operation or fields')
         if action == 'availability': return self.availability()
         if not self.available or self.closed: raise PermissionError('Desktop capability unavailable; prepare the pinned installation')
+        if action == 'stop':
+            with self.lock:
+                for job in self.jobs.values(): job['cancel'].set()
+                for p in self.access.pending.values():
+                    if p['status']=='pending': p['status']='cancelled'
+                for scope in self.scopes.values(): scope['snapshot']=None
+            return {'ok':True,'cancellation_requested':True,'held_input':False}
+        if action == 'review':
+            with self.lock:
+                p=self.access.review(args.get('proposal_id'))
+                return {k:p[k] for k in ('id','tool','operation','path','content','status')}
         if action == 'status':
             with self.lock:
                 ident = args.get('job', self.active)
@@ -348,7 +382,11 @@ class Desktop:
         if action == 'act': return self.action(args)
         with self.lock:
             if self.active: raise RuntimeError('Desktop busy; status or cancel the active job')
-            if action == 'open': return self.launch(args.get('application'), args.get('left'), args.get('right'))
+            if action == 'discover': return self.access.discover()
+            if action == 'select': return self.access.select(args.get('candidate'),user)
+            if action == 'prepare': return self.access.prepare(args)
+            if action == 'confirm': return self.access.confirm(args.get('proposal_id'),args.get('approve'),user)
+            if action == 'open': return self.access.open(args.get('application'), args.get('left'), args.get('right'), user)
             if action == 'observe': return self.observe(self.scope(args.get('scope')))
             scope = self.scopes.get(args.get('scope'))
             if not scope: raise PermissionError('Unknown desktop scope')

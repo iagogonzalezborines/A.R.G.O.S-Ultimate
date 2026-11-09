@@ -1,5 +1,7 @@
 # ARGOS · Linux 0.3
 
+[Control semántico en segundo plano — 9 de noviembre](experiments/hermes-pilot/reports/desktop-background-2026-11-09.md): ventanas autorizadas, texto, botones/menús, interfaz y pruebas reales de convivencia. Entrada física/arrastre todavía no disponibles.
+
 Control del ordenador del 9 de noviembre: [Agent Desktop integrado, calculadora real y comparación de texto en Wayland](experiments/hermes-pilot/reports/agent-desktop-2026-11-09.md). Incluye instalación, pruebas de conversación/interfaz, cancelación y límites de acceso.
 
 Último avance del piloto: [Project Map, fiabilidad, calidad local y biblioteca 3D verificada](experiments/hermes-pilot/reports/reliability-2026-11-06.md). Incluye evidencia de Electron/Codex, instalación y relevo para casa.

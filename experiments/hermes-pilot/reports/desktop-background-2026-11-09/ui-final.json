@@ -1,0 +1,34 @@
+{
+  "checks": [
+    {
+      "name": "menu discovers and authorizes real window",
+      "ok": true
+    },
+    {
+      "name": "review does not mutate native text",
+      "ok": true
+    },
+    {
+      "name": "trusted UI applies and verifies actual native field",
+      "ok": true
+    },
+    {
+      "name": "closing panel retains authorized scope",
+      "ok": true
+    },
+    {
+      "name": "narrow panel contains its form",
+      "ok": true
+    },
+    {
+      "name": "closed application produces visible error",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "renderer_errors": [],
+  "audio": false
+}

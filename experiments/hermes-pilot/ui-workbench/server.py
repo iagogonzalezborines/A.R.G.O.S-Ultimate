@@ -14,7 +14,7 @@ from urllib.parse import urlsplit, unquote
 ROOT=Path(__file__).resolve().parent
 DIST=ROOT/'dist'
 ALLOWED_HOSTS={'science.nasa.gov','www.nasa.gov','en.wikipedia.org','es.wikipedia.org','www.swpc.noaa.gov'}
-KINDS={'project','conversation','progress','summary','sources','browser','video','agents','note','files','document','change','storage','maintenance'}
+KINDS={'desktop','project','conversation','progress','summary','sources','browser','video','agents','note','files','document','change','storage','maintenance'}
 events=collections.deque(maxlen=128)
 changed=threading.Condition()
 sequence=0
@@ -65,7 +65,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.authorized():return self.send_error(401)
             return self.reply(200,dict(self.server.voice.status) if self.server.voice else {'ready':False,'phase':'off','listening':False})
         if path=='/':self.path='/index.html'
-        elif path not in {'/index.html','/style.css','/app.js','/project-map.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json'} and not path.startswith('/assets/'):
+        elif path not in {'/index.html','/style.css','/app.js','/desktop-control.js','/project-map.js','/window-manager.js','/files.js','/orbital.js','/sounds.js','/maintenance.js','/progress.js','/demo.json'} and not path.startswith('/assets/'):
             # New renderer modules are public only after the trusted release
             # journal admits them; candidates and arbitrary files stay private.
             development=getattr(self.server.workspace,'development',None)
