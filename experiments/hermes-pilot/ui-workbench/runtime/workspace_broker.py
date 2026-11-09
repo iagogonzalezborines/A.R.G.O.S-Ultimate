@@ -260,6 +260,8 @@ class WorkspaceBroker:
   self.publish=publish;self.validate=validate;self.storage=Storage();self.files=files or Files(storage=self.storage,progress=publish);self.condition=threading.Condition();self.windows=[];self.pending={};self.connected_at=0;self.socket_path=Path(socket_path);self.closed=False;self.epoch=0;self.research_epoch=None;self.development=None;self.apps=Apps();self.research_sources={};self.research_opened=set();self.research_found={};self.research_lock=threading.RLock()
   from .projects import Projects
   self.projects=Projects(lambda intent:self.intent(intent,wait=False))
+  from .desktop import Desktop
+  self.desktop=Desktop(publish,files=self.files)
  def begin_turn(self):
   # Transient display permission only. Native Hermes owns the actual turn/task.
   with self.condition:self.research_epoch=self.epoch;self.research_sources={};self.research_opened=set();self.research_found={}
@@ -373,6 +375,7 @@ class WorkspaceBroker:
   if not isinstance(request,dict) or set(request)-{'tool','arguments'}:raise ValueError('Invalid tool request')
   tool=request.get('tool');a=request.get('arguments',{})
   if not isinstance(a,dict):raise ValueError('Invalid arguments')
+  if tool=='desktop':return self.desktop.request(a,user=user)
   if tool=='projects':return self.projects.request(a,user=user)
   if tool=='adaptive':
    if a=={'operation':'availability'}:return {'enabled':self.projects.enabled and self.projects.config.get('adaptive_enabled') is True}
@@ -414,8 +417,16 @@ class WorkspaceBroker:
    return self.intent(intent)
   if tool=='apps':
    if set(a)-{'action','id','url'}:raise ValueError('Unexpected application fields')
-   if a.get('action')=='list':return self.apps.list()
-   if a.get('action')=='open':return self.apps.open(a.get('id'),a.get('url'))
+   if a.get('action')=='list':
+    result=self.apps.list()
+    if self.desktop.availability()['enabled'] and not any(x['id']=='calculator' for x in result['applications']):result['applications'].append({'id':'calculator','name':'Calculadora'})
+    return result
+   if a.get('action')=='open':
+    if a.get('id')=='calculator' and self.desktop.availability()['enabled']:
+     if a.get('url') is not None:raise ValueError('Calculator does not accept URLs')
+     result=self.desktop.request({'action':'open','application':'calculator'})
+     return {**result,'status':'window_verified','name':'Calculadora'}
+    return self.apps.open(a.get('id'),a.get('url'))
    raise ValueError('Unknown application action')
   if tool=='media':
    if set(a)-{'action','query'}:raise ValueError('Unexpected media fields')
@@ -481,7 +492,7 @@ class WorkspaceBroker:
      if self.development:self.development.incident('capability',e,notify=False)
     with (ROOT/'reports/workspace-capability-audit.jsonl').open('a') as log:
      outcome=result.get('result',{})
-     log.write(json.dumps({'time':time.time(),'tool':request.get('tool') if isinstance(request,dict) else None,'action':request.get('arguments',{}).get('action') if isinstance(request,dict) else None,'ok':result['ok'] and outcome.get('ok',True),'error':result.get('error') or outcome.get('error'),'status':outcome.get('status')})+'\n')
+     log.write(json.dumps({'time':time.time(),'tool':request.get('tool') if isinstance(request,dict) else None,'action':request.get('arguments',{}).get('action') if isinstance(request,dict) else None,'ok':result['ok'] and outcome.get('ok',True),'error':result.get('error') or outcome.get('error'),'status':outcome.get('status') or outcome.get('state')})+'\n')
     try:conn.sendall((json.dumps(result,ensure_ascii=False)+'\n').encode())
     except (BrokenPipeError,ConnectionResetError):
      if self.development:self.development.audit('capability_client_disconnected')
@@ -493,5 +504,6 @@ class WorkspaceBroker:
     threading.Thread(target=client,args=(conn,),daemon=True).start()
   self.thread=threading.Thread(target=accept,daemon=True);self.thread.start()
  def close(self):
+  self.desktop.close()
   if self.development:self.development.close()
   self.closed=True;self.files.stopping.set();self.socket.close();self.thread.join(timeout=1);self.socket_path.unlink(missing_ok=True)

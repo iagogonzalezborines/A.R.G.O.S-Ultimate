@@ -1,0 +1,38 @@
+# Agent Desktop integrado: calculadora y comparación en Wayland
+
+9 de noviembre de 2026. Implementado, instalado y habilitado en **ARGOS (Hermes)**. General usa el Broker existente; no se ha añadido otro modelo, coordinador ni base de tareas. La superficie probada es **calculadora nativa y comparación de copias de texto en Meld**. No se presenta como control universal del ordenador.
+
+[Recorrido real](agent-desktop-2026-11-09/execution.json) · [interfaz](agent-desktop-2026-11-09/layout.json) · [arranque instalado](agent-desktop-2026-11-09/installed-startup.json) · [regresiones](agent-desktop-2026-11-09/regressions.json) · [problemas encontrados](agent-desktop-2026-11-09/findings.json) · [preparación y repetición](../desktop/SETUP.md).
+
+## Integración entregada
+
+- Agent Desktop **1.2.0**, archivo de release fijado por SHA-256. Binario y helper juntos en `~/.local/share/argos-desktop/v1.2.0`, sin instalación global. Galculator **2.1.4-12**, paquete privado fijado por hash y cuya firma se comprobó contra el keyring Arch del equipo. Se reutiliza Meld ya instalado.
+- Herramienta opcional `desktop` registrada en el MCP existente únicamente cuando el controlador valida ejecutables y acceso AT-SPI. Las operaciones son `open`, `observe`, `act`, `status`, `cancel` y `release`. Su indisponibilidad no impide arrancar General. «Abre la calculadora» también funciona por el camino determinista `apps`, sin inferencia de routing.
+- El controlador crea procesos con hogar privado, identifica su grupo/PID/inicio/ejecutable y su ventana AT-SPI. Una coincidencia de nombre o título no autoriza adoptar una ventana ajena. El modelo no elige PID, ejecutable, argumentos, comandos ni ventanas globales.
+- Un solo lote activo, hasta 16 pulsaciones semánticas, con presupuesto de 12 s, llamadas de backend acotadas, salida limitada y máximo dos aplicaciones propias. El lote devuelve control al foreground tras una espera de hasta 250 ms; `status` conserva evidencia real. No es una cola de agentes ni un nuevo scheduler de proyectos.
+- Se prefiere seleccionar nombres **observados y únicos** de botones. También se admiten refs emitidas para el alcance. La revisión caduca a los 30 s; se comprueba de nuevo el estado antes de actuar y se observa tras cada clic. Una solicitud idéntica recupera el resultado retenido sin repetir efectos. Las revisiones consumidas/antiguas no vuelven a admitir trabajo, incluso si el resultado salió de la caché acotada.
+- Cancelar mata y recoge la llamada de backend activa y detiene los pasos siguientes; puede haber efectos parciales. Cerrar el panel no cancela. Cerrar el controlador retira sus aplicaciones y snapshots; reiniciar no reproduce acciones ni recupera trabajos de escritorio interrumpidos.
+- Meld recibe copias de dos archivos UTF-8 autorizados por Files, máximo 4.096 caracteres por archivo, con rechazo de contenido reconocible como credenciales. Su herramienta solo observa; no expone controles de edición y no modifica originales. La lectura no certifica una revisión semántica del contenido.
+
+## Adaptación a Wayland / Hyprland
+
+La calculadora del recorrido apareció en Hyprland como `mapped=true`, `xwayland=false`. Usa GTK/AT-SPI con `GDK_BACKEND=wayland`; los clics son llamadas de accesibilidad, sin mover el puntero ni enfocar otros programas para forzar un resultado. Meld también se lanzó por el backend Wayland.
+
+Agent Desktop omitía el texto del documento de la calculadora. Se añadió un lector AT-SPI **de solo lectura**, en un subproceso con plazo y límites, ligado al mismo PID y ruta de ventana. Esto permite verificar el resultado real, en vez de confundir `delivered_unverified` con éxito de la petición. No se ha bifurcado upstream.
+
+ARGOS conserva su renderer Electron XWayland/software. Hyprland podía reducir la ventana de fondo conservando el flag de pantalla completa de Electron; el botón explícito ahora comprueba la geometría y recupera pantalla completa en una pulsación. No se cambia la configuración de Hyprland ni se actúa sobre ventanas del usuario. El panel de progreso muestra acciones entregadas y distingue cancelación/fallo de finalización, sin contadores ficticios de fuentes web.
+
+No se habilitan teclas globales, ratón virtual, arrastre, portapapeles, capturas, terminales o lanzamiento arbitrario. Las funciones de Mutter no se suponen disponibles en Hyprland. Ampliar a Qt/Chromium/CAD, entrada física o control de ventanas necesita su propio contrato y prueba. Los buses de sesión/accesibilidad son autoridad ambiental: la allowlist y el montaje de archivos no equivalen a un sandbox universal de aplicaciones. Ese acceso **no se entrega al trabajador Engineering**, cuyo conector sigue limitado a las herramientas nativas de Kanban.
+
+## Validación real y regresiones
+
+- **21 comprobaciones** por Electron/Playwright: conversación real con General/Codex → MCP → Broker → calculadora real. «Calcula 12 + 25» produjo y leyó **37**; no se sustituyó por aritmética del test. Incluye referencias antiguas, deduplicación, cancelación, cierre del panel, estado tras cierre, comparación real y reinicio sin replay.
+- El turno nativo de cálculo tardó **32,65 s** entre el mensaje del usuario y la respuesta final guardados por Hermes; excluye entrada de UI y audio. Sigue siendo una limitación de latencia del recorrido con modelo, aunque la ejecución gráfica sea breve. No se presenta como una interacción instantánea.
+- Durante un lote activo, consultar aplicaciones tardó **4,43 ms**. Otra intervención conversacional se inició mientras el lote seguía `running`. Son observaciones de esta sesión, no percentiles ni una garantía de latencia.
+- **7 comprobaciones visuales adicionales**, sin modelo: ruta directa de aplicaciones, control de pantalla completa, cálculo real, progreso, ausencia de contadores de investigación, ausencia de scroll del escritorio y cancelación. Capturas inspeccionadas: [resultado](agent-desktop-2026-11-09/desktop-verified.png) y [cancelación parcial](agent-desktop-2026-11-09/desktop-cancelled.png). El panel de resultado de esas capturas fue abierto por el harness y está etiquetado como verificación programática; el recorrido conversacional consta por separado en `execution.json`.
+- **384 tests del repositorio**, incluidos **18 nuevos** de escritorio: denegaciones, revisiones y refs, selección ambigua, idempotencia, cambios tras observación, timeout/salida/cancelación con hijos reales, continuidad del proceso tras terminar el hilo solicitante y ausencia de replay.
+- Regresiones: archivos **25**, almacenamiento/clipboard **21**, investigación **17**, arranque **10**, entrada escrita y renderer de preparación/errores **11**. Arranque real de la instalación habitual: **4 comprobaciones**, incluidas conversación disponible, Proyectos y Desktop habilitados.
+
+La automatización descubrió y corrigió fallos de vida del proceso, selección de refs, carga de documentos y montajes temporales. También observó un primer turno que agotó el plazo del harness antes de llamar al escritorio: no se establece retrospectivamente su causa ni se oculta como un éxito. El flujo posterior con acciones reales pasó. Un ejemplo correcto no certifica la interpretación de todas las peticiones por el modelo.
+
+No se capturó micrófono ni se reprodujo audio; no se modificaron proyectos reales ni se descargaron otros modelos. Las credenciales derivadas y procesos del laboratorio se limpian al terminar. Se conserva el login de la instalación habitual. La prueba acústica y la aceptación humana siguen pendientes; también el arranque en frío señalado en el informe anterior. Esta entrega no los sustituye.

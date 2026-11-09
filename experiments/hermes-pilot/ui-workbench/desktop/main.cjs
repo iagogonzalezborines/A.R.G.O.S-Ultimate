@@ -15,7 +15,7 @@ app.on('second-instance',()=>{if(win&&!win.isDestroyed()){if(win.isMinimized())w
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('ozone-platform',process.env.ARGOS_UI_PLATFORM==='x11'?'x11':process.env.WAYLAND_DISPLAY?'wayland':'x11');
 if(process.env.ARGOS_UI_QA==='1')app.commandLine.appendSwitch('mute-audio');
-let win,eventsRequest,reconnect,lastEvent=0;const views=new Map();
+let win,eventsRequest,reconnect,lastEvent=0,fullscreenRecovery=false;const views=new Map();
 function token(){return fs.readFileSync(path.join(ROOT,'private/presentation.token'),'utf8').trim()}
 function request(route,payload){return new Promise((resolve,reject)=>{const body=payload?JSON.stringify(payload):null;const req=http.request(ORIGIN+route,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token(),...(body?{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}:{})}},response=>{let text='';response.on('data',c=>{text+=c;if(text.length>2400000)req.destroy()});response.on('end',()=>{try{const result=JSON.parse(text);if(response.statusCode>=400)throw Error(result.error||'Request rejected');resolve(result)}catch(e){reject(e)}})});req.on('error',reject);req.setTimeout(route==='/api/capability'&&payload?.tool==='projects'?60000:route==='/api/capability'&&payload?.tool==='files'&&['confirm','paste'].includes(payload.arguments?.action)?0:15000,()=>req.destroy(Error('Workspace host timeout')));if(body)req.write(body);req.end()})}
 function subscribe(){if(!win||win.isDestroyed())return;let buffer='';eventsRequest=http.get(ORIGIN+'/events',{headers:{Authorization:'Bearer '+token(),...(lastEvent?{'Last-Event-ID':String(lastEvent)}:{})}},response=>{response.on('data',chunk=>{buffer+=chunk;let at;while((at=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,at);buffer=buffer.slice(at+2);const line=block.split('\n').find(l=>l.startsWith('data: '));if(line)try{const event=JSON.parse(line.slice(6));lastEvent=event.sequence;if(win&&!win.isDestroyed())win.webContents.send('runtime-event',event)}catch{}}});response.on('end',()=>{reconnect=setTimeout(subscribe,1000)})});eventsRequest.on('error',()=>{reconnect=setTimeout(subscribe,1000)})}
@@ -33,7 +33,7 @@ app.whenReady().then(()=>{
  ipcMain.handle('ui:diagnostic',(event,payload)=>{if(!trusted(event)||!payload||Object.keys(payload).some(k=>!['component','message'].includes(k))||typeof payload.message!=='string'||payload.message.length>800)throw Error('Invalid diagnostic');return request('/api/diagnostic',payload)});
  ipcMain.handle('ui:voice-state',event=>{if(!trusted(event))throw Error('Untrusted sender');return request('/voice-state')});
  ipcMain.handle('ui:workspace-state',(event,payload)=>{if(!trusted(event))throw Error('Untrusted sender');return request('/api/workspace',payload)});
- ipcMain.handle('ui:capability',(event,payload)=>{if(!trusted(event)||!payload||!['files','workspace','storage','media','development','apps','projects'].includes(payload.tool))throw Error('Untrusted capability');return request('/api/capability',payload)});
+ ipcMain.handle('ui:capability',(event,payload)=>{if(!trusted(event)||!payload||!['files','workspace','storage','media','development','apps','projects','desktop'].includes(payload.tool))throw Error('Untrusted capability');return request('/api/capability',payload)});
  ipcMain.handle('ui:voice',(event,payload)=>{if(!trusted(event)||!payload||!['text','listen','interrupt','output','retry'].includes(payload.op)||Object.keys(payload).some(k=>!['op','enabled','text'].includes(k)))throw Error('Unsupported voice control');return request('/api/voice',payload)});
  const remoteSession=session.fromPartition('argos-pilot-public-sources');
  remoteSession.setPermissionRequestHandler((wc,permission,callback)=>callback(false));remoteSession.setPermissionCheckHandler(()=>false);remoteSession.on('will-download',event=>event.preventDefault());
@@ -53,7 +53,15 @@ app.whenReady().then(()=>{
   if(!view)return {ok:false};if(payload.type==='back'&&view.webContents.navigationHistory.canGoBack())view.webContents.navigationHistory.goBack();if(payload.type==='reload')view.webContents.reload();return {ok:true}
  });
  ipcMain.on('ui:layout',(event,layouts)=>{if(!trusted(event)||!Array.isArray(layouts)||layouts.length>8)return;const valid=new Map(layouts.filter(x=>x&&typeof x.id==='string'&&['x','y','width','height'].every(k=>Number.isFinite(x[k]))).map(x=>[x.id,x]));const b=win.getContentBounds();for(const [id,view] of views){const l=valid.get(id),visible=!!l?.visible&&l.width>0&&l.height>0;if(!visible&&view.getVisible())snapshot(id,view);if(l)view.setBounds({x:Math.max(0,Math.min(b.width,Math.round(l.x))),y:Math.max(0,Math.min(b.height,Math.round(l.y))),width:Math.max(1,Math.min(b.width,Math.round(l.width))),height:Math.max(1,Math.min(b.height,Math.round(l.height)))});view.setVisible(visible)}});
- ipcMain.on('ui:fullscreen',event=>{if(trusted(event))win.setFullScreen(!win.isFullScreen())});ipcMain.on('ui:close',event=>{if(trusted(event))win.close()});
+ ipcMain.on('ui:fullscreen',event=>{
+  if(!trusted(event)||fullscreenRecovery)return;
+  const bounds=win.getBounds(),display=screen.getDisplayMatching(bounds).bounds;
+  // Hyprland may tile a background XWayland window while Electron retains its
+  // fullscreen flag. Recover only on this explicit user gesture, never on focus.
+  const displaced=win.isFullScreen()&&(Math.abs(bounds.width-display.width)>4||Math.abs(bounds.height-display.height)>4);
+  if(displaced){fullscreenRecovery=true;win.setFullScreen(false);setTimeout(()=>{if(win&&!win.isDestroyed())win.setFullScreen(true);fullscreenRecovery=false},200)}
+  else win.setFullScreen(!win.isFullScreen());
+ });ipcMain.on('ui:close',event=>{if(trusted(event))win.close()});
  win.on('closed',()=>{clearTimeout(reconnect);eventsRequest?.destroy();for(const view of views.values())if(!view.webContents.isDestroyed())view.webContents.close();views.clear();win=null});
  win.loadURL(ORIGIN+'/');
 });

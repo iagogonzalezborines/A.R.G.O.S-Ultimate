@@ -17,7 +17,8 @@ async def main():
   class Handler(socketserver.StreamRequestHandler):
    def handle(self):
     request=json.loads(self.rfile.readline(65536))
-    if request.get('tool') in {'projects','adaptive'} and (request.get('arguments',{}).get('action')=='availability' or request.get('arguments',{}).get('operation')=='availability'):reply={'ok':True,'result':{'enabled':True,'project_map':True}}
+    if request.get('tool')=='desktop' and request.get('arguments',{}).get('action')=='availability':reply={'ok':True,'result':{'enabled':False}}
+    elif request.get('tool') in {'projects','adaptive'} and (request.get('arguments',{}).get('action')=='availability' or request.get('arguments',{}).get('operation')=='availability'):reply={'ok':True,'result':{'enabled':True,'project_map':True}}
     else:tool_calls.append(request.get('tool'));reply={'ok':False,'error':'Test broker denies all actions'}
     self.wfile.write((json.dumps(reply)+'\n').encode())
   host=socketserver.ThreadingUnixStreamServer(str(base/'workspace.sock'),Handler);threading.Thread(target=host.serve_forever,daemon=True).start()

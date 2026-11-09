@@ -30,5 +30,6 @@ def prepare_codex(agent,db,sid,on_stage=lambda stage:None):
   surface=agent._codex_session._client.request('mcpServerStatus/list',{},timeout=10)
   server=next((r for r in surface.get('data',[]) if r.get('name')=='argos-workspace'),{})
   tools=list(server.get('tools',{}))
-  if server.get('toolsError') or expected-set(tools):raise RuntimeError('Required ARGOS workspace capabilities are unavailable')
+  # Optional host desktop availability must not prevent conversation startup.
+  if server.get('toolsError') or (expected-{'desktop'})-set(tools):raise RuntimeError('Required ARGOS workspace capabilities are unavailable')
  return {'registered_tool_count':len(tools),'session_resumed':bool(wanted and thread_id==wanted),'codex_ready':True,'subscription_account_present':True,'thread_id':thread_id,'startup_seconds':time.monotonic()-started,'model_turns_during_startup':0}

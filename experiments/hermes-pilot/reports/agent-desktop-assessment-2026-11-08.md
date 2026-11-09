@@ -44,3 +44,5 @@ La primera superficie excluye terminales, lanzamiento arbitrario, entrada físic
 5. Medir observación, acción y verificación; después probar una petición natural mediante la misma conversación de General. No añadir una inferencia previa para routing ni otro runtime.
 
 Hasta superar esa prueba, Agent Desktop es un candidato documentado, no una capacidad anunciada. La versión, el entorno y la superficie efectiva se fijarán en la configuración del controlador antes de cualquier activación.
+
+Seguimiento del 9 de noviembre: [integración y pruebas reales entregadas](agent-desktop-2026-11-09.md). La evaluación anterior describe el estado previo; el alcance actual sigue limitado a los perfiles validados.

@@ -15,11 +15,12 @@ export function updateProgress(w,data,make){
  if(!bar)return;
  if(p.status)status.textContent=p.status;
  const ended=['completed','failed','cancelled'].includes(p.phase);
- bar.max=1;if(ended)bar.value=1;else bar.removeAttribute('value');
+ if(p.kind==='desktop'){bar.max=Math.max(1,p.total_steps||1);bar.value=p.completed_steps||0}
+ else{bar.max=1;if(ended)bar.value=1;else bar.removeAttribute('value')}
  bar.setAttribute('aria-label',ended?'Proceso finalizado':'Proceso en curso');
  w.body.dataset.processPhase=p.phase||'running';
- w.body.querySelector('.process-counts').textContent=`${p.found_sources??p.selected_sources??0} ${p.language==='en'?'found':'encontradas'} · ${p.selected_sources||0} ${p.language==='en'?'selected':'seleccionadas'} · ${p.opened_windows||0} ↗`;
- const list=w.body.querySelector('.process-sources');list.replaceChildren();
+ w.body.querySelector('.process-counts').textContent=p.kind==='desktop'?`${p.completed_steps||0} / ${p.total_steps||0} acciones entregadas`:`${p.found_sources??p.selected_sources??0} ${p.language==='en'?'found':'encontradas'} · ${p.selected_sources||0} ${p.language==='en'?'selected':'seleccionadas'} · ${p.opened_windows||0} ↗`;
+ const list=w.body.querySelector('.process-sources');list.hidden=p.kind==='desktop';list.replaceChildren();
  for(const source of (p.sources||[])){
   const row=make('div','process-source');
   row.append(make('span','source-state',source.stage==='opened'?'↗':source.stage==='opening'?'…':'•'),make('span','',source.title));

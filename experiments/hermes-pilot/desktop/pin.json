@@ -1,0 +1,13 @@
+{
+  "version": "1.2.0",
+  "platform": "x86_64-unknown-linux-gnu",
+  "asset_id": 711802329,
+  "archive_sha256": "591ae7f4a38479dc045df97e27447c0c8b530441730ab6b990e27c813162af44",
+  "source": "https://github.com/vercel-labs/agent-desktop/releases/tag/v1.2.0",
+  "calculator": {
+    "version": "2.1.4-12",
+    "source": "https://mirror.zyner.org/archlinux/extra/os/x86_64/galculator-2.1.4-12-x86_64.pkg.tar.zst",
+    "sha256": "efa6594897a59e9b37acb191939393c7dc7c3e54ac8f71f55839f91d226f3eb2",
+    "signer": "14E46FE5FD69F2E287E244DB632C3CC0D1C9CAF6"
+  }
+}

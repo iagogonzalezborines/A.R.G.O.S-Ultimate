@@ -1,0 +1,213 @@
+{
+  "checks": [
+    {
+      "name": "real application and General ready in text mode",
+      "ok": true
+    },
+    {
+      "name": "desktop discovered through trusted renderer IPC",
+      "ok": true
+    },
+    {
+      "name": "ordinary native turn before desktop request",
+      "ok": true
+    },
+    {
+      "name": "natural request used real desktop open and act",
+      "ok": true
+    },
+    {
+      "name": "calculator is native Wayland",
+      "ok": true
+    },
+    {
+      "name": "actual calculator displays 37",
+      "ok": true
+    },
+    {
+      "name": "General reports observed answer",
+      "ok": true
+    },
+    {
+      "name": "stale snapshot rejected in real application",
+      "ok": true
+    },
+    {
+      "name": "desktop operation hands back running job",
+      "ok": true
+    },
+    {
+      "name": "app discovery stays responsive during desktop work",
+      "ok": true
+    },
+    {
+      "name": "closing progress panel does not cancel desktop work",
+      "ok": true
+    },
+    {
+      "name": "background sequence completes",
+      "ok": true
+    },
+    {
+      "name": "duplicate action does not replay",
+      "ok": true
+    },
+    {
+      "name": "ordinary conversation remains available",
+      "ok": true
+    },
+    {
+      "name": "actual cancellation stops remaining clicks",
+      "ok": true
+    },
+    {
+      "name": "real Meld comparison is observed read-only",
+      "ok": true
+    },
+    {
+      "name": "comparison preserved originals",
+      "ok": true
+    },
+    {
+      "name": "closed application scope rejected",
+      "ok": true
+    },
+    {
+      "name": "restart preserves configured availability without replay",
+      "ok": true
+    },
+    {
+      "name": "old action not resumed after restart",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [
+    {
+      "request": "Argos, ¿estás ahí? Responde brevemente sin usar herramientas.",
+      "answer": "Sí, aquí estoy."
+    },
+    {
+      "request": "ARGOS, abre la calculadora y úsala para calcular 12 + 25. Comprueba lo que aparece en su pantalla y dime el resultado.",
+      "answer": "La pantalla muestra 37."
+    },
+    {
+      "request": "Mientras tanto, dime en una frase qué diferencia hay entre un archivo y una carpeta. No uses herramientas.",
+      "answer": "Un archivo contiene datos; una carpeta sirve para organizar archivos y otras carpetas."
+    }
+  ],
+  "renderer_errors": [],
+  "audio": false,
+  "native_action": {
+    "enabled": true,
+    "configured": true,
+    "version": "1.2.0",
+    "semantic_wayland": true,
+    "physical_input": false,
+    "arbitrary_launch": false,
+    "applications": [
+      "calculator",
+      "comparison"
+    ],
+    "active_job": null,
+    "state": "idle"
+  },
+  "desktop_calls": [
+    {
+      "time": 1794213606.9972305,
+      "tool": "desktop",
+      "action": "availability",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794213607.3001506,
+      "tool": "desktop",
+      "action": "availability",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794213634.0680957,
+      "tool": "desktop",
+      "action": "open",
+      "ok": true,
+      "error": null,
+      "status": null
+    },
+    {
+      "time": 1794213640.775094,
+      "tool": "desktop",
+      "action": "act",
+      "ok": true,
+      "error": null,
+      "status": "running"
+    },
+    {
+      "time": 1794213645.3752186,
+      "tool": "desktop",
+      "action": "status",
+      "ok": true,
+      "error": null,
+      "status": "completed"
+    }
+  ],
+  "calculator_display": [
+    {
+      "role": "text",
+      "name": "",
+      "text": "37"
+    }
+  ],
+  "wayland": [
+    {
+      "class": "galculator",
+      "pid": 51686,
+      "xwayland": false,
+      "mapped": true
+    }
+  ],
+  "apps_ms": 4.425279000002774,
+  "foreground_started_while_job": "running",
+  "foreground_answer": "Un archivo contiene datos; una carpeta sirve para organizar archivos y otras carpetas.",
+  "cancelled": {
+    "state": "cancelled",
+    "steps": 0
+  },
+  "comparison": {
+    "ok": true,
+    "scope": "aa9fdbde6c0f6a63f679d76d",
+    "application": "comparison",
+    "snapshot": "9eeeb01fa0f5e80d705cadf6",
+    "elements": [],
+    "texts": [
+      {
+        "role": "label",
+        "name": "Meld",
+        "text": "Meld"
+      },
+      {
+        "role": "text",
+        "name": "",
+        "text": "STL and OBJ\n3MF accepted"
+      },
+      {
+        "role": "text",
+        "name": "",
+        "text": "STL and OBJ\n3MF pending"
+      }
+    ],
+    "read_only": true,
+    "process_verified": true,
+    "window_verified": true,
+    "observation_untrusted": true,
+    "ready": true
+  },
+  "native_turn_seconds": 32.651,
+  "native_turn_measurement": "Native user message timestamp to final assistant message timestamp; excludes UI ingress and acoustic latency."
+}

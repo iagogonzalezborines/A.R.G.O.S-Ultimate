@@ -1,0 +1,26 @@
+[
+  {
+    "stage": "initial_native_turn",
+    "observation": "First calculator request timed out in the UI harness before any desktop action; later native greeting/complete flow passed. Exact reason not established."
+  },
+  {
+    "stage": "request_thread_lifetime",
+    "observation": "Linux parent-death signal followed the short-lived request thread and closed the calculator. Added a lifetime watcher and a real-process regression."
+  },
+  {
+    "stage": "opaque_reference_selection",
+    "observation": "General selected the 3 button when asked to input 25; real display was 47. Added unique observed button-name selection and reran the same 12+25 request; display 37 verified."
+  },
+  {
+    "stage": "comparison_readiness",
+    "observation": "Meld was visible before its document text; observe now reports ready explicitly and open waits within its existing deadline."
+  },
+  {
+    "stage": "temporary_home",
+    "observation": "The QA home under /tmp was hidden by a later tmpfs mount. Bind ordering corrected; real Meld copies loaded and originals preserved."
+  },
+  {
+    "stage": "hyprland_layout",
+    "observation": "Opening another Wayland app shrank the background XWayland ARGOS window while Electron retained fullscreen=true. Explicit fullscreen control now reconciles geometry; screenshots inspected at 1920x1080."
+  }
+]

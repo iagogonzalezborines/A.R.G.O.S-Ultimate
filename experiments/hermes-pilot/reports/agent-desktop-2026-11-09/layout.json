@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "name": "deterministic apps route opens verified calculator",
+      "ok": true
+    },
+    {
+      "name": "one user gesture restores fullscreen after Wayland app launch",
+      "ok": true
+    },
+    {
+      "name": "real calculator result independently observed",
+      "ok": true
+    },
+    {
+      "name": "desktop progress shows actual actions",
+      "ok": true
+    },
+    {
+      "name": "desktop does not show research counters",
+      "ok": true
+    },
+    {
+      "name": "desktop root does not scroll outside panels",
+      "ok": true
+    },
+    {
+      "name": "cancelled work is not presented as complete",
+      "ok": true
+    }
+  ],
+  "audio": false,
+  "model_turns": 0,
+  "background_geometry": {
+    "width": 740,
+    "height": 497,
+    "scrollX": 0,
+    "scrollY": 0
+  },
+  "restored_geometry": {
+    "width": 1920,
+    "height": 1080,
+    "scrollX": 0,
+    "scrollY": 0
+  },
+  "action": {
+    "state": "completed",
+    "buttons": [
+      "AC",
+      "1",
+      "2",
+      "+",
+      "2",
+      "5",
+      "="
+    ],
+    "steps": 7,
+    "seconds": 2.1277,
+    "display": [
+      {
+        "role": "text",
+        "name": "",
+        "text": "37"
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "checks": [
+    {
+      "name": "application and General ready without audio",
+      "ok": true
+    },
+    {
+      "name": "projects and text entry discoverable in installed app",
+      "ok": true
+    },
+    {
+      "name": "installed Projects and Map enabled",
+      "ok": true
+    },
+    {
+      "name": "installed desktop enabled",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "turns": []
+}

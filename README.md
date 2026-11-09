@@ -1,5 +1,7 @@
 # ARGOS · Linux 0.3
 
+Control del ordenador del 9 de noviembre: [Agent Desktop integrado, calculadora real y comparación de texto en Wayland](experiments/hermes-pilot/reports/agent-desktop-2026-11-09.md). Incluye instalación, pruebas de conversación/interfaz, cancelación y límites de acceso.
+
 Último avance del piloto: [Project Map, fiabilidad, calidad local y biblioteca 3D verificada](experiments/hermes-pilot/reports/reliability-2026-11-06.md). Incluye evidencia de Electron/Codex, instalación y relevo para casa.
 
 Actualización de casa del 8 de noviembre: [instalación, voz CUDA, Engineering, recuperación y límites pendientes](experiments/hermes-pilot/reports/home-integration-2026-11-08.md). ARGOS (Hermes) está actualizado y abierto con el SteelSeries; el timeout original durante el inicio de sesión aún no se ha reproducido.

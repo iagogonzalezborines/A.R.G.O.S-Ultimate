@@ -1,0 +1,20 @@
+{
+  "repository": {
+    "tests": 384,
+    "passed": true,
+    "seconds": 16.243
+  },
+  "desktop_unit_included": 18,
+  "files": 25,
+  "storage_clipboard": 21,
+  "research_boundaries": 17,
+  "startup": 10,
+  "text_ingress": "passed",
+  "live_electron": 21,
+  "layout_electron": 7,
+  "installed_startup": 4,
+  "audio_capture": false,
+  "speaker_playback": false,
+  "engineering_desktop_access": false,
+  "renderer_startup": 11
+}
