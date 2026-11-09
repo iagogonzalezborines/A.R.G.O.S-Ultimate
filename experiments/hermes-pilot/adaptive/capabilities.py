@@ -29,7 +29,8 @@ def catalog(config):
             try:reviewed_local(config);available=Local(config['local']).available()
             except (OSError,ValueError,KeyError,PermissionError):available=False
         rows.append({'id':name,**entry,'available':available})
-    return rows
+    from adaptive.specialized import catalog as specialized_catalog
+    return rows + specialized_catalog()
 
 
 def select(operation, payload):

@@ -1,0 +1,574 @@
+{
+  "checks": [
+    {
+      "name": "restart resolves same native project",
+      "ok": true
+    },
+    {
+      "name": "correction reaches native review",
+      "ok": true
+    },
+    {
+      "name": "capability statuses are discoverable",
+      "ok": true
+    },
+    {
+      "name": "Anatomy responds to keyboard",
+      "ok": true
+    },
+    {
+      "name": "artifact has no controller, storage, network, Node or popup authority",
+      "ok": true
+    },
+    {
+      "name": "artifact cannot navigate to controller",
+      "ok": true
+    },
+    {
+      "name": "Archify theme interaction works",
+      "ok": true
+    },
+    {
+      "name": "independent integrity diagram.architecture",
+      "ok": true
+    },
+    {
+      "name": "multi-task map permits reviewed acceptance",
+      "ok": true
+    },
+    {
+      "name": "independent integrity diagram.technical",
+      "ok": true
+    },
+    {
+      "name": "multi-task map permits reviewed acceptance",
+      "ok": true
+    },
+    {
+      "name": "independent integrity cad.parametric",
+      "ok": true
+    },
+    {
+      "name": "multi-task map permits reviewed acceptance",
+      "ok": true
+    },
+    {
+      "name": "independent integrity design.blender",
+      "ok": true
+    },
+    {
+      "name": "multi-task map permits reviewed acceptance",
+      "ok": true
+    },
+    {
+      "name": "narrow map has no horizontal overflow",
+      "ok": true
+    },
+    {
+      "name": "restart did not replay original tasks",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [],
+  "errors": [],
+  "host_input": false,
+  "project": {
+    "id": "p_438b4b74",
+    "name": "Especialidades ARGOS 1794227809982",
+    "slug": "especialidades-argos-1794227809982",
+    "path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+    "board": "argos-especialidades-argos-1794227809982",
+    "revision": "bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585",
+    "brief": {
+      "objective": "Demostrar artefactos técnicos persistentes aislados",
+      "decisions": [
+        "Diagramas explicativos, no autoridad de estado",
+        "Sin fabricación ni certificación mecánica"
+      ],
+      "aliases": [],
+      "verification": [
+        "Abrir y verificar los artefactos reales"
+      ],
+      "requirements": [
+        "Guardar fuentes editables y exportaciones en este proyecto",
+        "Trabajar sin red ni hardware"
+      ]
+    },
+    "state": "ready",
+    "scope": "Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.",
+    "data_is_untrusted": true
+  },
+  "repair": {
+    "id": "t_578204d3",
+    "project_id": "p_438b4b74",
+    "title": "Corrección acotada de render Archify, import Anatomy y documentación",
+    "status": "review",
+    "current_run_id": null,
+    "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+    "max_runtime_seconds": 300,
+    "last_failure": "",
+    "block_kind": null,
+    "parents": [],
+    "revision": "74f5cfb37d3cbde09fd8deb8e74ebc6e4a31e1f8632e3bb5c2556c8cda501c8a",
+    "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Conservar los diseños actuales y corregir únicamente los artefactos/documentación indicados. Reconstruir architecture.html usando el renderizador directo de Archify, siguiendo las instrucciones revisadas del controlador, y verificarlo con scripts/check-render-output.mjs. No usar deliver ni finalize, ni afirmar que recibos fallidos pasaron. Hacer portable el import del kit en comparador-referencias.mjs usando ARGOS_SPECIALIZED_ROOT o la instalación habitual en ~/.local/share/argos-hermes-pilot/tools/specialized; al reconstruir en este entorno pasar explícitamente la raíz instalada. Añadir LICENSES con avisos MIT de Anatomy y Apache/NOTICE de Archify; añadir README.md con comandos de reproducción para los cuatro artefactos y sus límites. Preservar las fuentes existentes, bracket STEP/STL, escena .blend y render preview existentes; no reemplazar los diseños.\", \"verification\": [\"Leer las instrucciones revisadas del controlador Archify y ejecutarlas respetando el alcance; reconstruir solo architecture.html mediante el renderizador directo (sin deliver/finalize).\", \"Ejecutar scripts/check-render-output.mjs contra el render reconstruido y reportar exactamente el resultado; recibos fallidos no cuentan como verificación pasada.\", \"Modificar comparador-referencias.mjs para resolver el kit mediante ARGOS_SPECIALIZED_ROOT, con fallback a ~/.local/share/argos-hermes-pilot/tools/specialized; la reconstrucción debe pasar explícitamente la raíz instalada.\", \"Añadir LICENSES con los textos/avisos MIT de Anatomy y Apache/NOTICE de Archify a partir de los avisos incluidos en las instalaciones existentes.\", \"Añadir README.md con comandos reproducibles para architecture, comparador, soporte CAD y objeto Blender, incluidos límites de offline/hardware/certificación.\", \"Conservar y verificar presencia de las fuentes actuales, bracket.step, bracket.stl, sculpture.blend y preview.png; informar los paths y resultados de verificación reales.\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\"}",
+    "kind": "engineering",
+    "runs": [
+      {
+        "id": 5,
+        "status": "review",
+        "outcome": "review_requested",
+        "started_at": 1794228671,
+        "ended_at": 1794228840,
+        "kind": "execution",
+        "summary": "Render Archify reconstruido mediante entry point directo y checker aprobado (9/9, composition pass, 0 errores/avisos); import Anatomy portable, README y licencias añadidos. CAD y Blender reproducidos localmente; fuentes y exportaciones requeridas presentes.",
+        "metadata_truncated": false,
+        "metadata": {
+          "verification": {
+            "archify_render": "exit 0",
+            "checker": {
+              "ok": true,
+              "checks_passed": 9,
+              "composition_status": "pass",
+              "errors": 0,
+              "warnings": 0,
+              "sha256": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038"
+            },
+            "anatomy_import": "node comparador-referencias.mjs con ARGOS_SPECIALIZED_ROOT explícito: exit 0",
+            "cad": "bracket.py exit 0; sólido válido/sonoro, 40x30x24 mm, 7200 mm³; STEP reabierto con misma inspección",
+            "blender": "Blender 5.2.3 CPU exit 0; escena guardada, GLB exportado, preview renderizado",
+            "syntax": "node --check y python3 -m py_compile pasaron",
+            "preserved": [
+              "architecture.json",
+              "bracket.py",
+              "bracket.step",
+              "bracket.stl",
+              "sculpture.py",
+              "sculpture.blend",
+              "preview.png"
+            ]
+          },
+          "artifacts": [
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/README.md",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/LICENSES",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/architecture.html",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/comparador-referencias.html",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/bracket.step",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/bracket.stl",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/sculpture.blend",
+            "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/preview.png"
+          ]
+        }
+      }
+    ],
+    "comments": [],
+    "events": [
+      {
+        "id": 48,
+        "kind": "created",
+        "run_id": null,
+        "at": 1794228666
+      },
+      {
+        "id": 49,
+        "kind": "blocked",
+        "run_id": null,
+        "at": 1794228666
+      },
+      {
+        "id": 50,
+        "kind": "unblocked",
+        "run_id": null,
+        "at": 1794228671
+      },
+      {
+        "id": 51,
+        "kind": "claimed",
+        "run_id": 5,
+        "at": 1794228671
+      },
+      {
+        "id": 52,
+        "kind": "spawned",
+        "run_id": 5,
+        "at": 1794228672
+      },
+      {
+        "id": 53,
+        "kind": "owner_admitted",
+        "run_id": 5,
+        "at": 1794228672
+      },
+      {
+        "id": 54,
+        "kind": "worker_bound",
+        "run_id": 5,
+        "at": 1794228672
+      },
+      {
+        "id": 55,
+        "kind": "heartbeat",
+        "run_id": 5,
+        "at": 1794228675
+      },
+      {
+        "id": 56,
+        "kind": "heartbeat",
+        "run_id": 5,
+        "at": 1794228741
+      },
+      {
+        "id": 57,
+        "kind": "heartbeat",
+        "run_id": 5,
+        "at": 1794228813
+      },
+      {
+        "id": 58,
+        "kind": "review_requested",
+        "run_id": 5,
+        "at": 1794228840
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "README.md",
+        "sha256_now": "864a11e6a1a0de2610975ba1c616a41d0b34a4a57b84fe74023e2d22a9f23c7d",
+        "bytes": 2044,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "architecture.html",
+        "sha256_now": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+        "bytes": 839423,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "comparador-referencias.html",
+        "sha256_now": "6164929a954e01ac05354d340b88aa35503d6c44f8dcaab22f465910e681f7cf",
+        "bytes": 136682,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "bracket.step",
+        "sha256_now": "584047e8d45733062681112129b32db2e63fd8f81e4a68ea55c71472df7aba9d",
+        "bytes": 21975,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "bracket.stl",
+        "sha256_now": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+        "bytes": 1084,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "sculpture.blend",
+        "sha256_now": "5a8174f936b1b925e14d6e68000616b07f7575ea4455bbdc18f7f0aa432bd739",
+        "bytes": 152679,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      },
+      {
+        "path": "preview.png",
+        "sha256_now": "bf449dd579e6eb9dc80de3763c3fd7cedfd47cc6493339546f8a6d157ee209bf",
+        "bytes": 96592,
+        "reported_by_run": 5,
+        "verification": "current file observed; run claims are not independent test verification"
+      }
+    ],
+    "evidence_is_untrusted": true,
+    "controller_evidence": []
+  },
+  "cancel": {
+    "id": "t_63cdd701",
+    "project_id": "p_438b4b74",
+    "title": "QA cancelación acotada",
+    "status": "archived",
+    "current_run_id": null,
+    "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+    "max_runtime_seconds": 300,
+    "last_failure": "",
+    "block_kind": null,
+    "parents": [],
+    "revision": "5484f5425fe4f0d8f4079c5265fe5b32d03ec212b3559e59c33d5c8806cf319f",
+    "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Prueba de cancelación autorizada. Escribe cancel.started con el texto started en la raíz del proyecto y ejecuta python -c \\\"import time; time.sleep(90)\\\" en primer plano. No generes más archivos ni procesos separados. Solicita revisión al terminar.\", \"verification\": [\"El controlador cancela el proceso antes de finalizar la espera\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\", \"specialized\": {\"id\": \"design.blender\", \"revision\": \"389f28addc79b87b28764898e38e7bf408d14b77\", \"skill\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/blender-skills/skills/blender-core/SKILL.md\", \"instructions\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/ARGOS.md\", \"commands\": {\"blender\": \"/home/iago/.local/share/argos-hermes-pilot/tools/specialized/blender-5.2.3-linux-x64/blender\"}, \"outputs\": [\".py\", \".blend\", \".glb\", \".png\"], \"boundary\": \"Use only assigned workspace, no network/install/publishing. Skill setup and global configuration advice is superseded by ARGOS policy. Report artifacts in native review metadata. Never claim mechanical certification.\"}}",
+    "kind": "engineering",
+    "runs": [
+      {
+        "id": 6,
+        "status": "reclaimed",
+        "outcome": "reclaimed",
+        "started_at": 1794228847,
+        "ended_at": 1794228866,
+        "kind": "execution",
+        "summary": "task archived with run still active",
+        "metadata_truncated": false,
+        "metadata": {}
+      }
+    ],
+    "comments": [],
+    "events": [
+      {
+        "id": 59,
+        "kind": "created",
+        "run_id": null,
+        "at": 1794228845
+      },
+      {
+        "id": 60,
+        "kind": "blocked",
+        "run_id": null,
+        "at": 1794228845
+      },
+      {
+        "id": 61,
+        "kind": "unblocked",
+        "run_id": null,
+        "at": 1794228847
+      },
+      {
+        "id": 62,
+        "kind": "claimed",
+        "run_id": 6,
+        "at": 1794228847
+      },
+      {
+        "id": 63,
+        "kind": "spawned",
+        "run_id": 6,
+        "at": 1794228847
+      },
+      {
+        "id": 64,
+        "kind": "owner_admitted",
+        "run_id": 6,
+        "at": 1794228847
+      },
+      {
+        "id": 66,
+        "kind": "worker_bound",
+        "run_id": 6,
+        "at": 1794228848
+      },
+      {
+        "id": 67,
+        "kind": "heartbeat",
+        "run_id": 6,
+        "at": 1794228850
+      },
+      {
+        "id": 68,
+        "kind": "archived",
+        "run_id": 6,
+        "at": 1794228866
+      },
+      {
+        "id": 69,
+        "kind": "archive_worker_termination",
+        "run_id": 6,
+        "at": 1794228866
+      }
+    ],
+    "artifacts": [],
+    "evidence_is_untrusted": true,
+    "controller_evidence": []
+  },
+  "anatomy_keyboard": {
+    "before": "18",
+    "after": "10"
+  },
+  "isolation": {
+    "parentBlocked": true,
+    "storageBlocked": true,
+    "networkBlocked": true,
+    "bridge": "undefined",
+    "node": "undefined",
+    "popup": true
+  },
+  "verification": [
+    {
+      "task_id": "t_220f439b",
+      "capability": "diagram.architecture",
+      "evidence": {
+        "exit_code": 0,
+        "files": {
+          "LICENSES/ANATOMY-MIT.txt": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+          "LICENSES/ARCHIFY-APACHE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "LICENSES/ARCHIFY-NOTICE.txt": "665eb53e6fcf09cee183c9f23c8052645dc95570d9ccbbf53dc0f5213a1b5edd",
+          "README.md": "864a11e6a1a0de2610975ba1c616a41d0b34a4a57b84fe74023e2d22a9f23c7d",
+          "architecture.delivery-pending.json": "734fab34477a07eb4af08ebd3e0305285d11ced5f7051b9ee4c6f6fbd1a10de4",
+          "architecture.delivery.json": "ac90835a469b5490670dff8159eb661822a02aece7ebe603e1966b14fd6f5582",
+          "architecture.html": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+          "architecture.json": "e47f5b4fb4d432993859155c211653013e0dc268d5da00a4fcf10ae78544e14d",
+          "bracket.py": "01e55c9c4bb56e27fd4d92defbdb4f4a278b7f525a2cd93f707e6c69226aa068",
+          "bracket.step": "584047e8d45733062681112129b32db2e63fd8f81e4a68ea55c71472df7aba9d",
+          "bracket.stl": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+          "cancel.started": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8",
+          "comparador-referencias.html": "6164929a954e01ac05354d340b88aa35503d6c44f8dcaab22f465910e681f7cf",
+          "comparador-referencias.mjs": "07e4075c0a82d529b6609cc79620249ae4705bfa4a6bfa5518cdcbed145d98e0",
+          "medidas.json": "4a9dfd040c8818fc9fed2a729ef822681c3c1dfa8588a8516c122a7c929bacc2",
+          "preview.png": "bf449dd579e6eb9dc80de3763c3fd7cedfd47cc6493339546f8a6d157ee209bf",
+          "review_sheet.png": "d1cbcea39f0b58ff4778fa3823124e00db4ab6b51aed0c2e4bd7e1c124797447",
+          "review_sheet_front.png": "0ce26c21315e0fd6d4d299836b300ed1a33a608c31c8ce8f73823e5ac0156e40",
+          "review_sheet_right.png": "f55466acde05eda4d0929f7bf8d87d340ee5bd9ebdd6191aa61817fbeb7bf8b0",
+          "review_sheet_three_quarter.png": "d6022b421b46d11a136df3cba4285639bdfe5a99976cd99392bcbfe7f61de659",
+          "review_sheet_top.png": "096d870b6e91b4950659884b411c54e72be812e690c44e70a243e4ced141dccc",
+          "sculpture.blend": "5a8174f936b1b925e14d6e68000616b07f7575ea4455bbdc18f7f0aa432bd739",
+          "sculpture.blend1": "80c5a41b25c308b6efd47f278d7540fbe1666fd69f9075fb2ebde10f934b40cc",
+          "sculpture.glb": "9fd66b56f572b77d34b50a92b45ffbcbb7d15359168b60b6a67efe105e0278f3",
+          "sculpture.py": "4c73f6cd257584894c79a0f5f352bed10cce1ed26fda20b1fc2ed84d017fed34"
+        },
+        "kind": "verification",
+        "output": "ARGOS_SPECIALIZED_INTEGRITY: {\"html_count\": 1, \"check\": \"structure and Archify static checks where applicable; interaction requires browser inspection\"}\nIntegrity only; compare measurements/visual output against task requirements before accepting. No mechanical certification.\n",
+        "passed": true,
+        "profile": "specialized_integrity",
+        "project_id": "p_438b4b74",
+        "run_id": 1,
+        "scope": "Artifact integrity; requirements and mechanical suitability need separate review",
+        "seconds": 0.17795326200212003,
+        "snapshot_unchanged": true,
+        "task_id": "t_220f439b"
+      }
+    },
+    {
+      "task_id": "t_d382f7dd",
+      "capability": "diagram.technical",
+      "evidence": {
+        "exit_code": 0,
+        "files": {
+          "LICENSES/ANATOMY-MIT.txt": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+          "LICENSES/ARCHIFY-APACHE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "LICENSES/ARCHIFY-NOTICE.txt": "665eb53e6fcf09cee183c9f23c8052645dc95570d9ccbbf53dc0f5213a1b5edd",
+          "README.md": "864a11e6a1a0de2610975ba1c616a41d0b34a4a57b84fe74023e2d22a9f23c7d",
+          "architecture.delivery-pending.json": "734fab34477a07eb4af08ebd3e0305285d11ced5f7051b9ee4c6f6fbd1a10de4",
+          "architecture.delivery.json": "ac90835a469b5490670dff8159eb661822a02aece7ebe603e1966b14fd6f5582",
+          "architecture.html": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+          "architecture.json": "e47f5b4fb4d432993859155c211653013e0dc268d5da00a4fcf10ae78544e14d",
+          "bracket.py": "01e55c9c4bb56e27fd4d92defbdb4f4a278b7f525a2cd93f707e6c69226aa068",
+          "bracket.step": "584047e8d45733062681112129b32db2e63fd8f81e4a68ea55c71472df7aba9d",
+          "bracket.stl": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+          "cancel.started": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8",
+          "comparador-referencias.html": "6164929a954e01ac05354d340b88aa35503d6c44f8dcaab22f465910e681f7cf",
+          "comparador-referencias.mjs": "07e4075c0a82d529b6609cc79620249ae4705bfa4a6bfa5518cdcbed145d98e0",
+          "medidas.json": "4a9dfd040c8818fc9fed2a729ef822681c3c1dfa8588a8516c122a7c929bacc2",
+          "preview.png": "bf449dd579e6eb9dc80de3763c3fd7cedfd47cc6493339546f8a6d157ee209bf",
+          "review_sheet.png": "d1cbcea39f0b58ff4778fa3823124e00db4ab6b51aed0c2e4bd7e1c124797447",
+          "review_sheet_front.png": "0ce26c21315e0fd6d4d299836b300ed1a33a608c31c8ce8f73823e5ac0156e40",
+          "review_sheet_right.png": "f55466acde05eda4d0929f7bf8d87d340ee5bd9ebdd6191aa61817fbeb7bf8b0",
+          "review_sheet_three_quarter.png": "d6022b421b46d11a136df3cba4285639bdfe5a99976cd99392bcbfe7f61de659",
+          "review_sheet_top.png": "096d870b6e91b4950659884b411c54e72be812e690c44e70a243e4ced141dccc",
+          "sculpture.blend": "5a8174f936b1b925e14d6e68000616b07f7575ea4455bbdc18f7f0aa432bd739",
+          "sculpture.blend1": "80c5a41b25c308b6efd47f278d7540fbe1666fd69f9075fb2ebde10f934b40cc",
+          "sculpture.glb": "9fd66b56f572b77d34b50a92b45ffbcbb7d15359168b60b6a67efe105e0278f3",
+          "sculpture.py": "4c73f6cd257584894c79a0f5f352bed10cce1ed26fda20b1fc2ed84d017fed34"
+        },
+        "kind": "verification",
+        "output": "ARGOS_SPECIALIZED_INTEGRITY: {\"html_count\": 1, \"check\": \"structure and Archify static checks where applicable; interaction requires browser inspection\"}\nIntegrity only; compare measurements/visual output against task requirements before accepting. No mechanical certification.\n",
+        "passed": true,
+        "profile": "specialized_integrity",
+        "project_id": "p_438b4b74",
+        "run_id": 2,
+        "scope": "Artifact integrity; requirements and mechanical suitability need separate review",
+        "seconds": 0.07840672599922982,
+        "snapshot_unchanged": true,
+        "task_id": "t_d382f7dd"
+      }
+    },
+    {
+      "task_id": "t_ca6ce380",
+      "capability": "cad.parametric",
+      "evidence": {
+        "exit_code": 0,
+        "files": {
+          "LICENSES/ANATOMY-MIT.txt": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+          "LICENSES/ARCHIFY-APACHE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "LICENSES/ARCHIFY-NOTICE.txt": "665eb53e6fcf09cee183c9f23c8052645dc95570d9ccbbf53dc0f5213a1b5edd",
+          "README.md": "864a11e6a1a0de2610975ba1c616a41d0b34a4a57b84fe74023e2d22a9f23c7d",
+          "architecture.delivery-pending.json": "734fab34477a07eb4af08ebd3e0305285d11ced5f7051b9ee4c6f6fbd1a10de4",
+          "architecture.delivery.json": "ac90835a469b5490670dff8159eb661822a02aece7ebe603e1966b14fd6f5582",
+          "architecture.html": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+          "architecture.json": "e47f5b4fb4d432993859155c211653013e0dc268d5da00a4fcf10ae78544e14d",
+          "bracket.py": "01e55c9c4bb56e27fd4d92defbdb4f4a278b7f525a2cd93f707e6c69226aa068",
+          "bracket.step": "584047e8d45733062681112129b32db2e63fd8f81e4a68ea55c71472df7aba9d",
+          "bracket.stl": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+          "cancel.started": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8",
+          "comparador-referencias.html": "6164929a954e01ac05354d340b88aa35503d6c44f8dcaab22f465910e681f7cf",
+          "comparador-referencias.mjs": "07e4075c0a82d529b6609cc79620249ae4705bfa4a6bfa5518cdcbed145d98e0",
+          "medidas.json": "4a9dfd040c8818fc9fed2a729ef822681c3c1dfa8588a8516c122a7c929bacc2",
+          "preview.png": "bf449dd579e6eb9dc80de3763c3fd7cedfd47cc6493339546f8a6d157ee209bf",
+          "review_sheet.png": "d1cbcea39f0b58ff4778fa3823124e00db4ab6b51aed0c2e4bd7e1c124797447",
+          "review_sheet_front.png": "0ce26c21315e0fd6d4d299836b300ed1a33a608c31c8ce8f73823e5ac0156e40",
+          "review_sheet_right.png": "f55466acde05eda4d0929f7bf8d87d340ee5bd9ebdd6191aa61817fbeb7bf8b0",
+          "review_sheet_three_quarter.png": "d6022b421b46d11a136df3cba4285639bdfe5a99976cd99392bcbfe7f61de659",
+          "review_sheet_top.png": "096d870b6e91b4950659884b411c54e72be812e690c44e70a243e4ced141dccc",
+          "sculpture.blend": "5a8174f936b1b925e14d6e68000616b07f7575ea4455bbdc18f7f0aa432bd739",
+          "sculpture.blend1": "80c5a41b25c308b6efd47f278d7540fbe1666fd69f9075fb2ebde10f934b40cc",
+          "sculpture.glb": "9fd66b56f572b77d34b50a92b45ffbcbb7d15359168b60b6a67efe105e0278f3",
+          "sculpture.py": "4c73f6cd257584894c79a0f5f352bed10cce1ed26fda20b1fc2ed84d017fed34"
+        },
+        "kind": "verification",
+        "output": "ARGOS_SPECIALIZED_INTEGRITY: {\"bracket.step\": {\"volume_mm3\": 7199.999999999999, \"dimensions_mm\": [40.0, 30.0, 24.0], \"solids\": 1}}\nIntegrity only; compare measurements/visual output against task requirements before accepting. No mechanical certification.\n",
+        "passed": true,
+        "profile": "specialized_integrity",
+        "project_id": "p_438b4b74",
+        "run_id": 3,
+        "scope": "Artifact integrity; requirements and mechanical suitability need separate review",
+        "seconds": 6.683087837998755,
+        "snapshot_unchanged": true,
+        "task_id": "t_ca6ce380"
+      }
+    },
+    {
+      "task_id": "t_153784b9",
+      "capability": "design.blender",
+      "evidence": {
+        "exit_code": 0,
+        "files": {
+          "LICENSES/ANATOMY-MIT.txt": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+          "LICENSES/ARCHIFY-APACHE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "LICENSES/ARCHIFY-NOTICE.txt": "665eb53e6fcf09cee183c9f23c8052645dc95570d9ccbbf53dc0f5213a1b5edd",
+          "README.md": "864a11e6a1a0de2610975ba1c616a41d0b34a4a57b84fe74023e2d22a9f23c7d",
+          "architecture.delivery-pending.json": "734fab34477a07eb4af08ebd3e0305285d11ced5f7051b9ee4c6f6fbd1a10de4",
+          "architecture.delivery.json": "ac90835a469b5490670dff8159eb661822a02aece7ebe603e1966b14fd6f5582",
+          "architecture.html": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+          "architecture.json": "e47f5b4fb4d432993859155c211653013e0dc268d5da00a4fcf10ae78544e14d",
+          "bracket.py": "01e55c9c4bb56e27fd4d92defbdb4f4a278b7f525a2cd93f707e6c69226aa068",
+          "bracket.step": "584047e8d45733062681112129b32db2e63fd8f81e4a68ea55c71472df7aba9d",
+          "bracket.stl": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+          "cancel.started": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8",
+          "comparador-referencias.html": "6164929a954e01ac05354d340b88aa35503d6c44f8dcaab22f465910e681f7cf",
+          "comparador-referencias.mjs": "07e4075c0a82d529b6609cc79620249ae4705bfa4a6bfa5518cdcbed145d98e0",
+          "medidas.json": "4a9dfd040c8818fc9fed2a729ef822681c3c1dfa8588a8516c122a7c929bacc2",
+          "preview.png": "bf449dd579e6eb9dc80de3763c3fd7cedfd47cc6493339546f8a6d157ee209bf",
+          "review_sheet.png": "d1cbcea39f0b58ff4778fa3823124e00db4ab6b51aed0c2e4bd7e1c124797447",
+          "review_sheet_front.png": "0ce26c21315e0fd6d4d299836b300ed1a33a608c31c8ce8f73823e5ac0156e40",
+          "review_sheet_right.png": "f55466acde05eda4d0929f7bf8d87d340ee5bd9ebdd6191aa61817fbeb7bf8b0",
+          "review_sheet_three_quarter.png": "d6022b421b46d11a136df3cba4285639bdfe5a99976cd99392bcbfe7f61de659",
+          "review_sheet_top.png": "096d870b6e91b4950659884b411c54e72be812e690c44e70a243e4ced141dccc",
+          "sculpture.blend": "5a8174f936b1b925e14d6e68000616b07f7575ea4455bbdc18f7f0aa432bd739",
+          "sculpture.blend1": "80c5a41b25c308b6efd47f278d7540fbe1666fd69f9075fb2ebde10f934b40cc",
+          "sculpture.glb": "9fd66b56f572b77d34b50a92b45ffbcbb7d15359168b60b6a67efe105e0278f3",
+          "sculpture.py": "4c73f6cd257584894c79a0f5f352bed10cce1ed26fda20b1fc2ed84d017fed34"
+        },
+        "kind": "verification",
+        "output": "ARGOS_SPECIALIZED_INTEGRITY: {\"scene\": \"reopened with auto-execution disabled\", \"export\": \"GLB 2 header and size verified\"}\nIntegrity only; compare measurements/visual output against task requirements before accepting. No mechanical certification.\n",
+        "passed": true,
+        "profile": "specialized_integrity",
+        "project_id": "p_438b4b74",
+        "run_id": 4,
+        "scope": "Artifact integrity; requirements and mechanical suitability need separate review",
+        "seconds": 2.17893159400046,
+        "snapshot_unchanged": true,
+        "task_id": "t_153784b9"
+      }
+    }
+  ]
+}

@@ -48,10 +48,19 @@ class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('X-Content-Type-Options','nosniff')
         self.send_header('Cache-Control','no-store')
-        self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-src https://science.nasa.gov https://en.wikipedia.org https://es.wikipedia.org https://www.swpc.noaa.gov; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
+        self.send_header('Content-Security-Policy',getattr(self,'artifact_policy',None) or "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-src 'self' https://science.nasa.gov https://en.wikipedia.org https://es.wikipedia.org https://www.swpc.noaa.gov; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
         super().end_headers()
     def do_GET(self):
         path=urlsplit(self.path).path
+        if path.startswith('/project-preview/'):
+            import re
+            token=path.removeprefix('/project-preview/')
+            if not re.fullmatch(r'[a-f0-9]{64}',token):return self.send_error(404)
+            try:body=self.server.workspace.projects.preview(token)
+            except (ValueError,AttributeError):return self.send_error(404)
+            from projects.artifact_preview import POLICY
+            self.artifact_policy=POLICY+"; sandbox allow-scripts; frame-ancestors 'self'"
+            self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body);return
         if path=='/events':return self.stream()
         if path=='/health':
             voice=self.server.voice;status=voice.status if voice else {}

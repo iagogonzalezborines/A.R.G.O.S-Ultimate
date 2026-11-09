@@ -59,7 +59,8 @@ def limits():
     resource.setrlimit(resource.RLIMIT_FSIZE,(16*1024**2,16*1024**2))
 
 
-def verify(root,profile):
+def verify(root,profile,*,capability=None,artifacts=None):
+    if profile=='specialized_integrity':return verify_specialized(root,capability,artifacts)
     if profile not in {'python_unittest','model_library_v1','model_library_v2'}:raise ValueError('Unregistered verification profile')
     before=fingerprint(root);start=time.monotonic()
     argv=['/usr/bin/python','-B','-c',MODEL_LIBRARY_V2 if profile=='model_library_v2' else MODEL_LIBRARY] if profile.startswith('model_library_') else ['/usr/bin/python','-B','-m','unittest','discover','-v']
@@ -75,3 +76,28 @@ def verify(root,profile):
     meaningful=('ARGOS_CLI_ACCEPTANCE:' in result if profile=='model_library_v2' else 'ARGOS_ACCEPTANCE:' in result) if profile.startswith('model_library_') else 'Ran ' in result and 'Ran 0 tests' not in result
     return {'profile':profile,'passed':code==0 and meaningful and before==after,'exit_code':code,
             'output':result,'seconds':time.monotonic()-start,'files':after,'snapshot_unchanged':before==after}
+
+
+def verify_specialized(root,capability,artifacts):
+    import json,tempfile
+    from pathlib import Path
+    from adaptive.specialized import context,ROOT
+    selected=context(capability)
+    before=fingerprint(root);paths=list(dict.fromkeys(artifacts or []))
+    if not paths or len(paths)>20 or any(p not in before for p in paths):raise ValueError('Select observed native task artifacts')
+    executable=str(ROOT/'cad-env/bin/python') if capability=='cad.parametric' else '/usr/bin/python'
+    argv=[executable,'-B','/verify.py',capability,json.dumps(paths),selected['commands'].get('blender',selected['commands'].get('node','')),str(ROOT)]
+    cmd=validation_sandbox(root,argv)
+    index=cmd.index('--')
+    pilot=Path(__file__).resolve().parents[1]
+    cmd[index:index]=['--ro-bind',str(pilot/'tools'),str(pilot/'tools'),'--ro-bind',str((pilot/'tools').resolve()),str((pilot/'tools').resolve()),'--ro-bind',str(pilot/'adaptive/verify_artifacts.py'),'/verify.py','--setenv','OPENBLAS_NUM_THREADS','2','--setenv','OMP_NUM_THREADS','2']
+    def bounded():
+        resource.setrlimit(resource.RLIMIT_CPU,(40,40));resource.setrlimit(resource.RLIMIT_AS,(4*1024**3,4*1024**3));resource.setrlimit(resource.RLIMIT_FSIZE,(16*1024**2,16*1024**2))
+    start=time.monotonic()
+    with tempfile.TemporaryFile() as output:
+        child=subprocess.Popen(cmd,stdout=output,stderr=output,start_new_session=True,preexec_fn=bounded)
+        try:code=child.wait(timeout=45)
+        except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait();code=-1
+        output.seek(0);result=clean(output.read(16384).decode('utf-8','replace'))
+    after=fingerprint(root)
+    return {'profile':'specialized_integrity','passed':code==0 and 'ARGOS_SPECIALIZED_INTEGRITY:' in result and before==after,'exit_code':code,'output':result,'seconds':time.monotonic()-start,'files':after,'snapshot_unchanged':before==after,'scope':'Artifact integrity; requirements and mechanical suitability need separate review'}

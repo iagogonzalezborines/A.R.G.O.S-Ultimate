@@ -22,7 +22,7 @@ def board_task(adapter,project,ident):
     raise PermissionError('Task not in this project')
 
 
-def row(adapter,conn,task,board):
+def row(adapter,conn,task,board,fingerprints=None):
     result=adapter.task_view(conn,task,True)
     result['board']=board
     if task.assignee=='argos-capabilities':
@@ -30,12 +30,19 @@ def row(adapter,conn,task,board):
         result.update(capability=data(task)['capability'],kind='auxiliary',runs=view(conn,task)['runs'])
     else:
         body=json.loads(task.body.split('\n',1)[1]);result.update(kind=body.get('kind','engineering'),goal=body['goal'],criteria=body['verification'],capability='Codex Engineering')
+        if body.get('specialized'):result['capability']=body['specialized']['id']+' · Codex Engineering'
         if result['kind']=='decision':result['capability']='User decision'
         if result['kind']=='desktop':result['capability']='Isolated desktop · reviewed artifacts'
     verified=[e for e in result['controller_evidence'] if e['kind']=='verification' and e.get('passed')]
     if verified and result['artifacts']:
-        current={a['path']:a['sha256_now'] for a in result['artifacts']}
-        result['verification_snapshot_current']=all(current.get(path)==sha for path,sha in verified[-1]['files'].items())
+        # Verification covers the whole authorized workspace, including other tasks.
+        # Cache it once per map projection instead of rehashing for each task.
+        from projects.lifecycle import fingerprint
+        if fingerprints is None:fingerprints={}
+        if task.workspace_path not in fingerprints:
+            try:fingerprints[task.workspace_path]=fingerprint(task.workspace_path)
+            except (OSError,ValueError,PermissionError):fingerprints[task.workspace_path]=None
+        result['verification_snapshot_current']=fingerprints[task.workspace_path]==verified[-1]['files']
     if task.status=='blocked' and result['runs']:result['blocked_reason']=result['runs'][-1].get('summary') or result['last_failure']
     result['state']=('decision' if result['kind']=='decision' and task.status not in {'done','archived'} else
                      'queued' if task.status in {'todo','ready'} or task.status=='blocked' and not result['runs'] else task.status)
@@ -71,18 +78,20 @@ def request(adapter,args,authorized=False):
                 if any(a.get('origin')=='desktop' and a['path']==path for a in view['artifacts']):
                     from projects.desktop import file_text
                     value,_=file_text(file);content=value.encode()
-                else:content=read_regular(file,262144)
+                else:
+                    from projects.artifact_preview import preview
+                    return {**preview(file),'path':path}
                 return {'path':path,'text':clean(content.decode('utf-8')),'sha256':hashlib.sha256(content).hexdigest()}
         boards=[project.board_slug]
         if adapter.config.get('adaptive_enabled'):
             from adaptive.native import BOARD
             if kb.board_exists(BOARD):boards.append(BOARD)
-        tasks=[];truncated=False
+        tasks=[];truncated=False;fingerprints={}
         for board in boards:
             with connect_closing(board=board) as conn:
                 ids=conn.execute('SELECT id FROM tasks WHERE project_id=? ORDER BY created_at,id LIMIT 101',(project.id,)).fetchall()
                 truncated|=len(ids)>100
-                tasks.extend(row(adapter,conn,kb.get_task(conn,r['id']),board) for r in ids[:100])
+                tasks.extend(row(adapter,conn,kb.get_task(conn,r['id']),board,fingerprints) for r in ids[:100])
         result={'project':adapter.view(project),'tasks':tasks,'truncated':truncated,'source':'native Projects / Kanban'}
         result['revision']=digest(result)
         return result

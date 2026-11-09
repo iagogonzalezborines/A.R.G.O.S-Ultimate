@@ -121,7 +121,8 @@ def act(adapter,conn,project,task,args,authorized):
     elif operation=='verify':
         if task.status!='review' or task.current_run_id:raise ValueError('Wait for a settled review before verifying')
         from projects.verification import verify
-        evidence=verify(project.primary_path,args.get('profile','python_unittest'))
+        specialized=json.loads(task.body.split('\n',1)[1]).get('specialized',{})
+        evidence=verify(project.primary_path,args.get('profile','python_unittest'),capability=specialized.get('id'),artifacts=[a['path'] for a in adapter.task_view(conn,task,True)['artifacts']])
         record(conn,task,adapter.config,'verification',run_id=last,**evidence)
     elif operation=='accept':
         if task.status!='review' or task.current_run_id:raise ValueError('Task is not awaiting acceptance')

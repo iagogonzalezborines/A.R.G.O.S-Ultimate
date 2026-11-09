@@ -1,0 +1,141 @@
+{
+  "availability": {
+    "enabled": true,
+    "project_map": true
+  },
+  "catalog": {
+    "capabilities": [
+      {
+        "id": "diagram.architecture",
+        "repo": "tt-a1i/archify",
+        "revision": "11b0d6031853bdae89eed57e7979aabbf0034097",
+        "license": "Apache-2.0",
+        "folder": "archify",
+        "skill": "archify/SKILL.md",
+        "purpose": "Interactive architecture and workflow HTML from a dated native project snapshot; explanatory, never authoritative",
+        "outputs": [
+          ".json",
+          ".html"
+        ],
+        "memory_mib": 768,
+        "available": true,
+        "status": "available_validated",
+        "reason": "Bounded Engineering workflow validated; individual outputs still require verification",
+        "executor": "native Engineering",
+        "permissions": [
+          "authorized_project_write",
+          "offline_tools_read"
+        ],
+        "parallel": false,
+        "lifecycle": "native task process; no persistent specialist",
+        "location": "local",
+        "cost": "existing Codex subscription and local resources"
+      },
+      {
+        "id": "diagram.technical",
+        "repo": "wheresryan22/anatomy",
+        "revision": "1482e8469b0a9e0d8cc18ea2740a01423d29ae80",
+        "license": "MIT",
+        "folder": "anatomy",
+        "skill": "SKILL.md",
+        "purpose": "Interactive technical mechanisms using Anatomy SVG; explanatory, not mechanical simulation",
+        "outputs": [
+          ".mjs",
+          ".html"
+        ],
+        "memory_mib": 768,
+        "available": true,
+        "status": "available_validated",
+        "reason": "Bounded Engineering workflow validated; individual outputs still require verification",
+        "executor": "native Engineering",
+        "permissions": [
+          "authorized_project_write",
+          "offline_tools_read"
+        ],
+        "parallel": false,
+        "lifecycle": "native task process; no persistent specialist",
+        "location": "local",
+        "cost": "existing Codex subscription and local resources"
+      },
+      {
+        "id": "cad.parametric",
+        "repo": "earthtojake/text-to-cad",
+        "revision": "1cfd73cbbf0be943e0ff7aa0c672f824935b98a7",
+        "license": "MIT",
+        "folder": "text-to-cad",
+        "skill": "skills/cad/SKILL.md",
+        "purpose": "Editable build123d geometry and text-to-cad geometry inspection, STEP/STL exports; no fabrication or structural certification",
+        "outputs": [
+          ".py",
+          ".step",
+          ".stl",
+          ".json"
+        ],
+        "memory_mib": 2048,
+        "available": true,
+        "status": "available_validated",
+        "reason": "Bounded Engineering workflow validated; individual outputs still require verification",
+        "executor": "native Engineering",
+        "permissions": [
+          "authorized_project_write",
+          "offline_tools_read"
+        ],
+        "parallel": false,
+        "lifecycle": "native task process; no persistent specialist",
+        "location": "local",
+        "cost": "existing Codex subscription and local resources"
+      },
+      {
+        "id": "design.blender",
+        "repo": "EL4CTEO/blender-skills",
+        "revision": "389f28addc79b87b28764898e38e7bf408d14b77",
+        "license": "MIT",
+        "folder": "blender-skills",
+        "skill": "skills/blender-core/SKILL.md",
+        "purpose": "Headless Blender modeling, materials, editable scenes, exports and CPU previews",
+        "outputs": [
+          ".py",
+          ".blend",
+          ".glb",
+          ".png"
+        ],
+        "memory_mib": 3072,
+        "available": true,
+        "status": "available_validated",
+        "reason": "Bounded Engineering workflow validated; individual outputs still require verification",
+        "executor": "native Engineering",
+        "permissions": [
+          "authorized_project_write",
+          "offline_tools_read"
+        ],
+        "parallel": false,
+        "lifecycle": "native task process; no persistent specialist",
+        "location": "local",
+        "cost": "existing Codex subscription and local resources"
+      },
+      {
+        "id": "learning.learnharness",
+        "repo": "amosblomqvist/learnharness",
+        "revision": "da08cb5f7d098598ba963c6689b22054c9f2a5a3",
+        "license": "AGPL-3.0-only",
+        "folder": "learnharness",
+        "skill": "README.md",
+        "purpose": "Candidate independent learning application; separate runtime, knowledge graph and unvalidated subscription integration",
+        "outputs": [],
+        "memory_mib": 0,
+        "available": false,
+        "status": "unsupported",
+        "reason": "Independent knowledge/runtime and provider access not authorized or validated",
+        "executor": "native Engineering",
+        "permissions": [
+          "authorized_project_write",
+          "offline_tools_read"
+        ],
+        "parallel": false,
+        "lifecycle": "native task process; no persistent specialist",
+        "location": "local",
+        "cost": "existing Codex subscription and local resources"
+      }
+    ]
+  }
+}

@@ -3,7 +3,7 @@ from project_tool import S
 NODE={'type':'object','additionalProperties':False,'required':['id','title','capability','parents'],
       'properties':{'id':S,'title':S,'capability':S,'parents':{'type':'array','items':S},
                     'payload':{'type':'object','properties':{'text':S,'format':S},'additionalProperties':False}}}
-TOOL={'name':'adaptive','description':'Experimental bounded capability network. catalog reports actually available tools/models. '
+TOOL={'name':'adaptive','description':'Experimental bounded capability network. catalog reports actually available tools/models. Entries with executor=native Engineering must use projects.task_create(capability=ID) and projects.dispatch; submit/workflow do not run those specializations. '
       'submit creates a persistent native task and returns immediately. items with format=lines uses deterministic code; '
       'format=prose uses the reviewed small local model and leaves semantics in review. No routing model call. '
       'research.documentation fetches official Python sqlite3/pathlib documentation with timestamps and hashes, no project data sent. files.inventory reads only project root metadata; files.types needs one inventory parent. workflow persists a validated '

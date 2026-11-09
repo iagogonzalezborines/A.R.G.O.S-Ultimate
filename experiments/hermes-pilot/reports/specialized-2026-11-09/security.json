@@ -1,0 +1,8 @@
+{
+  "scope": "Real toolchain validation sandbox; native Engineering additionally reuses unchanged Block A permissions",
+  "host_credentials_absent": true,
+  "controller_private_absent": true,
+  "host_bus_absent": true,
+  "physical_input_gpu_absent": true,
+  "external_network_denied": true
+}

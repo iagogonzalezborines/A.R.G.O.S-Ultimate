@@ -1,8 +1,22 @@
-# Catálogo de capacidades — 6 de noviembre de 2026
+# Catálogo de capacidades — 9 de noviembre de 2026
 
 Están implementadas `text.normalize`, `local.extract`, `files.inventory`, `files.types` y `research.documentation` (lectura acotada de documentación oficial), además de Engineering mediante la herramienta Projects existente. El catálogo describe candidatos; **no los anuncia como herramientas ejecutables**. Estado y medidas reales: [informe](../reports/adaptive-network-2026-11-06.md). Instalación selectiva: [procedimiento](SETUP.md).
 
 Estado posterior: [fiabilidad, Project Map, calidad y proyecto real](../reports/reliability-2026-11-06.md). En esta instalación se activaron Projects/Map y las funciones acotadas; la inferencia local permanece opcional y no disponible sin configuración revisada.
+
+## Especialidades de Engineering
+
+Integración y pruebas: [informe](../reports/specialized-2026-11-09.md). Preparación privada y reversible: [SPECIALIZED-SETUP](SPECIALIZED-SETUP.md). El catálogo operativo se consulta en Projects o Adaptive; sus filas con `executor=native Engineering` se ejecutan mediante `projects.task_create(capability=...)` y el dispatcher existente. No usan el ejecutor auxiliar ni mantienen especialistas activos.
+
+| Capacidad | Integración revisada y licencia | Resultado admitido | Estado en esta instalación |
+|---|---|---|---|
+| `diagram.architecture` | Archify, Apache-2.0, renderizador y comprobador directos fijados | JSON editable, HTML interactivo; snapshot explicativo de registros nativos | Validada; CLI exterior `deliver/finalize` excluida por incompatibilidad de subprocess en el sandbox |
+| `diagram.technical` | Anatomy, MIT, kit SVG y fuente de ejemplo revisados | Mecanismo interactivo HTML y script editable; no simulación mecánica | Validada |
+| `cad.parametric` | text-to-cad, MIT; biblioteca Python y build123d/OpenCASCADE en venv privado | Fuente paramétrica, STEP/STL e inspección geométrica; no impresión/FEA/certificación | Validada; servidor/viewer/MCP upstream no instalados |
+| `design.blender` | blender-skills, MIT; Blender 5.2.3 LTS con sus licencias de distribución | Escena BLEND, GLB y PNG mediante scripts offline/CPU | Validada para modelado simple/exportación/render; no certifica todas las 28 skills ni GPU/addons |
+| `learning.learnharness` | LearnHarness, AGPL-3.0-only | Aplicación candidata con runtime/grafo y autenticación propios | No integrada; conexión ChatGPT documentada, compatibilidad real con ARGOS no probada |
+
+Los commits exactos están en `specialized.py`. La disponibilidad depende del manifest de validación y de los ejecutables presentes; se vuelve a comprobar la integridad antes de crear/despachar trabajo. Estados diferenciados: `available_validated`, `installed_unverified`, `missing_dependencies`, `experimental`, `unsupported`. Ninguna descarga sucede por petición del modelo. Las reservas de admisión de 768/2048/3072 MiB más margen son presupuestos, no límites de memoria impuestos por el kernel ni benchmarks; se conserva un escritor Engineering. Las medidas reales y sus límites están en el informe.
 
 ## Modelos locales
 

@@ -1,0 +1,41 @@
+{
+  "cad_independent_STEP_measurements": {
+    "volume_mm3": 7199.999999999999,
+    "dimensions_mm": [
+      40.0,
+      30.0,
+      24.0
+    ],
+    "solids": 1
+  },
+  "blender_independent_reopen": {
+    "objects": {
+      "MESH": 1,
+      "CAMERA": 1,
+      "LIGHT": 1
+    },
+    "resolution": [
+      320,
+      240
+    ],
+    "samples": 4,
+    "device": "CPU"
+  },
+  "general_selected_registered_capabilities": {
+    "t_220f439b": "diagram.architecture",
+    "t_d382f7dd": "diagram.technical",
+    "t_ca6ce380": "cad.parametric",
+    "t_153784b9": "design.blender"
+  },
+  "STL_independent_binary_inspection": {
+    "triangles": 20,
+    "dimensions_mm": [
+      40.0,
+      30.0,
+      24.0
+    ],
+    "volume_mm3": 7200.0,
+    "every_undirected_edge_has_two_incident_triangles": true,
+    "method": "Binary STL floats; bounding box, signed tetrahedral volume and exact edge incidence; no generated script executed"
+  }
+}

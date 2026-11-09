@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Flujo del proyecto ARGOS",
+    "locale": "es",
+    "output": "architecture.html",
+    "quality_profile": "showcase",
+    "legend": { "mode": "all" }
+  },
+  "components": [
+    {
+      "id": "request",
+      "type": "external",
+      "label": "Petición",
+      "sublabel": "Entrada del proyecto",
+      "tag": "Etapa conceptual",
+      "pos": [40, 140],
+      "size": [150, 74]
+    },
+    {
+      "id": "requirements",
+      "type": "frontend",
+      "label": "Requisitos",
+      "sublabel": "Brief y criterios",
+      "tag": "Etapa conceptual",
+      "pos": [310, 140],
+      "size": [170, 74]
+    },
+    {
+      "id": "task",
+      "type": "messagebus",
+      "label": "Tarea nativa",
+      "sublabel": "Kanban · snapshot: 0 tareas",
+      "tag": "Sin instancia en la captura",
+      "pos": [590, 140],
+      "size": [190, 74]
+    },
+    {
+      "id": "engineering",
+      "type": "backend",
+      "label": "Engineering",
+      "sublabel": "Ejecución asignada",
+      "tag": "Rol del flujo",
+      "pos": [850, 140],
+      "size": [180, 74]
+    },
+    {
+      "id": "review",
+      "type": "security",
+      "label": "Revisión",
+      "sublabel": "Aprobación por revisor",
+      "tag": "Etapa posterior",
+      "pos": [1110, 140],
+      "size": [180, 74]
+    }
+  ],
+  "connections": [
+    { "id": "request-to-requirements", "from": "request", "to": "requirements", "label": "se concreta en", "variant": "emphasis" },
+    { "id": "requirements-to-task", "from": "requirements", "to": "task", "label": "se registra como", "variant": "emphasis" },
+    { "id": "task-to-engineering", "from": "task", "to": "engineering", "label": "se asigna a" },
+    { "id": "engineering-to-review", "from": "engineering", "to": "review", "label": "entrega para" }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Cómo leer este diagrama",
+      "items": [
+        "Representación explicativa; no es fuente de verdad ni refleja estado en tiempo real.",
+        "Para el estado real, consultar los registros nativos de Projects/Kanban.",
+        "Snapshot fechado: 2026-11-09. Proyecto p_438b4b74, revisión bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585.",
+        "El snapshot recibido contiene tasks: []; por ello no se atribuyen IDs ni estados reales a las etapas del flujo."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "native_initial_workers": [
+    {
+      "pid": null,
+      "status": "review",
+      "process_present": false
+    },
+    {
+      "pid": null,
+      "status": "review",
+      "process_present": false
+    },
+    {
+      "pid": null,
+      "status": "review",
+      "process_present": false
+    },
+    {
+      "pid": null,
+      "status": "review",
+      "process_present": false
+    }
+  ],
+  "active_native_tasks": 0,
+  "disposable_gateway_termination_requested": [
+    407678
+  ],
+  "derived_QA_auth_removed": true,
+  "normal_login_unchanged": true,
+  "blender_archive_removed": true
+}

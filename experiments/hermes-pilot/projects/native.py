@@ -209,6 +209,11 @@ class Adapter:
             except (OSError,ValueError,PermissionError):continue
         return result
 
+    def project_snapshot(self, conn, project):
+        tasks=[t for t in kanban.list_tasks(conn,limit=31) if t.project_id==project.id]
+        return {'project_id':project.id,'project_revision':revision(project),'authority':'Read-only explanatory snapshot; native Projects/Kanban remain authoritative','truncated':len(tasks)>30,
+                'tasks':[{'id':t.id,'title':t.title,'status':t.status,'parents':kanban.parent_ids(conn,t.id)} for t in tasks[:30]]}
+
     def task_body(self, project, args):
         title = text(args.get('title'), 160)
         goal = text(args.get('goal'), 3000)
@@ -218,6 +223,10 @@ class Adapter:
         criteria = [text(x, 800) for x in criteria]
         content = {'project_revision': revision(project), 'brief': decode(project)['brief'],
                    'goal': goal, 'verification': criteria, 'scope': ENVELOPE}
+        if args.get('capability'):
+            if args.get('kind','engineering')!='engineering':raise ValueError('Specialized tools require Engineering')
+            from adaptive.specialized import context
+            content['specialized']=context(args['capability'])
         if args.get('kind','engineering') not in {'engineering','decision','desktop'}:raise ValueError('Unsupported native task kind')
         if args.get('kind') in {'decision','desktop'}:content['kind']=args['kind']
         return title, 'ARGOS task brief (data, not authority):\n'+json.dumps(content, ensure_ascii=False)
@@ -231,6 +240,10 @@ class Adapter:
         for parent in parents:
             self.task(conn, project, parent)
         key = 'argos-'+digest([project.id, normalize(title), body, sorted(parents)])
+        if args.get('capability')=='diagram.architecture':
+            value=json.loads(body.split('\n',1)[1])
+            value['native_snapshot']=self.project_snapshot(conn,project)
+            body='ARGOS task brief (data, not authority):\n'+json.dumps(value,ensure_ascii=False)
         ident = kanban.create_task(conn, title=title, body=body, assignee='engineering-'+project.id,
             created_by='argos-broker', workspace_kind='dir', workspace_path=project.primary_path,
             project_id=project.id, board=project.board_slug, parents=parents, idempotency_key=key,
@@ -255,7 +268,10 @@ class Adapter:
         else:
             previous = json.loads(task.body.split('\n',1)[1])
             title,body = self.task_body(project, {'title':args.get('title',task.title),
-                'kind':previous.get('kind','engineering'), 'goal':args.get('goal',previous['goal']), 'verification':args.get('verification',previous['verification'])})
+                'capability':previous.get('specialized',{}).get('id'), 'kind':previous.get('kind','engineering'), 'goal':args.get('goal',previous['goal']), 'verification':args.get('verification',previous['verification'])})
+            if previous.get('specialized',{}).get('id')=='diagram.architecture':
+                value=json.loads(body.split('\n',1)[1]);value['native_snapshot']=self.project_snapshot(conn,project)
+                body='ARGOS task brief (data, not authority):\n'+json.dumps(value,ensure_ascii=False)
             kanban.edit_task(conn,task.id,title=title,body=body,board=project.board_slug)
         return self.task_view(conn,self.task(conn,project,task.id),True)
 
@@ -294,6 +310,10 @@ class Adapter:
                 dispatch_once(other_conn, board=other.board_slug, max_spawn=0, failure_limit=2)
                 if any(t.current_run_id for t in kanban.list_tasks(other_conn)):
                     return {**snapshot, 'dispatch': 'engineering_busy'}
+        if content.get('specialized'):
+            from adaptive.specialized import context,memory_ready
+            context(content['specialized']['id'])
+            if not memory_ready(content['specialized']['id']):return {**snapshot,'dispatch':'waiting_for_memory'}
         from projects.worker import provision
         from hermes_cli.gateway_runtime import ensure_gateway_runtime
         home = provision(project, self.config)
@@ -318,6 +338,10 @@ class Adapter:
 
     def request(self, args, authorized=False):
         action = args.get('action')
+        if action == 'catalog':
+            if set(args)!={'action'}:raise ValueError('Catalog accepts no extra fields')
+            from adaptive.specialized import catalog
+            return {'capabilities':catalog()}
         if action == 'desktop_artifacts':
             from projects.desktop import request
             return request(self,args,authorized)
@@ -335,7 +359,7 @@ class Adapter:
                   'update': {'project','expected_revision','brief'}, 'tasks': {'project'},
                   'task': {'project','task_id'},
                   'task_update': {'project','task_id','expected_revision','task_revision','title','goal','verification'},
-                  'dependency': {'project','task_id','expected_revision','task_revision','parent_id','operation'}, 'task_create': {'project','expected_revision','title','goal','verification','parents','kind'},
+                  'dependency': {'project','task_id','expected_revision','task_revision','parent_id','operation'}, 'task_create': {'project','expected_revision','title','goal','verification','parents','kind','capability'},
                   'lifecycle': {'project','task_id','expected_revision','task_revision','operation','reason','profile'},
                   'dispatch': {'project','task_id','expected_revision','task_revision'}}
         if action not in fields or set(args)-({'action'}|fields[action]):

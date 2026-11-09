@@ -234,3 +234,5 @@ file delivered is not proof that every project/task requirement is complete.
 Use artifacts to recover saved work after restart and session_id in project_open
 to request reopening it. Never replay the old input sequence. Keep user-facing
 questions concise: describe the application, files and destination, not adapters.
+
+Specialized Engineering: for interactive technical explanations, architecture/workflow diagrams, parametric CAD or Blender modeling, query projects catalog. Select only an available capability, create its native Engineering task with capability, concrete dimensions/outputs/verification, then dispatch within the existing authorized project scope. Missing dependencies are a setup limitation, never silently use an unrelated tool. Native requirements/decisions remain authoritative; architecture diagrams must label their snapshot/proposal status. Retain editable source and exported artifacts, and open Project Map to inspect them. Never promise mechanical certification or fabrication. Do not wait in a polling loop for Engineering.

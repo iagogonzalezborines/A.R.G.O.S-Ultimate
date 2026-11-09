@@ -1,0 +1,25 @@
+{
+  "project_id": "p_438b4b74",
+  "files": {
+    "LICENSES/ANATOMY-MIT.txt": "87c078ab9d90a3044f359e6b563d4e6afea7aa060897cf4f21618687b3856796",
+    "LICENSES/ARCHIFY-APACHE-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "LICENSES/ARCHIFY-NOTICE.txt": "665eb53e6fcf09cee183c9f23c8052645dc95570d9ccbbf53dc0f5213a1b5edd",
+    "README.md": "864a11e6a1a0de2610975ba1c616a41d0b34a4a57b84fe74023e2d22a9f23c7d",
+    "architecture.html": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+    "architecture.json": "e47f5b4fb4d432993859155c211653013e0dc268d5da00a4fcf10ae78544e14d",
+    "bracket.py": "01e55c9c4bb56e27fd4d92defbdb4f4a278b7f525a2cd93f707e6c69226aa068",
+    "bracket.step": "584047e8d45733062681112129b32db2e63fd8f81e4a68ea55c71472df7aba9d",
+    "bracket.stl": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+    "comparador-referencias.html": "6164929a954e01ac05354d340b88aa35503d6c44f8dcaab22f465910e681f7cf",
+    "comparador-referencias.mjs": "07e4075c0a82d529b6609cc79620249ae4705bfa4a6bfa5518cdcbed145d98e0",
+    "medidas.json": "4a9dfd040c8818fc9fed2a729ef822681c3c1dfa8588a8516c122a7c929bacc2",
+    "preview.png": "bf449dd579e6eb9dc80de3763c3fd7cedfd47cc6493339546f8a6d157ee209bf",
+    "sculpture.blend": "5a8174f936b1b925e14d6e68000616b07f7575ea4455bbdc18f7f0aa432bd739",
+    "sculpture.glb": "9fd66b56f572b77d34b50a92b45ffbcbb7d15359168b60b6a67efe105e0278f3",
+    "sculpture.py": "4c73f6cd257584894c79a0f5f352bed10cce1ed26fda20b1fc2ed84d017fed34",
+    "LICENSES/ARCHIFY-THIRD-PARTY.md": "b5e129197f391568f7abf287c74b24f4835f10e5388f600407c8788feaeb9015",
+    "LICENSES/ARCHIFY-MIT.txt": "b799ab081703e7821ae5096d2c1abdf14bbdc75e8ea1c4045998c36ed6db9706",
+    "LICENSES/JetBrainsMono-OFL.txt": "c1ab7c666206842a02b35b30770dac0d7a10156ed401c9defc3f02a754d89e90"
+  },
+  "source": "Observed native project files after scoped correction plus accompanying upstream third-party license notices; no private database or credentials copied"
+}

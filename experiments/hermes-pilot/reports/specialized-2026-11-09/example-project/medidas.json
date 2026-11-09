@@ -1,0 +1,40 @@
+{
+  "units": {
+    "length": "mm",
+    "volume": "mm^3"
+  },
+  "design_parameters": {
+    "base_length": 40.0,
+    "base_depth": 30.0,
+    "total_height": 24.0,
+    "thickness": 4.0,
+    "holes": 0
+  },
+  "model_inspection": {
+    "valid": true,
+    "sound": true,
+    "topology_errors": [],
+    "solid_count": 1,
+    "dimensions_mm": {
+      "x": 40.0,
+      "y": 30.0,
+      "z": 24.0
+    },
+    "volume_mm3": 7199.999999999999,
+    "holes": 0
+  },
+  "step_reopened_inspection": {
+    "valid": true,
+    "sound": true,
+    "topology_errors": [],
+    "solid_count": 1,
+    "dimensions_mm": {
+      "x": 40.0,
+      "y": 30.0,
+      "z": 24.0
+    },
+    "volume_mm3": 7199.999999999999,
+    "holes": 0
+  },
+  "verification": "CAD geometry inspection only; no fabrication or mechanical certification."
+}

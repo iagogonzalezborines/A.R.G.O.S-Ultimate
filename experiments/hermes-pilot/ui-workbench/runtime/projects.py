@@ -19,6 +19,7 @@ class Projects:
         self.config = json.loads(self.config_path.read_text()) if self.config_path.exists() else {}
         self.enabled = self.config.get('projects_enabled') is True
         self.pending = {}
+        self.previews = {}
         self.lock = threading.RLock()
 
     def native(self, arguments, *, authorized=False):
@@ -88,7 +89,22 @@ class Projects:
         if action in {'lifecycle','map_action'}:
             if not user:raise PermissionError('Task decisions require the trusted user surface')
             return self.native(args,authorized=True)
-        return self.native(args)
+        result=self.native(args)
+        if action=='artifact' and user and result.get('kind')=='html':
+            import secrets
+            token=secrets.token_hex(32)
+            with self.lock:
+                self.previews={k:v for k,v in self.previews.items() if v[0]>time.monotonic()}
+                while len(self.previews)>=8:self.previews.pop(next(iter(self.previews)))
+                self.previews[token]=(time.monotonic()+900,result.pop('html'))
+            result['preview_url']='/project-preview/'+token
+        return result
+
+    def preview(self,token):
+        with self.lock:
+            item=self.previews.get(token)
+            if not item or item[0]<time.monotonic():raise ValueError('Preview expired; reopen the artifact')
+            return item[1].encode('utf-8')
 
     def review(self, ident):
         item = self.pending.get(ident)

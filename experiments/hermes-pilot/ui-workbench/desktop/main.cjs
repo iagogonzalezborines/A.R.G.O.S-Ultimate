@@ -29,6 +29,9 @@ app.whenReady().then(()=>{
  win=new BrowserWindow({width:Math.min(1540,area.width-30),height:Math.min(940,area.height-30),minWidth:850,minHeight:620,title:'ARGOS · Workspace',backgroundColor:'#01050a',frame:false,show:true,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webviewTag:false,webSecurity:true,autoplayPolicy:'no-user-gesture-required',backgroundThrottling:true}});
  win.webContents.setWindowOpenHandler(({url})=>{if(allowedURL(url))emit({type:'source-open',url});return {action:'deny'}});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(ORIGIN+'/'))event.preventDefault()});
+ win.webContents.on('will-frame-navigate',event=>{if(!event.isMainFrame&&event.frame?.url?.startsWith(ORIGIN+'/project-preview/'))event.preventDefault()});
+ win.webContents.session.setPermissionRequestHandler((wc,permission,callback)=>callback(false));
+ win.webContents.session.on('will-download',event=>event.preventDefault());
  win.webContents.on('did-finish-load',subscribe);
  ipcMain.handle('ui:diagnostic',(event,payload)=>{if(!trusted(event)||!payload||Object.keys(payload).some(k=>!['component','message'].includes(k))||typeof payload.message!=='string'||payload.message.length>800)throw Error('Invalid diagnostic');return request('/api/diagnostic',payload)});
  ipcMain.handle('ui:voice-state',event=>{if(!trusted(event))throw Error('Untrusted sender');return request('/voice-state')});

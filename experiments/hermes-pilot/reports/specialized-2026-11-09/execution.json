@@ -1,0 +1,746 @@
+{
+  "checks": [
+    {
+      "name": "natural request creates diagram.architecture",
+      "ok": true
+    },
+    {
+      "name": "real outputs diagram.architecture",
+      "ok": true
+    },
+    {
+      "name": "rendered interactive SVG diagram.architecture",
+      "ok": true
+    },
+    {
+      "name": "natural request creates diagram.technical",
+      "ok": true
+    },
+    {
+      "name": "real outputs diagram.technical",
+      "ok": true
+    },
+    {
+      "name": "rendered interactive SVG diagram.technical",
+      "ok": true
+    },
+    {
+      "name": "natural request creates cad.parametric",
+      "ok": true
+    },
+    {
+      "name": "real outputs cad.parametric",
+      "ok": true
+    },
+    {
+      "name": "natural request creates design.blender",
+      "ok": true
+    },
+    {
+      "name": "real outputs design.blender",
+      "ok": true
+    },
+    {
+      "name": "no renderer errors",
+      "ok": true
+    }
+  ],
+  "turns": [
+    {
+      "request": "En el proyecto «Especialidades ARGOS 1794227809982», realiza ahora este trabajo autorizado mediante Engineering: Genera un diagrama interactivo pequeño del flujo de este proyecto: petición, requisitos, tarea, Engineering y revisión. Usa sus registros nativos y distingue la representación explicativa de su estado real. Guarda architecture.json y architecture.html; verifica la entrega estática. Crea una sola tarea especializada, despáchala y responde sin esperar a que termine.",
+      "answer": "La única tarea especializada quedó despachada y está en ejecución. Aún no hay artefactos verificados; no esperé a que terminara.",
+      "seconds": 54.909522812000006
+    },
+    {
+      "request": "Mientras trabaja Engineering, responde brevemente: ¿sigues disponible para conversar? No esperes a que termine.",
+      "answer": "Sí, sigo aquí.",
+      "seconds": 5.421814608999994
+    },
+    {
+      "request": "En el proyecto «Especialidades ARGOS 1794227809982», realiza ahora este trabajo autorizado mediante Engineering: Crea una explicación técnica interactiva pequeña de un comparador de carátula y tres bloques de referencia. Adapta el ejemplo del kit instalado, conserva el script editable y el HTML autónomo dentro del proyecto. Explica que es una ilustración, no una simulación mecánica. Crea una sola tarea especializada, despáchala y responde sin esperar a que termine.",
+      "answer": "La tarea especializada «Ilustración interactiva de comparador y bloques de referencia» está despachada y en ejecución. Aún no hay artefactos verificados; no esperé a que termine.",
+      "seconds": 36.68593127500001
+    },
+    {
+      "request": "En el proyecto «Especialidades ARGOS 1794227809982», realiza ahora este trabajo autorizado mediante Engineering: Diseña un soporte paramétrico en L: base 40 por 30 mm, altura total 24 mm, espesor 4 mm, sin agujeros. Guarda bracket.py con función build(), bracket.step, bracket.stl y medidas.json. Usa la inspección geométrica de la biblioteca instalada, comprueba sólido válido, dimensiones 40 por 30 por 24 y volumen 7200 mm3; reabre STEP y verifica. Sin impresión ni certificación mecánica. Crea una sola tarea especializada, despáchala y responde sin esperar a que termine.",
+      "answer": "La tarea CAD «Soporte paramétrico en L 40 × 30 × 24 mm» está despachada y en ejecución. Todavía no hay artefactos verificados; no esperé a que termine.",
+      "seconds": 35.38259954699996
+    },
+    {
+      "request": "En el proyecto «Especialidades ARGOS 1794227809982», realiza ahora este trabajo autorizado mediante Engineering: Modela un objeto decorativo azul sencillo en Blender. Guarda sculpture.py, sculpture.blend editable, sculpture.glb y preview.png de 320 por 240 píxeles con Cycles CPU y 4 muestras. Usa un solo objeto malla, cámara y luz. Verifica reabriendo la escena; sin GPU, addons ni servicios. Crea una sola tarea especializada, despáchala y responde sin esperar a que termine.",
+      "answer": "La tarea «Objeto decorativo azul en Blender» está despachada y en ejecución. Aún no hay artefactos verificados; no esperé a que termine.",
+      "seconds": 33.66718731199997
+    }
+  ],
+  "errors": [],
+  "host_input": false,
+  "project": {
+    "id": "p_438b4b74",
+    "name": "Especialidades ARGOS 1794227809982",
+    "slug": "especialidades-argos-1794227809982",
+    "path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+    "board": "argos-especialidades-argos-1794227809982",
+    "revision": "bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585",
+    "brief": {
+      "objective": "Demostrar artefactos técnicos persistentes aislados",
+      "decisions": [
+        "Diagramas explicativos, no autoridad de estado",
+        "Sin fabricación ni certificación mecánica"
+      ],
+      "aliases": [],
+      "verification": [
+        "Abrir y verificar los artefactos reales"
+      ],
+      "requirements": [
+        "Guardar fuentes editables y exportaciones en este proyecto",
+        "Trabajar sin red ni hardware"
+      ]
+    },
+    "state": "ready",
+    "scope": "Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.",
+    "data_is_untrusted": true
+  },
+  "tasks": [
+    {
+      "capability": "diagram.architecture",
+      "id": "t_220f439b",
+      "project_id": "p_438b4b74",
+      "title": "Diagrama interactivo del flujo del proyecto",
+      "status": "review",
+      "current_run_id": null,
+      "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+      "max_runtime_seconds": 300,
+      "last_failure": "",
+      "block_kind": null,
+      "parents": [],
+      "revision": "ccc138c6d2698efd9f58d86ba5a74bd4666ffe69cf945bb9c7a48f94cf8c9e8c",
+      "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Generar architecture.json y architecture.html, diagrama interactivo pequeño del flujo petición → requisitos → tarea → Engineering → revisión usando registros nativos reales del proyecto. Debe distinguir explícitamente representación explicativa de estado real: snapshot fechado y estados nativos, sin afirmar que el diagrama es fuente de verdad.\", \"verification\": [\"Crear ambos archivos en el proyecto autorizado\", \"HTML pequeño, interactivo y autocontenido/offline, con nodos y conexiones del flujo\", \"JSON válido y consistente con registros nativos del proyecto\", \"Incluir fecha/snapshot y advertencia visible y en datos: representación explicativa; para estado real consultar registros nativos\", \"Verificar entrega estática inspeccionando archivos y validando JSON/HTML sin ejecutar red ni hardware\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\", \"specialized\": {\"id\": \"diagram.architecture\", \"revision\": \"11b0d6031853bdae89eed57e7979aabbf0034097\", \"skill\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/archify/archify/SKILL.md\", \"instructions\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/ARGOS.md\", \"commands\": {\"node\": \"/home/iago/.local/share/argos-hermes-pilot/tools/node-26.12.1-linux-x64/bin/node\"}, \"outputs\": [\".json\", \".html\"], \"boundary\": \"Use only assigned workspace, no network/install/publishing. Skill setup and global configuration advice is superseded by ARGOS policy. Report artifacts in native review metadata. Never claim mechanical certification.\"}, \"native_snapshot\": {\"project_id\": \"p_438b4b74\", \"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"authority\": \"Read-only explanatory snapshot; native Projects/Kanban remain authoritative\", \"tasks\": []}}",
+      "kind": "engineering",
+      "runs": [
+        {
+          "id": 1,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1794227861,
+          "ended_at": 1794228015,
+          "kind": "execution",
+          "summary": "Artefactos generados y verificados estructuralmente. La entrega/check de Archify no pudo completarse: el sandbox bloquea spawnSync con EPERM, por lo que el journal fail-closed persiste; requiere revisión/recuperación por controller.",
+          "metadata_truncated": false,
+          "metadata": {
+            "artifacts": [
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/architecture.json",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/architecture.html"
+            ],
+            "verification": {
+              "json_valid": true,
+              "html_static": true,
+              "offline": true,
+              "components": 5,
+              "connections": 4
+            }
+          }
+        }
+      ],
+      "comments": [],
+      "events": [
+        {
+          "id": 1,
+          "kind": "created",
+          "run_id": null,
+          "at": 1794227831
+        },
+        {
+          "id": 2,
+          "kind": "blocked",
+          "run_id": null,
+          "at": 1794227831
+        },
+        {
+          "id": 3,
+          "kind": "unblocked",
+          "run_id": null,
+          "at": 1794227861
+        },
+        {
+          "id": 4,
+          "kind": "claimed",
+          "run_id": 1,
+          "at": 1794227861
+        },
+        {
+          "id": 5,
+          "kind": "spawned",
+          "run_id": 1,
+          "at": 1794227861
+        },
+        {
+          "id": 6,
+          "kind": "owner_admitted",
+          "run_id": 1,
+          "at": 1794227863
+        },
+        {
+          "id": 7,
+          "kind": "worker_bound",
+          "run_id": 1,
+          "at": 1794227865
+        },
+        {
+          "id": 8,
+          "kind": "heartbeat",
+          "run_id": 1,
+          "at": 1794227869
+        },
+        {
+          "id": 9,
+          "kind": "heartbeat",
+          "run_id": 1,
+          "at": 1794227936
+        },
+        {
+          "id": 10,
+          "kind": "heartbeat",
+          "run_id": 1,
+          "at": 1794227996
+        },
+        {
+          "id": 11,
+          "kind": "review_requested",
+          "run_id": 1,
+          "at": 1794228015
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "architecture.json",
+          "sha256_now": "e47f5b4fb4d432993859155c211653013e0dc268d5da00a4fcf10ae78544e14d",
+          "bytes": 2403,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "architecture.html",
+          "sha256_now": "e469ff42699507ffe0a29f00de2a9b4d2dc4e8b1b9ecdb3f79f8031aaeec7038",
+          "bytes": 839423,
+          "reported_by_run": 1,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ],
+      "evidence_is_untrusted": true,
+      "controller_evidence": []
+    },
+    {
+      "capability": "diagram.technical",
+      "id": "t_d382f7dd",
+      "project_id": "p_438b4b74",
+      "title": "Ilustración interactiva de comparador y bloques de referencia",
+      "status": "review",
+      "current_run_id": null,
+      "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+      "max_runtime_seconds": 300,
+      "last_failure": "",
+      "block_kind": null,
+      "parents": [],
+      "revision": "b7ce515d059e9d073534295874c151402f9ce924b5a303931050697cab1db16a",
+      "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Adaptar el ejemplo pertinente del kit instalado para crear una explicación técnica pequeña e interactiva de un comparador de carátula y tres bloques de referencia. Conservar dentro del proyecto el script editable y generar HTML autónomo; hacer explícito y visible que es ilustración explicativa, no simulación mecánica ni medición.\", \"verification\": [\"Usar el ejemplo del kit instalado como base, respetando el ámbito local/offline autorizado\", \"Guardar script editable y HTML autónomo en el proyecto\", \"Representar comparador de carátula y tres bloques de referencia de forma clara e interactiva\", \"Incluir una advertencia visible: ilustración, no simulación mecánica\", \"Verificar estáticamente el HTML y la presencia/consistencia de los artefactos sin red ni hardware\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\", \"specialized\": {\"id\": \"diagram.technical\", \"revision\": \"1482e8469b0a9e0d8cc18ea2740a01423d29ae80\", \"skill\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/anatomy/SKILL.md\", \"instructions\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/ARGOS.md\", \"commands\": {\"node\": \"/home/iago/.local/share/argos-hermes-pilot/tools/node-26.12.1-linux-x64/bin/node\"}, \"outputs\": [\".mjs\", \".html\"], \"boundary\": \"Use only assigned workspace, no network/install/publishing. Skill setup and global configuration advice is superseded by ARGOS policy. Report artifacts in native review metadata. Never claim mechanical certification.\"}}",
+      "kind": "engineering",
+      "runs": [
+        {
+          "id": 2,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1794228050,
+          "ended_at": 1794228150,
+          "kind": "execution",
+          "summary": "Adapté el ejemplo dial-indicator del kit Anatomy y generé una ilustración interactiva autónoma en español. La fuente editable y el HTML están en el proyecto; el HTML incluye aviso explícito de que no es simulación mecánica ni medición. Node --check y verificaciones estáticas locales pasaron; no usé red ni hardware.",
+          "metadata_truncated": false,
+          "metadata": {
+            "artifacts": [
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/comparador-referencias.mjs",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/comparador-referencias.html"
+            ],
+            "verification": [
+              "Generación del HTML con Node 26.12.1",
+              "node --check comparador-referencias.mjs",
+              "Verificación estática de autonomía (sin activos externos), idioma/accesibilidad, aviso, tres bloques e interacción"
+            ]
+          }
+        }
+      ],
+      "comments": [],
+      "events": [
+        {
+          "id": 13,
+          "kind": "created",
+          "run_id": null,
+          "at": 1794228041
+        },
+        {
+          "id": 14,
+          "kind": "blocked",
+          "run_id": null,
+          "at": 1794228041
+        },
+        {
+          "id": 15,
+          "kind": "unblocked",
+          "run_id": null,
+          "at": 1794228050
+        },
+        {
+          "id": 16,
+          "kind": "claimed",
+          "run_id": 2,
+          "at": 1794228050
+        },
+        {
+          "id": 17,
+          "kind": "spawned",
+          "run_id": 2,
+          "at": 1794228051
+        },
+        {
+          "id": 18,
+          "kind": "owner_admitted",
+          "run_id": 2,
+          "at": 1794228051
+        },
+        {
+          "id": 19,
+          "kind": "worker_bound",
+          "run_id": 2,
+          "at": 1794228051
+        },
+        {
+          "id": 20,
+          "kind": "heartbeat",
+          "run_id": 2,
+          "at": 1794228054
+        },
+        {
+          "id": 21,
+          "kind": "heartbeat",
+          "run_id": 2,
+          "at": 1794228114
+        },
+        {
+          "id": 22,
+          "kind": "review_requested",
+          "run_id": 2,
+          "at": 1794228150
+        },
+        {
+          "id": 23,
+          "kind": "worker_result",
+          "run_id": 2,
+          "at": 1794228153
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "comparador-referencias.mjs",
+          "sha256_now": "90a8af6603d68afd79a4d0a624e47379a8e712ed132d29f0c44265ad2f65bc81",
+          "bytes": 15229,
+          "reported_by_run": 2,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "comparador-referencias.html",
+          "sha256_now": "764cb04fb6c195e5d83e5e24621eaf796338406323f67ed36d5598d02a6089b2",
+          "bytes": 136683,
+          "reported_by_run": 2,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ],
+      "evidence_is_untrusted": true,
+      "controller_evidence": []
+    },
+    {
+      "capability": "cad.parametric",
+      "id": "t_ca6ce380",
+      "project_id": "p_438b4b74",
+      "title": "Soporte paramétrico en L 40 × 30 × 24 mm",
+      "status": "review",
+      "current_run_id": null,
+      "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+      "max_runtime_seconds": 300,
+      "last_failure": "",
+      "block_kind": null,
+      "parents": [],
+      "revision": "1f320d3fa8d5a6e7671aa0369a94f449b667e98cf619670810508e21728a2b88",
+      "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Diseñar un soporte paramétrico en L de base 40 × 30 mm, altura total 24 mm, espesor 4 mm y sin agujeros. Entregar bracket.py con función build(), bracket.step, bracket.stl y medidas.json. Usar la inspección geométrica de la biblioteca CAD instalada. No imprimir ni certificar mecánicamente.\", \"verification\": [\"Construir la geometría con parámetros editables y función build() en bracket.py\", \"Inspeccionar el sólido y verificar que sea válido\", \"Verificar dimensiones exteriores 40 × 30 × 24 mm y volumen 7200 mm³\", \"Exportar bracket.step y bracket.stl y medidas.json con las medidas observadas\", \"Reabrir bracket.step e inspeccionar de nuevo para comprobar sólido válido, dimensiones y volumen\", \"No imprimir ni afirmar certificación mecánica\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\", \"specialized\": {\"id\": \"cad.parametric\", \"revision\": \"1cfd73cbbf0be943e0ff7aa0c672f824935b98a7\", \"skill\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/text-to-cad/skills/cad/SKILL.md\", \"instructions\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/ARGOS.md\", \"commands\": {\"python\": \"/home/iago/.local/share/argos-hermes-pilot/tools/specialized/cad-env/bin/python\"}, \"outputs\": [\".py\", \".step\", \".stl\", \".json\"], \"boundary\": \"Use only assigned workspace, no network/install/publishing. Skill setup and global configuration advice is superseded by ARGOS policy. Report artifacts in native review metadata. Never claim mechanical certification.\"}}",
+      "kind": "engineering",
+      "runs": [
+        {
+          "id": 3,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1794228186,
+          "ended_at": 1794228281,
+          "kind": "execution",
+          "summary": "Modelo paramétrico L generado y verificado con build123d. STEP reabierto; fuente, STEP, STL y medidas persistidos. Inspección pre/post STEP: 1 sólido válido y sonoro, sin errores topológicos, 40×30×24 mm, volumen 7199.999999999999 mm³, sin agujeros. Sin fabricación ni certificación mecánica.",
+          "metadata_truncated": false,
+          "metadata": {
+            "artifacts": [
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/bracket.py",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/bracket.step",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/bracket.stl",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/medidas.json"
+            ]
+          }
+        }
+      ],
+      "comments": [],
+      "events": [
+        {
+          "id": 24,
+          "kind": "created",
+          "run_id": null,
+          "at": 1794228177
+        },
+        {
+          "id": 25,
+          "kind": "blocked",
+          "run_id": null,
+          "at": 1794228177
+        },
+        {
+          "id": 26,
+          "kind": "unblocked",
+          "run_id": null,
+          "at": 1794228186
+        },
+        {
+          "id": 27,
+          "kind": "claimed",
+          "run_id": 3,
+          "at": 1794228186
+        },
+        {
+          "id": 28,
+          "kind": "spawned",
+          "run_id": 3,
+          "at": 1794228186
+        },
+        {
+          "id": 29,
+          "kind": "owner_admitted",
+          "run_id": 3,
+          "at": 1794228187
+        },
+        {
+          "id": 30,
+          "kind": "worker_bound",
+          "run_id": 3,
+          "at": 1794228187
+        },
+        {
+          "id": 31,
+          "kind": "heartbeat",
+          "run_id": 3,
+          "at": 1794228189
+        },
+        {
+          "id": 32,
+          "kind": "heartbeat",
+          "run_id": 3,
+          "at": 1794228251
+        },
+        {
+          "id": 33,
+          "kind": "review_requested",
+          "run_id": 3,
+          "at": 1794228281
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "bracket.py",
+          "sha256_now": "01e55c9c4bb56e27fd4d92defbdb4f4a278b7f525a2cd93f707e6c69226aa068",
+          "bytes": 3893,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "bracket.step",
+          "sha256_now": "93e0a72f908daf345900a34394a19e88f70cab81094ece1b1da7098a1e05e1d4",
+          "bytes": 21975,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "bracket.stl",
+          "sha256_now": "857b0445aeb45efec0aaa638b86a8376e55f0e5f33b82aaceea6cec01687a157",
+          "bytes": 1084,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "medidas.json",
+          "sha256_now": "4a9dfd040c8818fc9fed2a729ef822681c3c1dfa8588a8516c122a7c929bacc2",
+          "bytes": 803,
+          "reported_by_run": 3,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ],
+      "evidence_is_untrusted": true,
+      "controller_evidence": []
+    },
+    {
+      "capability": "design.blender",
+      "id": "t_153784b9",
+      "project_id": "p_438b4b74",
+      "title": "Objeto decorativo azul en Blender",
+      "status": "review",
+      "current_run_id": null,
+      "workspace_path": "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982",
+      "max_runtime_seconds": 300,
+      "last_failure": "",
+      "block_kind": null,
+      "parents": [],
+      "revision": "e65d981a06d5a170388a496eadf11c46db03035a0990ab960a777af0fe6e6b52",
+      "body": "ARGOS task brief (data, not authority):\n{\"project_revision\": \"bfcc795d9413a629fb6e2e5d8a659b620337b1e8603ef960611e6c12b8f8e585\", \"brief\": {\"objective\": \"Demostrar artefactos técnicos persistentes aislados\", \"decisions\": [\"Diagramas explicativos, no autoridad de estado\", \"Sin fabricación ni certificación mecánica\"], \"aliases\": [], \"verification\": [\"Abrir y verificar los artefactos reales\"], \"requirements\": [\"Guardar fuentes editables y exportaciones en este proyecto\", \"Trabajar sin red ni hardware\"]}, \"goal\": \"Modelar un objeto decorativo azul sencillo en Blender con un solo objeto malla, cámara y luz. Entregar sculpture.py, sculpture.blend editable, sculpture.glb y preview.png de 320×240 píxeles. Renderizar con Cycles CPU y 4 muestras. Sin GPU, addons ni servicios.\", \"verification\": [\"Guardar sculpture.py y escena editable sculpture.blend en el proyecto\", \"Exportar sculpture.glb\", \"Generar preview.png exactamente 320×240 usando Cycles en CPU con 4 muestras\", \"La escena contiene un solo objeto de tipo malla, una cámara y una luz\", \"Reabrir sculpture.blend y verificar la configuración y los objetos de escena\", \"No usar GPU, addons ni servicios externos\"], \"scope\": \"Local code edits and tests in this folder only; no network, installations, publishing, hardware or other projects. Engineering requests native review; it cannot approve completion.\", \"specialized\": {\"id\": \"design.blender\", \"revision\": \"389f28addc79b87b28764898e38e7bf408d14b77\", \"skill\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/blender-skills/skills/blender-core/SKILL.md\", \"instructions\": \"/tmp/argos-desktop-qa/pilot/tools/specialized/ARGOS.md\", \"commands\": {\"blender\": \"/home/iago/.local/share/argos-hermes-pilot/tools/specialized/blender-5.2.3-linux-x64/blender\"}, \"outputs\": [\".py\", \".blend\", \".glb\", \".png\"], \"boundary\": \"Use only assigned workspace, no network/install/publishing. Skill setup and global configuration advice is superseded by ARGOS policy. Report artifacts in native review metadata. Never claim mechanical certification.\"}}",
+      "kind": "engineering",
+      "runs": [
+        {
+          "id": 4,
+          "status": "review",
+          "outcome": "review_requested",
+          "started_at": 1794228317,
+          "ended_at": 1794228578,
+          "kind": "execution",
+          "summary": "Artefactos Blender generados y verificados: jarrón decorativo azul, una malla/cámara/luz; .blend reabierto con Cycles CPU a 4 muestras y preview 320×240. QA de malla pasa sin errores; aviso UV omitido intencionalmente por material sin texturas. Solicito revisión nativa.",
+          "metadata_truncated": false,
+          "metadata": {
+            "artifacts": [
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/sculpture.py",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/sculpture.blend",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/sculpture.glb",
+              "/tmp/argos-desktop-qa/home/Projects/especialidades-argos-1794227809982/preview.png"
+            ],
+            "verification": {
+              "blender": "5.2.3 LTS",
+              "scene_objects": {
+                "mesh": 1,
+                "camera": 1,
+                "light": 1
+              },
+              "render": {
+                "engine": "CYCLES",
+                "device": "CPU",
+                "samples": 4,
+                "resolution": "320x240"
+              },
+              "mesh": {
+                "vertices": 2306,
+                "faces": 2400,
+                "triangles": 4608,
+                "qa_pass": true,
+                "qa_errors": 0,
+                "qa_warnings": [
+                  "UV map intentionally omitted; procedural material uses no image textures"
+                ]
+              },
+              "glb": {
+                "version": 2,
+                "meshes": 1,
+                "primitives": 1,
+                "materials": 1
+              },
+              "png": "320x240"
+            }
+          }
+        }
+      ],
+      "comments": [],
+      "events": [
+        {
+          "id": 35,
+          "kind": "created",
+          "run_id": null,
+          "at": 1794228309
+        },
+        {
+          "id": 36,
+          "kind": "blocked",
+          "run_id": null,
+          "at": 1794228309
+        },
+        {
+          "id": 37,
+          "kind": "unblocked",
+          "run_id": null,
+          "at": 1794228317
+        },
+        {
+          "id": 38,
+          "kind": "claimed",
+          "run_id": 4,
+          "at": 1794228317
+        },
+        {
+          "id": 39,
+          "kind": "spawned",
+          "run_id": 4,
+          "at": 1794228317
+        },
+        {
+          "id": 40,
+          "kind": "owner_admitted",
+          "run_id": 4,
+          "at": 1794228317
+        },
+        {
+          "id": 41,
+          "kind": "worker_bound",
+          "run_id": 4,
+          "at": 1794228318
+        },
+        {
+          "id": 42,
+          "kind": "heartbeat",
+          "run_id": 4,
+          "at": 1794228320
+        },
+        {
+          "id": 43,
+          "kind": "heartbeat",
+          "run_id": 4,
+          "at": 1794228387
+        },
+        {
+          "id": 44,
+          "kind": "heartbeat",
+          "run_id": 4,
+          "at": 1794228458
+        },
+        {
+          "id": 45,
+          "kind": "heartbeat",
+          "run_id": 4,
+          "at": 1794228519
+        },
+        {
+          "id": 46,
+          "kind": "review_requested",
+          "run_id": 4,
+          "at": 1794228578
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "sculpture.py",
+          "sha256_now": "4c73f6cd257584894c79a0f5f352bed10cce1ed26fda20b1fc2ed84d017fed34",
+          "bytes": 5797,
+          "reported_by_run": 4,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "sculpture.blend",
+          "sha256_now": "80c5a41b25c308b6efd47f278d7540fbe1666fd69f9075fb2ebde10f934b40cc",
+          "bytes": 152679,
+          "reported_by_run": 4,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "sculpture.glb",
+          "sha256_now": "9fd66b56f572b77d34b50a92b45ffbcbb7d15359168b60b6a67efe105e0278f3",
+          "bytes": 97896,
+          "reported_by_run": 4,
+          "verification": "current file observed; run claims are not independent test verification"
+        },
+        {
+          "path": "preview.png",
+          "sha256_now": "989aedf6d98d2d95d76658ed57076412779e98b2701c355172c24b898c38d872",
+          "bytes": 96592,
+          "reported_by_run": 4,
+          "verification": "current file observed; run claims are not independent test verification"
+        }
+      ],
+      "evidence_is_untrusted": true,
+      "controller_evidence": []
+    }
+  ],
+  "apps_ms": 3.5950639999937266,
+  "frames": [
+    {
+      "capability": "diagram.architecture",
+      "buttons": [
+        "\n      \n      Claro\n    ",
+        "\n        \n        Clásico\n        \n      ",
+        "\n          \n          ClásicoPredeterminado técnico estable\n          \n        ",
+        "\n          \n          Flujo de señalPresentación con énfasis en el movimiento\n          \n        ",
+        "\n          \n          PlanoRevisión de ingeniería\n          \n        ",
+        "\n          \n          EditorialNotas de publicación y lanzamiento\n          \n        ",
+        "\n      \n      Fija\n    ",
+        "\n      \n      Presentar\n    ",
+        "\n        Exportar \n      ",
+        "Tarjeta de ruta para compartir1200×630 PNG",
+        "Tarjeta de alcance para compartir1200×630 PNG",
+        "Copiar diagramaPNG al portapapeles",
+        "PNGImagen sin pérdida",
+        "JPEGImagen compacta",
+        "WebPImagen moderna",
+        "SVG · AutoCoincide con el tema del host",
+        "SVG · ClaroSiempre claro",
+        "SVG · OscuroSiempre oscuro",
+        "WebMMovimiento de 6 s",
+        "×",
+        "\n            01\n            Buscar cualquier nodoBusca por etiquetas, responsabilidades, tipos e IDs estables.\n            /\n          ",
+        "\n            02\n            Trazar una rutaPregunta cómo se conectan dos nodos semánticos en el sentido definido.\n            R\n          ",
+        "\n            03\n            Ver todo el sistemaAbre el Radar semántico con un viewport en vivo y nodos estables.\n            M\n          ",
+        "\n            04\n            Comparar tipos semánticosCuenta roles, revela su tráfico y compara enlaces directos definidos.\n            L\n          ",
+        "\n            05\n            Entrar al modo presentaciónDale al diagrama en vivo todo el viewport sin cambiar la exportación.\n            F\n          ",
+        "×",
+        "Petición1 enlaceExterno · request · Entrada del proyecto · Etapa conceptual",
+        "Requisitos2 enlacesFrontend · requirements · Brief y criterios · Etapa conceptual",
+        "Tarea nativa2 enlacesBus de mensajes · task · Kanban · snapshot: 0 tareas · Sin instancia en la captura",
+        "Engineering2 enlacesBackend · engineering · Ejecución asignada · Rol del flujo",
+        "Revisión1 enlaceSeguridad · review · Aprobación por revisor · Etapa posterior",
+        "",
+        "\n                  Ascendente0\n                ",
+        "\n                  Descendente0\n                ",
+        "×",
+        "Copiar enlace",
+        "Relaciones",
+        "Buscar inicio",
+        "Copiar enlace",
+        "Borrar",
+        "←",
+        "\n            ▶\n            Recorrido\n          ",
+        "→",
+        "Vista general",
+        "×",
+        "Backend1",
+        "Bus de mensajes1",
+        "Externo1",
+        "Frontend1",
+        "Seguridad1",
+        "Copiar enlace",
+        "Borrar",
+        "Abrir el radar",
+        "×",
+        "Notas e índice",
+        "RUTA",
+        "MAPA",
+        "LENTE",
+        "",
+        "",
+        "",
+        "LEER100%",
+        "",
+        "",
+        "",
+        "PeticiónEntrada del proyecto",
+        "RequisitosBrief y criterios",
+        "Tarea nativaKanban · snapshot: 0 tareas",
+        "EngineeringEjecución asignada",
+        "RevisiónAprobación por revisor"
+      ]
+    },
+    {
+      "capability": "diagram.technical",
+      "buttons": []
+    }
+  ]
+}
